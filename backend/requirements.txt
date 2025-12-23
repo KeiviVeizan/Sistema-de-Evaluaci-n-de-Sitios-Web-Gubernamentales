@@ -1,0 +1,48 @@
+# FastAPI y servidor
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+pydantic==2.5.3
+pydantic-settings==2.1.0
+python-multipart==0.0.6
+
+# Base de datos
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+alembic==1.13.1
+
+# Web scraping y crawling
+scrapy==2.11.0
+beautifulsoup4==4.12.3
+lxml==5.1.0
+playwright==1.41.0
+requests==2.31.0
+html5lib==1.1
+
+# NLP y Machine Learning
+transformers==4.37.2
+torch==2.2.0
+sentence-transformers==2.3.1
+spacy==3.7.2
+
+# Procesamiento asíncrono
+celery==5.3.6
+redis==5.0.1
+
+# Utilidades
+python-dotenv==1.0.0
+reportlab==4.0.9
+openpyxl==3.1.2
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Testing
+pytest==7.4.4
+pytest-asyncio==0.23.3
+httpx==0.26.0
+
+# Validación y análisis
+validators==0.22.0
+tldextract==5.1.1
+
+# CORS y seguridad
+python-cors==1.0.0
