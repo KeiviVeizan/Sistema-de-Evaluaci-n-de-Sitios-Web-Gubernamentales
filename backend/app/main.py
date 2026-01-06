@@ -14,6 +14,7 @@ from pathlib import Path
 from app.config import settings
 from app.database import init_db
 from app.api.routes import router as api_router
+from app.api.crawler_routes import router as crawler_router
 from app import __version__, __description__
 
 
@@ -79,6 +80,7 @@ app.add_middleware(
 
 # Registrar rutas
 app.include_router(api_router, prefix=settings.api_v1_prefix)
+app.include_router(crawler_router, prefix=settings.api_v1_prefix)
 
 
 # Health check endpoint (fuera del prefijo API)

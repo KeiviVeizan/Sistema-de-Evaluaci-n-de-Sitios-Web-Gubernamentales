@@ -73,6 +73,11 @@ class Website(Base):
         back_populates="website",
         cascade="all, delete-orphan"
     )
+    extracted_content: Mapped[Optional["ExtractedContent"]] = relationship(
+        back_populates="website",
+        cascade="all, delete-orphan",
+        uselist=False
+    )
 
     def __repr__(self) -> str:
         return f"<Website(id={self.id}, domain={self.domain}, institution={self.institution_name})>"
@@ -192,3 +197,122 @@ class NLPAnalysis(Base):
 
     def __repr__(self) -> str:
         return f"<NLPAnalysis(id={self.id}, evaluation_id={self.evaluation_id})>"
+
+
+class ExtractedContent(Base):
+    """
+    Modelo para contenido extraído del sitio web.
+
+    Almacena todo el contenido HTML extraído por el crawler, incluyendo
+    estructura del documento, metadatos, elementos semánticos, imágenes,
+    enlaces, formularios, multimedia y recursos externos.
+    """
+
+    __tablename__ = "extracted_content"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    website_id: Mapped[int] = mapped_column(
+        ForeignKey("websites.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False
+    )
+
+    # Información básica
+    crawled_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    http_status_code: Mapped[Optional[int]] = mapped_column(nullable=True)
+
+    # Robots.txt (Buena práctica SEO)
+    robots_txt: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="exists, accessible, allows_crawling, has_sitemap"
+    )
+
+    # Estructura del documento (SEM-01, SEM-02, SEM-04)
+    html_structure: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="DOCTYPE, charset, elementos obsoletos"
+    )
+
+    # Metadatos (ACC-02, ACC-03, SEO-01, SEO-02, SEO-03)
+    page_metadata: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="title, lang, description, keywords, viewport"
+    )
+
+    # Elementos semánticos HTML5 (SEM-03, NAV-01)
+    semantic_elements: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="header, nav, main, footer, article, section"
+    )
+
+    # Headings (ACC-04, ACC-09)
+    headings: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="h1-h6 con texto y jerarquía"
+    )
+
+    # Imágenes (ACC-01, FMT-02)
+    images: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="src, alt, dimensiones"
+    )
+
+    # Enlaces (ACC-08, PART-01 a PART-05)
+    links: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="clasificados por tipo: social, messaging, email, phone"
+    )
+
+    # Formularios (ACC-07)
+    forms: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="inputs con/sin label"
+    )
+
+    # Multimedia (ACC-05)
+    media: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="audio, video con/sin autoplay"
+    )
+
+    # Recursos externos (PROH-01 a PROH-04)
+    external_resources: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="iframes, CDN, fuentes, trackers"
+    )
+
+    # Estilos y scripts
+    stylesheets: Mapped[Optional[list]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="lista de CSS con clasificación"
+    )
+
+    scripts: Mapped[Optional[list]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="lista de JS con clasificación"
+    )
+
+    # Corpus textual para análisis NLP
+    text_corpus: Mapped[Optional[dict]] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="texto estructurado para análisis de coherencia"
+    )
+
+    # Relaciones
+    website: Mapped["Website"] = relationship(back_populates="extracted_content")
+
+    def __repr__(self) -> str:
+        return f"<ExtractedContent(id={self.id}, website_id={self.website_id})>"

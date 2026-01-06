@@ -1,0 +1,2312 @@
+{
+  "url": "https://www.minedu.gob.bo",
+  "final_url": "https://www.minedu.gob.bo/",
+  "crawled_at": "2026-01-06T04:04:47.213912",
+  "http_status_code": 200,
+  "structure": {
+    "has_html5_doctype": true,
+    "doctype_text": "html",
+    "has_utf8_charset": false,
+    "charset_declared": null,
+    "obsolete_elements": [
+      {
+        "tag": "font",
+        "count": 26
+      }
+    ],
+    "obsolete_attributes": [],
+    "has_obsolete_code": true
+  },
+  "metadata": {
+    "title": "Ministerio de Educación",
+    "title_length": 23,
+    "has_title": true,
+    "lang": "es-es",
+    "has_lang": true,
+    "description": "Ministerio de Educación del Estado Plurinacional de Bolivia",
+    "description_length": 59,
+    "has_description": true,
+    "keywords": "educacion,ministerio,bolivia,ministerio de educacion de bolivia, educa, pedagogia,politicaseducativas,educabolivia",
+    "has_keywords": true,
+    "viewport": "width=device-width, initial-scale=1.0",
+    "has_viewport": true
+  },
+  "semantic_elements": {
+    "header": {
+      "count": 0,
+      "present": false
+    },
+    "nav": {
+      "count": 0,
+      "present": false
+    },
+    "main": {
+      "count": 0,
+      "present": false
+    },
+    "footer": {
+      "count": 1,
+      "present": true
+    },
+    "article": {
+      "count": 0,
+      "present": false
+    },
+    "section": {
+      "count": 7,
+      "present": true
+    },
+    "aside": {
+      "count": 2,
+      "present": true
+    },
+    "summary": {
+      "total_semantic_elements": 10,
+      "types_used": 3,
+      "has_basic_structure": false
+    }
+  },
+  "headings": {
+    "headings": [
+      {
+        "level": 4,
+        "tag": "h4",
+        "text": "NOTICIAS",
+        "length": 8,
+        "is_empty": false
+      },
+      {
+        "level": 5,
+        "tag": "h5",
+        "text": "ENTIDADES DESCENTRALIZADAS Y DESCONCENTRADAS",
+        "length": 44,
+        "is_empty": false
+      },
+      {
+        "level": 5,
+        "tag": "h5",
+        "text": "DOCUMENTOS NORMATIVOS DEL MINISTERIO DE EDUCACIÓN",
+        "length": 49,
+        "is_empty": false
+      },
+      {
+        "level": 5,
+        "tag": "h5",
+        "text": "MINISTERIOS DE BOLIVIA",
+        "length": 22,
+        "is_empty": false
+      },
+      {
+        "level": 5,
+        "tag": "h5",
+        "text": "",
+        "length": 0,
+        "is_empty": true
+      },
+      {
+        "level": 5,
+        "tag": "h5",
+        "text": "ENLACES DE INTERÉS",
+        "length": 18,
+        "is_empty": false
+      },
+      {
+        "level": 5,
+        "tag": "h5",
+        "text": "ENLACES EDUCATIVOS INTERNACIONALES",
+        "length": 34,
+        "is_empty": false
+      }
+    ],
+    "total_count": 7,
+    "by_level": {
+      "h1": 0,
+      "h2": 0,
+      "h3": 0,
+      "h4": 1,
+      "h5": 6,
+      "h6": 0
+    },
+    "h1_count": 0,
+    "has_single_h1": false,
+    "hierarchy_valid": false,
+    "hierarchy_errors": [
+      {
+        "position": 0,
+        "expected_max": 1,
+        "found": 4
+      }
+    ],
+    "empty_headings": 1
+  },
+  "images": {
+    "images": [
+      {
+        "src": "/images/logo.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/logo.png",
+        "alt": "Ministerio de Educación",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 23,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "RM 0001 2026",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 12,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "CONVOCATORIA PARA EL PROCESO DE SELECCIÓN DE POSTULANTES A BECAS SOCIALES EN UNIVERSIDADES PRIVADAS DEL ESTADO PLURINACIONAL DE BOLIVIA GESTIÓN 2026",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 148,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "CONVOCATORIA Nº 001/2025",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 24,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "REGISTRO DE POSTULANTES",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 23,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "REPOSITORIO DE PREGUNTAS para la Prueba Académica de Educación Superior para la Formación Profesional",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 101,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "CONVOCATORIA PÚBLICA Nº 001/2025 ADMISIÓN DE POSTULANTES A LAS ESCUELAS SUPERIORES DE FORMACIÓN DE MAESTROS Y UNIDADES ACADÉMICAS DEL ESTADO PLURINACIONAL DE BOLIVIA Gestión 2026",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 178,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "REGLAMENTO DEL PROCESO DE ADMISIÓN DE POSTULANTES A LAS ESCUELAS SUPERIORES DE FORMACIÓN DE MAESTROS Y UNIDADES ACADÉMICAS DEL ESTADO PLURINACIONAL DE BOLIVIA PARA LA GESTIÓN 2026",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 179,
+        "width": 900,
+        "height": 300,
+        "has_dimensions": true
+      },
+      {
+        "src": "/images/modules/navi/prev.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/prev.png",
+        "alt": "Previous",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 8,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/navi/next.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/next.png",
+        "alt": "Next",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 4,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/navi/play.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/play.png",
+        "alt": "Play",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 4,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/navi/pause.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/pause.png",
+        "alt": "Pause",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 5,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minifp/imagecache/73dcd2ddcf8a33618b3f7b5b1f368fbb.jpg",
+        "absolute_src": "https://www.minedu.gob.bo/images/minifp/imagecache/73dcd2ddcf8a33618b3f7b5b1f368fbb.jpg",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minifp/imagecache/178b4940621db6892280dcad25b73a63.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/minifp/imagecache/178b4940621db6892280dcad25b73a63.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minifp/imagecache/f06b3c6d23482503cbf7e5924a184cba.jpeg",
+        "absolute_src": "https://www.minedu.gob.bo/images/minifp/imagecache/f06b3c6d23482503cbf7e5924a184cba.jpeg",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minifp/imagecache/f7cca34ed17e819e3a6b78812af51efb.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/minifp/imagecache/f7cca34ed17e819e3a6b78812af51efb.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minifp/imagecache/a0b840ca1fef6e464866b767a0410a9d.jpg",
+        "absolute_src": "https://www.minedu.gob.bo/images/minifp/imagecache/a0b840ca1fef6e464866b767a0410a9d.jpg",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minifp/imagecache/8d8e1efc1e66b9e720106a62f8ad68dc.jpeg",
+        "absolute_src": "https://www.minedu.gob.bo/images/minifp/imagecache/8d8e1efc1e66b9e720106a62f8ad68dc.jpeg",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/components/com_djtabs/assets/images/ajax-loader.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djtabs/assets/images/ajax-loader.gif",
+        "alt": "loading...",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 10,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minedu/vesfp/BANNER-COSTADO.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/minedu/vesfp/BANNER-COSTADO.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "Sisep",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 5,
+        "width": 300,
+        "height": 200,
+        "has_dimensions": true
+      },
+      {
+        "src": "/images/modules/navi/prev.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/prev.png",
+        "alt": "Previous",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 8,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/navi/next.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/next.png",
+        "alt": "Next",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 4,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/navi/play.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/play.png",
+        "alt": "Play",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 4,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/navi/pause.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/navi/pause.png",
+        "alt": "Pause",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 5,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/videos/Banner_Legas.jpg",
+        "absolute_src": "https://www.minedu.gob.bo/images/videos/Banner_Legas.jpg",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/SI-AtencionUsuario.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/SI-AtencionUsuario.png",
+        "alt": "Atención al usuario",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 19,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/SI-MaestrasMaestros.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/SI-MaestrasMaestros.png",
+        "alt": "Maestras y Maestros",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 19,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/SI-EducacionSuperior.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/SI-EducacionSuperior.png",
+        "alt": "Educación Superior",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 18,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/SI-sieducativo.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/SI-sieducativo.png",
+        "alt": "Educación Regular",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 17,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/SI-AtencionUsuario.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/SI-AtencionUsuario.png",
+        "alt": "Educación Alternativa y Especial",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 32,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/SI-IndicadoresEducativos.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/SI-IndicadoresEducativos.png",
+        "alt": "Estadísticas e Indicadores en Educación",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 39,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "PROFE-logo",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 10,
+        "width": 370,
+        "height": 150,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "UNEFCO-21",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 9,
+        "width": 370,
+        "height": 150,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "EGPP-21",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 7,
+        "width": 370,
+        "height": 150,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "UP-21",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 5,
+        "width": 370,
+        "height": 150,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "IPELC-21",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 8,
+        "width": 370,
+        "height": 150,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djmediatools/assets/images/blank.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djmediatools/assets/images/blank.gif",
+        "alt": "CEPEAD-logo",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 11,
+        "width": 370,
+        "height": 150,
+        "has_dimensions": true
+      },
+      {
+        "src": "/components/com_djtabs/assets/images/ajax-loader.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djtabs/assets/images/ajax-loader.gif",
+        "alt": "loading...",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 10,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/components/com_djtabs/assets/images/ajax-loader.gif",
+        "absolute_src": "https://www.minedu.gob.bo/components/com_djtabs/assets/images/ajax-loader.gif",
+        "alt": "loading...",
+        "has_alt": true,
+        "alt_empty": false,
+        "alt_length": 10,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/resoluciones1_of.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/resoluciones1_of.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/convocatorias1_of.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/convocatorias1_of.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/comunicados1_of.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/comunicados1_of.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/instructivos1_of.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/instructivos1_of.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/modules/icons/icon-reglamentos_of.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/modules/icons/icon-reglamentos_of.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      },
+      {
+        "src": "/images/minedu/logo_apostilla_2083b598.png",
+        "absolute_src": "https://www.minedu.gob.bo/images/minedu/logo_apostilla_2083b598.png",
+        "alt": "",
+        "has_alt": true,
+        "alt_empty": true,
+        "alt_length": 0,
+        "width": null,
+        "height": null,
+        "has_dimensions": false
+      }
+    ],
+    "total_count": 46,
+    "with_alt": 32,
+    "without_alt": 14,
+    "alt_compliance_percentage": 69.56521739130434
+  },
+  "links": {
+    "all_links": [
+      {
+        "href": "/index.php?option=com_content&view=article&id=3554&Itemid=470",
+        "text": "INICIO",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=3554&Itemid=470"
+      },
+      {
+        "href": "/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167",
+        "text": "SERVICIOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=2063&Itemid=1020",
+        "text": "CONTÁCTANOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=2063&Itemid=1020"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=3554&Itemid=470",
+        "text": "INICIO",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=3554&Itemid=470"
+      },
+      {
+        "href": "/index.php?option=com_content&view=categories&id=89&Itemid=933",
+        "text": "Documentos Normativos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=categories&id=89&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6740&Itemid=1170",
+        "text": "Recursos Humanos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6740&Itemid=1170"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=169&Itemid=932",
+        "text": "Sobre el Ministerio de Educación",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=169&Itemid=932"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=903",
+        "text": "Viceministerio de Educación Regular",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=903"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=904",
+        "text": "Viceministerio de Educación Alternativa y Especial",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=904"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=905",
+        "text": "Viceministerio de Educación Superior y Formación Profesional",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=905"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=162&Itemid=923",
+        "text": "D.D.E. Beni",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=162&Itemid=923"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=164&Itemid=924",
+        "text": "D.D.E. Chuquisaca",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=164&Itemid=924"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=161&Itemid=1218",
+        "text": "D.D.E. Cochabamba",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=161&Itemid=1218"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=160&Itemid=926",
+        "text": "D.D.E. La Paz",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=160&Itemid=926"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=167&Itemid=1221",
+        "text": "D.D.E. Oruro",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=167&Itemid=1221"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=165&Itemid=928",
+        "text": "D.D.E. Pando",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=165&Itemid=928"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=163&Itemid=929",
+        "text": "D.D.E. Potosí",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=163&Itemid=929"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=168&Itemid=930",
+        "text": "D.D.E. Santa Cruz",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=168&Itemid=930"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=166&Itemid=931",
+        "text": "D.D.E. Tarija",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=166&Itemid=931"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=479",
+        "text": "Auditoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=479"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=142&Itemid=476",
+        "text": "Denuncias y Quejas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=142&Itemid=476"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6821&Itemid=1233",
+        "text": "Ejecución Presupuestaria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6821&Itemid=1233"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=291&Itemid=481",
+        "text": "Flujograma de Trámites y Procesos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=291&Itemid=481"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&layout=blog&id=283&Itemid=1087",
+        "text": "Informes y rendición de cuentas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&layout=blog&id=283&Itemid=1087"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&layout=blog&id=324&Itemid=480",
+        "text": "Convocatorias",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&layout=blog&id=324&Itemid=480"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6737&Itemid=482",
+        "text": "Escala Salarial",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6737&Itemid=482"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&layout=blog&id=282&Itemid=1086",
+        "text": "Planes y Programas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&layout=blog&id=282&Itemid=1086"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=3623&Itemid=1154",
+        "text": "Nómina de proveedores",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=3623&Itemid=1154"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=336&Itemid=1247",
+        "text": "Presupuesto institucional",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=336&Itemid=1247"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=337&Itemid=1248",
+        "text": "Ejecución presupuestaria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=337&Itemid=1248"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=338&Itemid=1249",
+        "text": "Programas y proyectos de inversión",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=338&Itemid=1249"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=339&Itemid=1250",
+        "text": "Fuentes de financiamiento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=339&Itemid=1250"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=173&Itemid=670",
+        "text": "Noticias",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=173&Itemid=670"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=604&Itemid=780",
+        "text": "Redes Sociales",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=604&Itemid=780"
+      },
+      {
+        "href": "/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167",
+        "text": "SERVICIOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=2063&Itemid=1020",
+        "text": "CONTÁCTANOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=2063&Itemid=1020"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=3554&Itemid=470",
+        "text": "INICIO",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=3554&Itemid=470"
+      },
+      {
+        "href": "/index.php?option=com_content&view=categories&id=89&Itemid=933",
+        "text": "Documentos Normativos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=categories&id=89&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6740&Itemid=1170",
+        "text": "Recursos Humanos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6740&Itemid=1170"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=169&Itemid=932",
+        "text": "Sobre el Ministerio de Educación",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=169&Itemid=932"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=903",
+        "text": "Viceministerio de Educación Regular",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=903"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=904",
+        "text": "Viceministerio de Educación Alternativa y Especial",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=904"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=905",
+        "text": "Viceministerio de Educación Superior y Formación Profesional",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=905"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=162&Itemid=923",
+        "text": "D.D.E. Beni",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=162&Itemid=923"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=164&Itemid=924",
+        "text": "D.D.E. Chuquisaca",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=164&Itemid=924"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=161&Itemid=1218",
+        "text": "D.D.E. Cochabamba",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=161&Itemid=1218"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=160&Itemid=926",
+        "text": "D.D.E. La Paz",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=160&Itemid=926"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=167&Itemid=1221",
+        "text": "D.D.E. Oruro",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=167&Itemid=1221"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=165&Itemid=928",
+        "text": "D.D.E. Pando",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=165&Itemid=928"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=163&Itemid=929",
+        "text": "D.D.E. Potosí",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=163&Itemid=929"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=168&Itemid=930",
+        "text": "D.D.E. Santa Cruz",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=168&Itemid=930"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=166&Itemid=931",
+        "text": "D.D.E. Tarija",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=166&Itemid=931"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&Itemid=479",
+        "text": "Auditoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&Itemid=479"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=142&Itemid=476",
+        "text": "Denuncias y Quejas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=142&Itemid=476"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6821&Itemid=1233",
+        "text": "Ejecución Presupuestaria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6821&Itemid=1233"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=291&Itemid=481",
+        "text": "Flujograma de Trámites y Procesos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=291&Itemid=481"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&layout=blog&id=283&Itemid=1087",
+        "text": "Informes y rendición de cuentas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&layout=blog&id=283&Itemid=1087"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&layout=blog&id=324&Itemid=480",
+        "text": "Convocatorias",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&layout=blog&id=324&Itemid=480"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6737&Itemid=482",
+        "text": "Escala Salarial",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6737&Itemid=482"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&layout=blog&id=282&Itemid=1086",
+        "text": "Planes y Programas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&layout=blog&id=282&Itemid=1086"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=3623&Itemid=1154",
+        "text": "Nómina de proveedores",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=3623&Itemid=1154"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=336&Itemid=1247",
+        "text": "Presupuesto institucional",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=336&Itemid=1247"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=337&Itemid=1248",
+        "text": "Ejecución presupuestaria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=337&Itemid=1248"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=338&Itemid=1249",
+        "text": "Programas y proyectos de inversión",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=338&Itemid=1249"
+      },
+      {
+        "href": "/index.php?option=com_content&view=category&id=339&Itemid=1250",
+        "text": "Fuentes de financiamiento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=339&Itemid=1250"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=173&Itemid=670",
+        "text": "Noticias",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=173&Itemid=670"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=604&Itemid=780",
+        "text": "Redes Sociales",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=604&Itemid=780"
+      },
+      {
+        "href": "/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167",
+        "text": "SERVICIOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=2063&Itemid=1020",
+        "text": "CONTÁCTANOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=2063&Itemid=1020"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8244&catid=90&Itemid=933",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8244&catid=90&Itemid=933"
+      },
+      {
+        "href": "https://dgesu.minedu.gob.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://dgesu.minedu.gob.bo/"
+      },
+      {
+        "href": "https://dgesttla.minedu.gob.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://dgesttla.minedu.gob.bo/"
+      },
+      {
+        "href": "https://dgfmegi.minedu.gob.bo/#/admision/inscripcion",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://dgfmegi.minedu.gob.bo/#/admision/inscripcion"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8224:inscripcion-al-curso-de-capacitacion-en-idioma-ingles-de-la-escuela-de-idiomas-extranjeros-esiex-2032&catid=91&Itemid=933",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8224:inscripcion-al-curso-de-capacitacion-en-idioma-ingles-de-la-escuela-de-idiomas-extranjeros-esiex-2032&catid=91&Itemid=933"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8218&catid=90&Itemid=933",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8218&catid=90&Itemid=933"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8218&catid=90&Itemid=933",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8218&catid=90&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8250:programa-de-becas-para-jovenes-gestion-2026&catid=182:noticias&Itemid=854",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8250:programa-de-becas-para-jovenes-gestion-2026&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8250:programa-de-becas-para-jovenes-gestion-2026&catid=182:noticias&Itemid=854",
+        "text": "Programa de Becas para Jóvenes Gestión 2026",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8250:programa-de-becas-para-jovenes-gestion-2026&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8240:la-universidad-pedagogica-titulara-a-mas-de-400-maestros-de-la-paz-con-certificaciones-de-postgrado&catid=182:noticias&Itemid=854",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8240:la-universidad-pedagogica-titulara-a-mas-de-400-maestros-de-la-paz-con-certificaciones-de-postgrado&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8240:la-universidad-pedagogica-titulara-a-mas-de-400-maestros-de-la-paz-con-certificaciones-de-postgrado&catid=182:noticias&Itemid=854",
+        "text": "La Universidad Pedagógica titulará a más de 400 maestros de La Paz con certificaciones de postgrado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8240:la-universidad-pedagogica-titulara-a-mas-de-400-maestros-de-la-paz-con-certificaciones-de-postgrado&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8249:se-garantizan-200-dias-de-clases-se-prohiben-celulares-en-aula-se-congelan-las-pensiones-en-colegios-privados-y-se-fomenta-la-lecto-escritura-de-los-estudiantes&catid=182:noticias&Itemid=854",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8249:se-garantizan-200-dias-de-clases-se-prohiben-celulares-en-aula-se-congelan-las-pensiones-en-colegios-privados-y-se-fomenta-la-lecto-escritura-de-los-estudiantes&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8249:se-garantizan-200-dias-de-clases-se-prohiben-celulares-en-aula-se-congelan-las-pensiones-en-colegios-privados-y-se-fomenta-la-lecto-escritura-de-los-estudiantes&catid=182:noticias&Itemid=854",
+        "text": "Ministerio de Educación presenta RM 0001 con nuevas medidas",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8249:se-garantizan-200-dias-de-clases-se-prohiben-celulares-en-aula-se-congelan-las-pensiones-en-colegios-privados-y-se-fomenta-la-lecto-escritura-de-los-estudiantes&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8223:admision-2026-a-las-esfm-y-unidades-academicas-sera-transparente-y-basada-en-meritos&catid=182:noticias&Itemid=854",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8223:admision-2026-a-las-esfm-y-unidades-academicas-sera-transparente-y-basada-en-meritos&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8223:admision-2026-a-las-esfm-y-unidades-academicas-sera-transparente-y-basada-en-meritos&catid=182:noticias&Itemid=854",
+        "text": "Admisión 2026 a las ESFM y Unidades Académicas será transparente y basada en méritos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8223:admision-2026-a-las-esfm-y-unidades-academicas-sera-transparente-y-basada-en-meritos&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8241:la-ministra-de-educacion-confia-que-el-magisterio-no-sacrificara-el-derecho-de-los-estudiantes-a-la-educacion&catid=182:noticias&Itemid=854",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8241:la-ministra-de-educacion-confia-que-el-magisterio-no-sacrificara-el-derecho-de-los-estudiantes-a-la-educacion&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8241:la-ministra-de-educacion-confia-que-el-magisterio-no-sacrificara-el-derecho-de-los-estudiantes-a-la-educacion&catid=182:noticias&Itemid=854",
+        "text": "La Ministra de Educación confía que el magisterio no sacrificará el derecho de los estudiantes a la educación",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8241:la-ministra-de-educacion-confia-que-el-magisterio-no-sacrificara-el-derecho-de-los-estudiantes-a-la-educacion&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8217:gobierno-incrementa-el-bono-juancito-pinto-a-bs-300&catid=182:noticias&Itemid=854",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8217:gobierno-incrementa-el-bono-juancito-pinto-a-bs-300&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8217:gobierno-incrementa-el-bono-juancito-pinto-a-bs-300&catid=182:noticias&Itemid=854",
+        "text": "Gobierno incrementa El Bono Juancito Pinto a Bs. 300",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8217:gobierno-incrementa-el-bono-juancito-pinto-a-bs-300&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8216:educacion-aporta-insumos-al-plan-de-desarrollo-economico-social&catid=182:noticias&Itemid=854",
+        "text": "Educación aporta insumos al Plan de Desarrollo Económico Social",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8216:educacion-aporta-insumos-al-plan-de-desarrollo-economico-social&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8215:ministerio-de-educacion-instruye-auditoria-especial-a-la-designacion-de-directores-departamentales&catid=182:noticias&Itemid=854",
+        "text": "Ministerio de Educación instruye auditoría especial a la designación de Directores Departamentales",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8215:ministerio-de-educacion-instruye-auditoria-especial-a-la-designacion-de-directores-departamentales&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8214:concluye-pago-del-bono-juancito-pinto-con-un-99-15-de-cobertura&catid=182:noticias&Itemid=854",
+        "text": "Concluye pago del Bono Juancito Pinto, con un 99,15 % de cobertura",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8214:concluye-pago-del-bono-juancito-pinto-con-un-99-15-de-cobertura&catid=182:noticias&Itemid=854"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=173&Itemid=670",
+        "text": "[+] Ver más Noticias",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=173&Itemid=670"
+      },
+      {
+        "href": "https://dgfmegi.minedu.gob.bo/#/admision/inscripcion",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://dgfmegi.minedu.gob.bo/#/admision/inscripcion"
+      },
+      {
+        "href": "https://sisep.minedu.gob.bo",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://sisep.minedu.gob.bo"
+      },
+      {
+        "href": "https://www.facebook.com/watch/?v=3358908821046340&ref=sharing",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.facebook.com/watch/?v=3358908821046340&ref=sharing"
+      },
+      {
+        "href": "javascript:void(0);",
+        "text": "Atención al usuario",
+        "title": "",
+        "absolute_url": "javascript:void(0);"
+      },
+      {
+        "href": "https://chasqui2.minedu.gob.bo/",
+        "text": "Chasqui Gestión de Correspondencia y Documentación",
+        "title": "",
+        "absolute_url": "https://chasqui2.minedu.gob.bo/"
+      },
+      {
+        "href": "http://chasquidos.minedu.gob.bo/consulta",
+        "text": "Consultas de Hojas de Ruta",
+        "title": "",
+        "absolute_url": "http://chasquidos.minedu.gob.bo/consulta"
+      },
+      {
+        "href": "/index.php?option=com_djtabs&view=tabs&layout=accordion&Itemid=920",
+        "text": "Plataforma de Atención",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djtabs&view=tabs&layout=accordion&Itemid=920"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=2063&Itemid=1020",
+        "text": "Centro de contacto",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=2063&Itemid=1020"
+      },
+      {
+        "href": "javascript:void(0);",
+        "text": "Maestras y Maestros",
+        "title": "",
+        "absolute_url": "javascript:void(0);"
+      },
+      {
+        "href": "http://sep.minedu.gob.bo:8080/mi-boleta",
+        "text": "Certificación de boleta de pago",
+        "title": "",
+        "absolute_url": "http://sep.minedu.gob.bo:8080/mi-boleta"
+      },
+      {
+        "href": "http://sep.minedu.gob.bo:8080/web/guest/duplicado-rda",
+        "text": "Duplicado del RDA",
+        "title": "",
+        "absolute_url": "http://sep.minedu.gob.bo:8080/web/guest/duplicado-rda"
+      },
+      {
+        "href": "http://sep.minedu.gob.bo:8080/",
+        "text": "UGPSEP - Gestión de Personal del SEP",
+        "title": "",
+        "absolute_url": "http://sep.minedu.gob.bo:8080/"
+      },
+      {
+        "href": "http://sifm.minedu.gob.bo/",
+        "text": "Sistema de Información de Formación de Maestros",
+        "title": "",
+        "absolute_url": "http://sifm.minedu.gob.bo/"
+      },
+      {
+        "href": "javascript:void(0);",
+        "text": "Educación Superior",
+        "title": "",
+        "absolute_url": "javascript:void(0);"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=142&Itemid=876",
+        "text": "Convocatorias DGESTTLA",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=category&id=142&Itemid=876"
+      },
+      {
+        "href": "http://siesu.minedu.gob.bo/",
+        "text": "SIESU - Sistema de Habilitaciones",
+        "title": "",
+        "absolute_url": "http://siesu.minedu.gob.bo/"
+      },
+      {
+        "href": "http://utp.minedu.gob.bo/",
+        "text": "Sistema de Trámites de Títulos Profesionales",
+        "title": "",
+        "absolute_url": "http://utp.minedu.gob.bo/"
+      },
+      {
+        "href": "http://dgfm.minedu.gob.bo/",
+        "text": "Dirección General de Formación de Maestros",
+        "title": "",
+        "absolute_url": "http://dgfm.minedu.gob.bo/"
+      },
+      {
+        "href": "javascript:void(0);",
+        "text": "Educación Regular",
+        "title": "",
+        "absolute_url": "javascript:void(0);"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167",
+        "text": "S.I.E.",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_djmediatools&view=categories&id=96&Itemid=1167"
+      },
+      {
+        "href": "http://educa.minedu.gob.bo/",
+        "text": "Educa Bolivia",
+        "title": "",
+        "absolute_url": "http://educa.minedu.gob.bo/"
+      },
+      {
+        "href": "http://aula.minedu.gob.bo/",
+        "text": "Aula Minedu",
+        "title": "",
+        "absolute_url": "http://aula.minedu.gob.bo/"
+      },
+      {
+        "href": "javascript:void(0);",
+        "text": "Educación Alternativa y Especial",
+        "title": "",
+        "absolute_url": "javascript:void(0);"
+      },
+      {
+        "href": "http://cepead.minedu.gob.bo/",
+        "text": "CEPEAD",
+        "title": "",
+        "absolute_url": "http://cepead.minedu.gob.bo/"
+      },
+      {
+        "href": "javascript:void(0);",
+        "text": "Estadísticas e Indicadores en Educación",
+        "title": "",
+        "absolute_url": "javascript:void(0);"
+      },
+      {
+        "href": "http://seie.minedu.gob.bo/",
+        "text": "Estadísticas e Indicadores Educativos",
+        "title": "",
+        "absolute_url": "http://seie.minedu.gob.bo/"
+      },
+      {
+        "href": "https://reportes.sie.gob.bo/",
+        "text": "Reportes Educativos",
+        "title": "",
+        "absolute_url": "https://reportes.sie.gob.bo/"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7868&catid=93&Itemid=933",
+        "text": "FORMULARIO RUDE 2025",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7868&catid=93&Itemid=933"
+      },
+      {
+        "href": "https://profe.minedu.gob.bo",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://profe.minedu.gob.bo"
+      },
+      {
+        "href": "https://www.unefco.edu.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.unefco.edu.bo/"
+      },
+      {
+        "href": "https://egpp.gob.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://egpp.gob.bo/"
+      },
+      {
+        "href": "https://www.upedagogica.edu.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.upedagogica.edu.bo/"
+      },
+      {
+        "href": "https://www.ipelc.gob.bo/",
+        "text": "",
+        "title": "",
+        "absolute_url": "https://www.ipelc.gob.bo/"
+      },
+      {
+        "href": "http://cepead.minedu.gob.bo",
+        "text": "",
+        "title": "",
+        "absolute_url": "http://cepead.minedu.gob.bo"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7877&catid=96&Itemid=933",
+        "text": "Premio IILA-Literatura XVI edición",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7877&catid=96&Itemid=933"
+      },
+      {
+        "href": "https://iila.org/es/premio-iila-literatura-xvi-edicion-candidaturas-abiertas-hasta-el-28-de-febrero-de-2025/",
+        "text": "[+] Sitio web",
+        "title": "",
+        "absolute_url": "https://iila.org/es/premio-iila-literatura-xvi-edicion-candidaturas-abiertas-hasta-el-28-de-febrero-de-2025/"
+      },
+      {
+        "href": "/files/publicaciones/minedu/Convocatoria-Premio-IILA-Letteratura_XVI_edizione-1.pdf",
+        "text": "[+] Convocatoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/files/publicaciones/minedu/Convocatoria-Premio-IILA-Letteratura_XVI_edizione-1.pdf"
+      },
+      {
+        "href": "https://iila.org/wp-content/uploads/2024/12/Formulario_Premio-IILA-LETTERATURA-1.docx",
+        "text": "[+] Formulario",
+        "title": "",
+        "absolute_url": "https://iila.org/wp-content/uploads/2024/12/Formulario_Premio-IILA-LETTERATURA-1.docx"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8244&catid=90&Itemid=933",
+        "text": "Ver Resolución",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8244&catid=90&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8218&catid=90&Itemid=933",
+        "text": "Ver Resolución",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8218&catid=90&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8210&catid=192&Itemid=712",
+        "text": "Ver Resolución",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8210&catid=192&Itemid=712"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8201&catid=196&Itemid=715",
+        "text": "Ver Resolución",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8201&catid=196&Itemid=715"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8197&catid=192&Itemid=712",
+        "text": "Ver Resolución",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8197&catid=192&Itemid=712"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8222&catid=91&Itemid=933",
+        "text": "Leer Convocatoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8222&catid=91&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8164&catid=91&Itemid=933",
+        "text": "Leer Convocatoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8164&catid=91&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8135&catid=91&Itemid=933",
+        "text": "Leer Convocatoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8135&catid=91&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7884&catid=91&Itemid=933",
+        "text": "Leer Convocatoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7884&catid=91&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8110&catid=91&Itemid=933",
+        "text": "Leer Convocatoria",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8110&catid=91&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8154&catid=223&Itemid=724",
+        "text": "Discurso Presidente del Estado Plurinacional de Bolivia",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8154&catid=223&Itemid=724"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8154&catid=223&Itemid=724",
+        "text": "Leer Comunicado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8154&catid=223&Itemid=724"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7868&catid=93&Itemid=933",
+        "text": "FORMULARIO RUDE 2025",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7868&catid=93&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7868&catid=93&Itemid=933",
+        "text": "Leer Comunicado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7868&catid=93&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6731&catid=225&Itemid=725",
+        "text": "JORNADA PEDAGÓGICA DE PENSAMIENTO LÓGICO MATEMÁTICO",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6731&catid=225&Itemid=725"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6731&catid=225&Itemid=725",
+        "text": "Leer Comunicado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6731&catid=225&Itemid=725"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6146&catid=93&Itemid=933",
+        "text": "PUBLICACIÓN",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6146&catid=93&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=6146&catid=93&Itemid=933",
+        "text": "Leer Comunicado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=6146&catid=93&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=5616&catid=223&Itemid=724",
+        "text": "REQUISITOS PARA OBTENER LA CERTIFICACIÓN DE ACREDITACIÓN DE UNA CARRERA EN EL SISTEMA ARCU-SUR",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=5616&catid=223&Itemid=724"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=5616&catid=223&Itemid=724",
+        "text": "Leer Comunicado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=5616&catid=223&Itemid=724"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8242&catid=92&Itemid=933",
+        "text": "INSTRUCTIVO INST/VESFP/DGFM N° 58/2025",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8242&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8242&catid=92&Itemid=933",
+        "text": "Leer Instructivo",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8242&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8048&catid=224&Itemid=933",
+        "text": "CIRCULAR CIR/DGP/UEGG N° 2/2025",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8048&catid=224&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8048&catid=224&Itemid=933",
+        "text": "Leer Instructivo",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8048&catid=224&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8046&catid=92&Itemid=933",
+        "text": "INSTRUCTIVO INST/DGP/UEGG N° 1/2025",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8046&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8046&catid=92&Itemid=933",
+        "text": "Leer Instructivo",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8046&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7309&catid=92&Itemid=933",
+        "text": "INSTRUCTIVO IT/VESFP/DGFM N° 0023/2024",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7309&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7309&catid=92&Itemid=933",
+        "text": "Leer Instructivo",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7309&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7029&catid=92&Itemid=933",
+        "text": "INSTRUCTIVO IT/VER N° 0073/2023",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7029&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7029&catid=92&Itemid=933",
+        "text": "Leer Instructivo",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7029&catid=92&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8221&catid=226&Itemid=894",
+        "text": "REGLAMENTO DEL PROCESO DE ADMISIÓN DE POSTULANTES A LAS ESCUELAS SUPERIORES DE FORMACIÓN DE MAESTROS...",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8221&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8221&catid=226&Itemid=894",
+        "text": "Leer Reglamento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8221&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8189&catid=226&Itemid=894",
+        "text": "REGLAMENTO  PARA EL FORTALECIMIENTO DE LA EDUCACIÓN  INCLUSIVA EN EL SISTEMA EDUCATIVO  PLURINACIONA...",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8189&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8189&catid=226&Itemid=894",
+        "text": "Leer Reglamento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8189&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8118&catid=226&Itemid=894",
+        "text": "REGLAMENTO DE TRANSITABILIDAD A LOS INSTITUTOS TÉCNICOS Y TECNOLÓGICOS",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8118&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=8118&catid=226&Itemid=894",
+        "text": "Leer Reglamento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=8118&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7539&catid=226&Itemid=894",
+        "text": "REGLAMENTO GENERAL X ENCUENTRO PLURINACIONAL DE MAESTRAS Y MAESTROS EDUCA INNOVA 2024",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7539&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7539&catid=226&Itemid=894",
+        "text": "Leer Reglamento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7539&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7082&catid=226&Itemid=894",
+        "text": "REGLAMENTO DE GRADUACIÓN DEL BACHILLERATO TÉCNICO HUMANÍSTICO DEL SUBSISTEMA DE EDUCACIÓN REGULAR....",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7082&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=7082&catid=226&Itemid=894",
+        "text": "Leer Reglamento",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=7082&catid=226&Itemid=894"
+      },
+      {
+        "href": "/index.php?option=com_content&view=categories&id=89&Itemid=933",
+        "text": "[+] Más Documentos Normativos",
+        "title": "Documentos Normativos del Ministerio de Educación",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=categories&id=89&Itemid=933"
+      },
+      {
+        "href": "http://www.presidencia.gob.bo/",
+        "text": "Ministerio de la Presidencia",
+        "title": "",
+        "absolute_url": "http://www.presidencia.gob.bo/"
+      },
+      {
+        "href": "http://www.mingobierno.gob.bo/",
+        "text": "Ministerio de Gobierno",
+        "title": "",
+        "absolute_url": "http://www.mingobierno.gob.bo/"
+      },
+      {
+        "href": "https://www.mintrabajo.gob.bo/",
+        "text": "Ministerio de Trabajo, Empleo y Previsión Social",
+        "title": "",
+        "absolute_url": "https://www.mintrabajo.gob.bo/"
+      },
+      {
+        "href": "https://www.economiayfinanzas.gob.bo/",
+        "text": "Ministerio de Economía y Finanzas Públicas",
+        "title": "",
+        "absolute_url": "https://www.economiayfinanzas.gob.bo/"
+      },
+      {
+        "href": "http://www.cancilleria.gob.bo/webmre/",
+        "text": "Ministerio de Relaciones Exteriores",
+        "title": "",
+        "absolute_url": "http://www.cancilleria.gob.bo/webmre/"
+      },
+      {
+        "href": "http://www.mindef.gob.bo/mindef/",
+        "text": "Ministerio de Defensa",
+        "title": "",
+        "absolute_url": "http://www.mindef.gob.bo/mindef/"
+      },
+      {
+        "href": "http://www.planificacion.gob.bo/index",
+        "text": "Ministerio de Planificación del Desarrollo",
+        "title": "",
+        "absolute_url": "http://www.planificacion.gob.bo/index"
+      },
+      {
+        "href": "http://www.mhe.gob.bo/",
+        "text": "Ministerio de Hidrocarburos y Energías",
+        "title": "",
+        "absolute_url": "http://www.mhe.gob.bo/"
+      },
+      {
+        "href": "http://produccion.gob.bo/",
+        "text": "Ministerio de Desarrollo Productivo y Economía Plural",
+        "title": "",
+        "absolute_url": "http://produccion.gob.bo/"
+      },
+      {
+        "href": "https://www.oopp.gob.bo/",
+        "text": "Ministerio de Obras Públicas, Servicios y Vivienda",
+        "title": "",
+        "absolute_url": "https://www.oopp.gob.bo/"
+      },
+      {
+        "href": "http://www.mineria.gob.bo/",
+        "text": "Ministerio de Minería y Metalurgia",
+        "title": "",
+        "absolute_url": "http://www.mineria.gob.bo/"
+      },
+      {
+        "href": "https://www.justicia.gob.bo/portal/index.php",
+        "text": "Ministerio de Justicia y Transparencia Institucional",
+        "title": "",
+        "absolute_url": "https://www.justicia.gob.bo/portal/index.php"
+      },
+      {
+        "href": "https://www.minsalud.gob.bo/",
+        "text": "Ministerio de Salud y Deportes",
+        "title": "",
+        "absolute_url": "https://www.minsalud.gob.bo/"
+      },
+      {
+        "href": "http://www.mmaya.gob.bo/",
+        "text": "Ministerio de Medio Ambiente y Agua",
+        "title": "",
+        "absolute_url": "http://www.mmaya.gob.bo/"
+      },
+      {
+        "href": "http://www.ruralytierras.gob.bo/",
+        "text": "Ministerio de Desarrollo Rural y Tierras",
+        "title": "",
+        "absolute_url": "http://www.ruralytierras.gob.bo/"
+      },
+      {
+        "href": "http://www.minculturas.gob.bo/",
+        "text": "Ministerio de Culturas, Descolonización y Despatriarcalización",
+        "title": "",
+        "absolute_url": "http://www.minculturas.gob.bo/"
+      },
+      {
+        "href": "https://www.sicoes.gob.bo/portal/index.php",
+        "text": "Sistema de Contrataciones Estatales",
+        "title": "",
+        "absolute_url": "https://www.sicoes.gob.bo/portal/index.php"
+      },
+      {
+        "href": "https://egpp.gob.bo/",
+        "text": "Escuela de Gestión Pública Plurinacional",
+        "title": "",
+        "absolute_url": "https://egpp.gob.bo/"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=1525:constitucion-politica-del-estado&catid=233&Itemid=933",
+        "text": "Constitución Política del Estado",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=1525:constitucion-politica-del-estado&catid=233&Itemid=933"
+      },
+      {
+        "href": "/index.php?option=com_content&view=article&id=1524:ley-avelino-sinani-elizardo-perez&catid=233&Itemid=933",
+        "text": "Ley de Educación Avelino Siñani - Elizardo Pérez",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/index.php?option=com_content&view=article&id=1524:ley-avelino-sinani-elizardo-perez&catid=233&Itemid=933"
+      },
+      {
+        "href": "/files/publicaciones/minedu/glosario-de-terminos-referidos-a-los-derechos-humanos.pdf",
+        "text": "Glosario de términos referidos a los Derechos Humanos",
+        "title": "",
+        "absolute_url": "https://www.minedu.gob.bo/files/publicaciones/minedu/glosario-de-terminos-referidos-a-los-derechos-humanos.pdf"
+      },
+      {
+        "href": "https://apostilla.rree.gob.bo/#/",
+        "text": "Apostilla Certificación Única de Documentos",
+        "title": "",
+        "absolute_url": "https://apostilla.rree.gob.bo/#/"
+      },
+      {
+        "href": "https://oei.int/oficinas/secretaria-general",
+        "text": "OEI",
+        "title": "",
+        "absolute_url": "https://oei.int/oficinas/secretaria-general"
+      },
+      {
+        "href": "http://edu.mercosur.int/es-ES/",
+        "text": "Mercosur Educativo",
+        "title": "",
+        "absolute_url": "http://edu.mercosur.int/es-ES/"
+      },
+      {
+        "href": "https://www.ei-ie-al.org/",
+        "text": "Internacional de la Educación América Latina",
+        "title": "",
+        "absolute_url": "https://www.ei-ie-al.org/"
+      },
+      {
+        "href": "https://www.ei-ie.org/es",
+        "text": "Internacional de la Educación",
+        "title": "",
+        "absolute_url": "https://www.ei-ie.org/es"
+      },
+      {
+        "href": "https://www.eda.admin.ch/deza/es/home/paises/bolivia.html",
+        "text": "COSUDE",
+        "title": "",
+        "absolute_url": "https://www.eda.admin.ch/deza/es/home/paises/bolivia.html"
+      },
+      {
+        "href": "https://www.unicef.org/spanish/education/#:~:text=Para%20cada%20ni%C3%B1o%2C%20educaci%C3%B3n&text=En%20UNICEF%20creemos%20que%20cada,cu%C3%A1nto%20dinero%20tenga%20su%20familia.",
+        "text": "UNICEF",
+        "title": "",
+        "absolute_url": "https://www.unicef.org/spanish/education/#:~:text=Para%20cada%20ni%C3%B1o%2C%20educaci%C3%B3n&text=En%20UNICEF%20creemos%20que%20cada,cu%C3%A1nto%20dinero%20tenga%20su%20familia."
+      }
+    ],
+    "total_count": 206,
+    "social": {
+      "links": [
+        {
+          "href": "https://www.facebook.com/watch/?v=3358908821046340&ref=sharing",
+          "text": "",
+          "title": "",
+          "absolute_url": "https://www.facebook.com/watch/?v=3358908821046340&ref=sharing"
+        }
+      ],
+      "count": 1,
+      "unique_platforms": 1
+    },
+    "messaging": {
+      "links": [],
+      "count": 0
+    },
+    "email": {
+      "links": [],
+      "count": 0
+    },
+    "phone": {
+      "links": [],
+      "count": 0
+    },
+    "share_buttons": {
+      "links": [],
+      "count": 0
+    },
+    "generic_text": {
+      "links": [],
+      "count": 0
+    }
+  },
+  "forms": {
+    "forms": [
+      {
+        "action": "/index.php?option=com_search&view=search",
+        "method": "POST",
+        "inputs": [
+          {
+            "type": "search",
+            "id": "mod-ajaxsearch-searchword",
+            "name": "searchword",
+            "has_label": false,
+            "label_text": null
+          },
+          {
+            "type": "hidden",
+            "id": "",
+            "name": "task",
+            "has_label": false,
+            "label_text": null
+          },
+          {
+            "type": "hidden",
+            "id": "",
+            "name": "limit",
+            "has_label": false,
+            "label_text": null
+          }
+        ]
+      }
+    ],
+    "total_forms": 1,
+    "total_inputs": 3,
+    "inputs_with_label": 0,
+    "inputs_without_label": 3,
+    "label_compliance_percentage": 0.0
+  },
+  "media": {
+    "audio": {
+      "elements": [],
+      "count": 0,
+      "with_autoplay": 0
+    },
+    "video": {
+      "elements": [],
+      "count": 0,
+      "with_autoplay": 0
+    },
+    "has_autoplay_media": false
+  },
+  "external_resources": {
+    "iframes": {
+      "external": [],
+      "count": 0
+    },
+    "cdn": {
+      "external": [
+        {
+          "src": "https://cdn.jsdelivr.net/npm/simple-line-icons@2.4.1/css/simple-line-icons.css",
+          "absolute_src": "https://cdn.jsdelivr.net/npm/simple-line-icons@2.4.1/css/simple-line-icons.css",
+          "domain": "cdn.jsdelivr.net",
+          "type": "link",
+          "rel": [
+            "stylesheet"
+          ]
+        },
+        {
+          "src": "https://fonts.googleapis.com/css?family=Open+Sans&display=swap",
+          "absolute_src": "https://fonts.googleapis.com/css?family=Open+Sans&display=swap",
+          "domain": "fonts.googleapis.com",
+          "type": "link",
+          "rel": [
+            "stylesheet"
+          ]
+        },
+        {
+          "src": "https://fonts.googleapis.com/css?family=Montserrat&display=swap",
+          "absolute_src": "https://fonts.googleapis.com/css?family=Montserrat&display=swap",
+          "domain": "fonts.googleapis.com",
+          "type": "link",
+          "rel": [
+            "stylesheet"
+          ]
+        },
+        {
+          "src": "//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css",
+          "absolute_src": "https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css",
+          "domain": "maxcdn.bootstrapcdn.com",
+          "type": "link",
+          "rel": [
+            "stylesheet"
+          ]
+        },
+        {
+          "src": "https://cdnjs.cloudflare.com/ajax/libs/picturefill/2.3.1/picturefill.min.js",
+          "absolute_src": "https://cdnjs.cloudflare.com/ajax/libs/picturefill/2.3.1/picturefill.min.js",
+          "domain": "cdnjs.cloudflare.com",
+          "type": "script"
+        }
+      ],
+      "count": 5,
+      "unique_domains": 4
+    },
+    "fonts": {
+      "external": [
+        {
+          "src": "https://fonts.googleapis.com/css?family=Open+Sans&display=swap",
+          "absolute_src": "https://fonts.googleapis.com/css?family=Open+Sans&display=swap"
+        },
+        {
+          "src": "https://fonts.googleapis.com/css?family=Montserrat&display=swap",
+          "absolute_src": "https://fonts.googleapis.com/css?family=Montserrat&display=swap"
+        }
+      ],
+      "count": 2
+    },
+    "trackers": {
+      "found": [
+        {
+          "type": "inline_script",
+          "tracker": "google-analytics.com",
+          "snippet": "(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){\n  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),\n  m=s.getElementsByTagName(o)[0];a.async=1"
+        }
+      ],
+      "count": 1
+    }
+  },
+  "stylesheets": {
+    "stylesheets": [
+      {
+        "href": "/index.php?option=com_ajax&plugin=arktypography&format=json",
+        "absolute_href": "https://www.minedu.gob.bo/index.php?option=com_ajax&plugin=arktypography&format=json",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://cdn.jsdelivr.net/npm/simple-line-icons@2.4.1/css/simple-line-icons.css",
+        "absolute_href": "https://cdn.jsdelivr.net/npm/simple-line-icons@2.4.1/css/simple-line-icons.css",
+        "domain": "cdn.jsdelivr.net",
+        "is_external": true,
+        "is_gob_bo": false,
+        "media": "all"
+      },
+      {
+        "href": "/components/com_k2/css/k2.css?v=2.10.3&b=20200429",
+        "absolute_href": "https://www.minedu.gob.bo/components/com_k2/css/k2.css?v=2.10.3&b=20200429",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/plugins/content/pdf_embed/assets/css/style.css",
+        "absolute_href": "https://www.minedu.gob.bo/plugins/content/pdf_embed/assets/css/style.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/plugins/editors/dropeditor/dropeditor.css",
+        "absolute_href": "https://www.minedu.gob.bo/plugins/editors/dropeditor/dropeditor.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/media/dropeditor/customstyles.css",
+        "absolute_href": "https://www.minedu.gob.bo/media/dropeditor/customstyles.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/media/dropeditor/titlestyles.css",
+        "absolute_href": "https://www.minedu.gob.bo/media/dropeditor/titlestyles.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/templates/jm-financial-services/css/bootstrap.20.css",
+        "absolute_href": "https://www.minedu.gob.bo/templates/jm-financial-services/css/bootstrap.20.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/templates/jm-financial-services/css/bootstrap_responsive.20.css",
+        "absolute_href": "https://www.minedu.gob.bo/templates/jm-financial-services/css/bootstrap_responsive.20.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/templates/jm-financial-services/css/template.20.css",
+        "absolute_href": "https://www.minedu.gob.bo/templates/jm-financial-services/css/template.20.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/templates/jm-financial-services/css/offcanvas.20.css",
+        "absolute_href": "https://www.minedu.gob.bo/templates/jm-financial-services/css/offcanvas.20.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/templates/jm-financial-services/css/template_responsive.20.css",
+        "absolute_href": "https://www.minedu.gob.bo/templates/jm-financial-services/css/template_responsive.20.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://fonts.googleapis.com/css?family=Open+Sans&display=swap",
+        "absolute_href": "https://fonts.googleapis.com/css?family=Open+Sans&display=swap",
+        "domain": "fonts.googleapis.com",
+        "is_external": true,
+        "is_gob_bo": false,
+        "media": "all"
+      },
+      {
+        "href": "https://fonts.googleapis.com/css?family=Montserrat&display=swap",
+        "absolute_href": "https://fonts.googleapis.com/css?family=Montserrat&display=swap",
+        "domain": "fonts.googleapis.com",
+        "is_external": true,
+        "is_gob_bo": false,
+        "media": "all"
+      },
+      {
+        "href": "/modules/mod_ajaxsearch/assets/css/style.css",
+        "absolute_href": "https://www.minedu.gob.bo/modules/mod_ajaxsearch/assets/css/style.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/media/djmediatools/css/slideshow_fd4b0ea0235f590a22dd8ac81db006d6.css",
+        "absolute_href": "https://www.minedu.gob.bo/media/djmediatools/css/slideshow_fd4b0ea0235f590a22dd8ac81db006d6.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/modules/mod_minifrontpage/themes/tabbed-slide-left-right/assets/css/style.css",
+        "absolute_href": "https://www.minedu.gob.bo/modules/mod_minifrontpage/themes/tabbed-slide-left-right/assets/css/style.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/media/system/css/modal.css?d05885117da9f98745e13aa6669fed9f",
+        "absolute_href": "https://www.minedu.gob.bo/media/system/css/modal.css?d05885117da9f98745e13aa6669fed9f",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/components/com_djtabs/assets/icons.css",
+        "absolute_href": "https://www.minedu.gob.bo/components/com_djtabs/assets/icons.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/components/com_djtabs/assets/css/default/default-theme.css",
+        "absolute_href": "https://www.minedu.gob.bo/components/com_djtabs/assets/css/default/default-theme.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/media/djmediatools/css/slideshow_4503b5a65a6d84afb9333c768fdbd61c.css",
+        "absolute_href": "https://www.minedu.gob.bo/media/djmediatools/css/slideshow_4503b5a65a6d84afb9333c768fdbd61c.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/modules/mod_accordeonck/themes/simple/mod_accordeonck_css.php?cssid=accordeonck496",
+        "absolute_href": "https://www.minedu.gob.bo/modules/mod_accordeonck/themes/simple/mod_accordeonck_css.php?cssid=accordeonck496",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/media/djmediatools/css/galleryGrid_8deee2186e2650a53286a6bfad77116a.css",
+        "absolute_href": "https://www.minedu.gob.bo/media/djmediatools/css/galleryGrid_8deee2186e2650a53286a6bfad77116a.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "https://www.minedu.gob.bo/media/editors/arkeditor/css/squeezebox.css",
+        "absolute_href": "https://www.minedu.gob.bo/media/editors/arkeditor/css/squeezebox.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css",
+        "absolute_href": "https://maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css",
+        "domain": "maxcdn.bootstrapcdn.com",
+        "is_external": true,
+        "is_gob_bo": false,
+        "media": "all"
+      },
+      {
+        "href": "/modules/mod_djmegamenu/assets/css/animations.css",
+        "absolute_href": "https://www.minedu.gob.bo/modules/mod_djmegamenu/assets/css/animations.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/modules/mod_djmegamenu/assets/css/offcanvas.css",
+        "absolute_href": "https://www.minedu.gob.bo/modules/mod_djmegamenu/assets/css/offcanvas.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/modules/mod_djmegamenu/mobilethemes/light/djmobilemenu.css",
+        "absolute_href": "https://www.minedu.gob.bo/modules/mod_djmegamenu/mobilethemes/light/djmobilemenu.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      },
+      {
+        "href": "/templates/jm-financial-services/css/djmegamenu.20.css",
+        "absolute_href": "https://www.minedu.gob.bo/templates/jm-financial-services/css/djmegamenu.20.css",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "media": "all"
+      }
+    ],
+    "count": 29,
+    "inline_styles_count": 2,
+    "external_count": 4
+  },
+  "scripts": {
+    "scripts": [
+      {
+        "src": "/templates/jm-financial-services/cache/jmf_cf08be27c985583ddee37d76f94fe983.js?t=1684252591",
+        "absolute_src": "https://www.minedu.gob.bo/templates/jm-financial-services/cache/jmf_cf08be27c985583ddee37d76f94fe983.js?t=1684252591",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "type": "text/javascript",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "/media/k2/assets/js/k2.frontend.js?v=2.10.3&b=20200429&sitepath=/",
+        "absolute_src": "https://www.minedu.gob.bo/media/k2/assets/js/k2.frontend.js?v=2.10.3&b=20200429&sitepath=/",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "type": "text/javascript",
+        "async": false,
+        "defer": false
+      },
+      {
+        "src": "https://cdnjs.cloudflare.com/ajax/libs/picturefill/2.3.1/picturefill.min.js",
+        "absolute_src": "https://cdnjs.cloudflare.com/ajax/libs/picturefill/2.3.1/picturefill.min.js",
+        "domain": "cdnjs.cloudflare.com",
+        "is_external": true,
+        "is_gob_bo": false,
+        "type": "text/javascript",
+        "async": false,
+        "defer": true
+      },
+      {
+        "src": "/templates/jm-financial-services/cache/jmf_920b9776d676aa400901e394100094d8.js?t=1715176986",
+        "absolute_src": "https://www.minedu.gob.bo/templates/jm-financial-services/cache/jmf_920b9776d676aa400901e394100094d8.js?t=1715176986",
+        "domain": "www.minedu.gob.bo",
+        "is_external": false,
+        "is_gob_bo": true,
+        "type": "text/javascript",
+        "async": false,
+        "defer": true
+      }
+    ],
+    "count": 4,
+    "inline_scripts_count": 8,
+    "external_count": 1
+  },
+  "text_corpus": {
+    "header_text": "",
+    "has_bolivia_service_text": false,
+    "sections": [],
+    "main_text": "",
+    "total_sections": 0
+  }
+}
