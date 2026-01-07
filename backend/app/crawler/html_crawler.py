@@ -1,18 +1,13 @@
-"""
-Crawler completo para extraer datos de sitios .gob.bo según los 31 criterios definidos.
-
-Este módulo implementa GobBoCrawler que extrae información estructurada
-del HTML para evaluar accesibilidad, usabilidad, semántica web y soberanía digital.
-"""
-
 import re
 import logging
+import time
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup, Doctype
 import requests
 from requests.exceptions import RequestException, Timeout, SSLError
+from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +66,97 @@ class GobBoCrawler:
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': self.user_agent})
 
+    def _fetch_page_with_playwright(self, url: str) -> Optional[str]:
+        """
+        Obtiene el HTML de una URL usando Playwright (ejecuta JavaScript).
+
+        Esto permite extraer contenido de sitios web que cargan contenido dinámicamente
+        con JavaScript (SPAs como React, Vue, Angular).
+
+        Args:
+            url: URL del sitio web a cargar
+
+        Returns:
+            str: HTML completamente renderizado, o None si hay error
+        """
+        try:
+            logger.info(f"Usando Playwright para cargar {url}")
+
+            with sync_playwright() as p:
+                # Lanzar navegador Chromium en modo headless
+                browser = p.chromium.launch(
+                    headless=True,
+                    args=[
+                        '--disable-dev-shm-usage',  # Evitar problemas de memoria compartida
+                        '--no-sandbox',              # Necesario en algunos entornos
+                        '--disable-web-security'     # Para sitios con CORS estricto
+                    ]
+                )
+
+                # Crear contexto de navegación con configuración
+                context = browser.new_context(
+                    user_agent=self.user_agent,
+                    viewport={'width': 1920, 'height': 1080},
+                    ignore_https_errors=True  # Manejar certificados SSL inválidos
+                )
+
+                # Crear nueva página
+                page = context.new_page()
+                page.set_default_timeout(self.timeout * 1000)  # Convertir a milisegundos
+
+                # Navegar a la URL y esperar a que la red esté inactiva
+                logger.info(f"Navegando a {url} y esperando carga de JavaScript...")
+                page.goto(url, wait_until='networkidle')
+
+                # Esperar adicional para contenido dinámico
+                time.sleep(3)
+
+                # Scroll para activar lazy loading de imágenes y contenido
+                logger.info("Simulando scroll para activar lazy loading...")
+                page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2);')
+                time.sleep(1)
+                page.evaluate('window.scrollTo(0, document.body.scrollHeight);')
+                time.sleep(1)
+                page.evaluate('window.scrollTo(0, 0);')  # Volver arriba
+                time.sleep(1)
+
+                # Obtener HTML completamente renderizado
+                html = page.content()
+
+                # Cerrar navegador
+                browser.close()
+
+                logger.info(f"HTML obtenido exitosamente ({len(html)} caracteres)")
+                return html
+
+        except PlaywrightTimeout as e:
+            logger.error(f"Timeout de Playwright al cargar {url}: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"Error con Playwright al cargar {url}: {e}")
+            return None
+
+    def _validate_content_loaded(self, soup: BeautifulSoup) -> bool:
+        """
+        Valida que el contenido se haya cargado correctamente.
+
+        Verifica que el HTML tenga elementos básicos que indiquen
+        que el JavaScript se ejecutó y cargó contenido.
+
+        Args:
+            soup: Objeto BeautifulSoup con el HTML parseado
+
+        Returns:
+            bool: True si el contenido parece cargado correctamente
+        """
+        # Verificar que haya al menos algunos elementos básicos
+        has_links = len(soup.find_all('a')) > 0
+        has_images = len(soup.find_all('img')) > 0
+        has_text = len(soup.get_text(strip=True)) > 100
+
+        # Al menos debe tener texto o algunos elementos
+        return has_text or has_links or has_images
+
     def crawl(self, url: str) -> Dict[str, Any]:
         """
         Crawlea un sitio web y extrae toda la información necesaria.
@@ -92,17 +178,24 @@ class GobBoCrawler:
         logger.info(f"Iniciando crawling de {url}")
 
         try:
-            # Realizar petición HTTP
-            response = self.session.get(
-                url,
-                timeout=self.timeout,
-                verify=False,  # Manejar sitios con SSL inválido
-                allow_redirects=True
-            )
-            response.raise_for_status()
+            # Usar Playwright para obtener HTML con JavaScript ejecutado
+            html = self._fetch_page_with_playwright(url)
 
-            # Parsear HTML
-            soup = BeautifulSoup(response.content, 'html.parser')
+            if not html:
+                logger.error(f"No se pudo obtener el HTML de {url}")
+                return {
+                    'error': 'No se pudo cargar el sitio web',
+                    'url': url,
+                    'crawled_at': datetime.utcnow().isoformat()
+                }
+
+            # Parsear HTML con lxml (más rápido que html.parser)
+            soup = BeautifulSoup(html, 'lxml')
+
+            # Validar que el contenido se cargó correctamente
+            if not self._validate_content_loaded(soup):
+                logger.warning(f"El sitio {url} parece no haber cargado contenido dinámico correctamente")
+                # Continuar de todos modos, puede ser un sitio estático
 
             # Verificar robots.txt
             robots_info = self._check_robots_txt(url)
@@ -110,11 +203,11 @@ class GobBoCrawler:
             # Extraer toda la información
             extracted_data = {
                 'url': url,
-                'final_url': response.url,  # En caso de redirecciones
+                'final_url': url,  # Playwright maneja redirecciones internamente
                 'crawled_at': datetime.utcnow().isoformat(),
-                'http_status_code': response.status_code,
+                'http_status_code': 200,  # Asumimos 200 si Playwright cargó correctamente
                 'robots_txt': robots_info,
-                'structure': self._extract_structure(soup, response.text),
+                'structure': self._extract_structure(soup, html),
                 'metadata': self._extract_metadata(soup),
                 'semantic_elements': self._extract_semantic_elements(soup),
                 'headings': self._extract_headings(soup),
@@ -311,6 +404,11 @@ class GobBoCrawler:
                         'value': tag[attr]
                     })
 
+        # FMT-02: Verificar elementos básicos de estructura HTML
+        has_html = soup.find('html') is not None
+        has_head = soup.find('head') is not None
+        has_body = soup.find('body') is not None
+
         return {
             'has_html5_doctype': has_html5_doctype,
             'doctype_text': doctype_text,
@@ -318,7 +416,11 @@ class GobBoCrawler:
             'charset_declared': charset,
             'obsolete_elements': obsolete_elements_found,
             'obsolete_attributes': obsolete_attributes_found[:20],  # Limitar a 20 ejemplos
-            'has_obsolete_code': len(obsolete_elements_found) > 0 or len(obsolete_attributes_found) > 0
+            'has_obsolete_code': len(obsolete_elements_found) > 0 or len(obsolete_attributes_found) > 0,
+            # FMT-02: Estructura básica HTML
+            'has_html': has_html,
+            'has_head': has_head,
+            'has_body': has_body
         }
 
     def _extract_metadata(self, soup: BeautifulSoup) -> Dict[str, Any]:
@@ -667,6 +769,7 @@ class GobBoCrawler:
         inputs_with_label = 0
 
         for form in soup.find_all('form'):
+            # FIX: Buscar inputs tanto dentro como alrededor del form
             inputs = form.find_all(['input', 'select', 'textarea'])
             form_inputs = []
 
@@ -674,29 +777,47 @@ class GobBoCrawler:
                 input_id = input_elem.get('id', '')
                 input_type = input_elem.get('type', 'text')
                 input_name = input_elem.get('name', '')
+                input_placeholder = input_elem.get('placeholder', '')
+
+                # Ignorar inputs hidden y submit/button
+                if input_type in ['hidden', 'submit', 'button', 'reset', 'image']:
+                    continue
 
                 # Buscar label asociado
                 has_label = False
                 label_text = None
 
-                # Buscar por atributo 'for'
+                # Método 1: Buscar por atributo 'for' en todo el documento
                 if input_id:
                     label = soup.find('label', attrs={'for': input_id})
                     if label:
                         has_label = True
-                        label_text = label.get_text().strip()
+                        label_text = label.get_text(strip=True)
 
-                # Buscar si el input está dentro de un label
+                # Método 2: Buscar si el input está dentro de un label
                 if not has_label:
                     parent = input_elem.parent
                     if parent and parent.name == 'label':
                         has_label = True
-                        label_text = parent.get_text().strip()
+                        label_text = parent.get_text(strip=True)
+
+                # Método 3: Buscar label hermano anterior (común en algunos frameworks)
+                if not has_label:
+                    prev_sibling = input_elem.find_previous_sibling('label')
+                    if prev_sibling:
+                        has_label = True
+                        label_text = prev_sibling.get_text(strip=True)
+
+                # Método 4: Si tiene placeholder descriptivo, considerar como label implícito
+                if not has_label and input_placeholder and len(input_placeholder) > 3:
+                    has_label = True
+                    label_text = f"[placeholder: {input_placeholder}]"
 
                 form_inputs.append({
                     'type': input_type,
                     'id': input_id,
                     'name': input_name,
+                    'placeholder': input_placeholder,
                     'has_label': has_label,
                     'label_text': label_text
                 })
@@ -705,11 +826,13 @@ class GobBoCrawler:
                 if has_label:
                     inputs_with_label += 1
 
-            forms_list.append({
-                'action': form.get('action', ''),
-                'method': form.get('method', 'get').upper(),
-                'inputs': form_inputs
-            })
+            # Solo agregar el formulario si tiene inputs válidos
+            if form_inputs:
+                forms_list.append({
+                    'action': form.get('action', ''),
+                    'method': form.get('method', 'get').upper(),
+                    'inputs': form_inputs
+                })
 
         return {
             'forms': forms_list,
@@ -999,6 +1122,12 @@ class GobBoCrawler:
         # Buscar "Bolivia a tu servicio"
         has_bolivia_service = 'bolivia a tu servicio' in header_text.lower()
 
+        # 1.5. TEXTO DEL FOOTER (para PART-01 datos de contacto)
+        footer_text = ""
+        footer = soup.find('footer')
+        if footer:
+            footer_text = footer.get_text(separator=' ', strip=True)
+
         # 2. TÍTULO DE LA PÁGINA
         title_text = ''
         title_tag = soup.find('title')
@@ -1174,6 +1303,7 @@ class GobBoCrawler:
         return {
             # Textos específicos
             'header_text': header_text[:500],
+            'footer_text': footer_text[:1000],  # AGREGADO: Texto del footer para contacto
             'has_bolivia_service_text': has_bolivia_service,
             'title': title_text,
             'meta_description': meta_desc[:300],

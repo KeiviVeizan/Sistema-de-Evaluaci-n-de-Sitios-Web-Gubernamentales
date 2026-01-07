@@ -1,11 +1,22 @@
 """
 Módulo de evaluación de sitios web.
 
-Implementa evaluadores para D.S. 3925, WCAG 2.0 y cálculo de puntajes.
+Implementa evaluadores heurísticos para D.S. 3925, WCAG 2.0 y cálculo de puntajes.
 """
 
-from app.evaluator.ds3925 import DS3925Evaluator
-from app.evaluator.wcag import WCAGEvaluator
-from app.evaluator.scorer import ScoreCalculator
+from .evaluation_engine import EvaluationEngine
+from .base_evaluator import BaseEvaluator, CriteriaEvaluation
+from .accesibilidad_evaluator import EvaluadorAccesibilidad
+from .usabilidad_evaluator import EvaluadorUsabilidad
+from .semantica_evaluator import EvaluadorSemanticaTecnica
+from .soberania_evaluator import EvaluadorSoberania
 
-__all__ = ["DS3925Evaluator", "WCAGEvaluator", "ScoreCalculator"]
+__all__ = [
+    'EvaluationEngine',
+    'BaseEvaluator',
+    'CriteriaEvaluation',
+    'EvaluadorAccesibilidad',
+    'EvaluadorUsabilidad',
+    'EvaluadorSemanticaTecnica',
+    'EvaluadorSoberania'
+]

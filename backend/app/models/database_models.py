@@ -146,21 +146,27 @@ class CriteriaResult(Base):
         nullable=False
     )
 
-    # Tipo de criterio
-    criteria_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
-    criteria_code: Mapped[str] = mapped_column(String(50), nullable=False)
+    # Identificación del criterio
+    criteria_id: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     criteria_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    dimension: Mapped[str] = mapped_column(String(50), nullable=False)
+    lineamiento: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Resultado
-    status: Mapped[CriteriaStatus] = mapped_column(SQLEnum(CriteriaStatus), nullable=False)
-    score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False)  # pass, fail, partial, na
+    score: Mapped[float] = mapped_column(Float, nullable=False)
+    max_score: Mapped[float] = mapped_column(Float, nullable=False)
     details: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    evidence: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+
+    # Timestamp
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relaciones
     evaluation: Mapped["Evaluation"] = relationship(back_populates="criteria_results")
 
     def __repr__(self) -> str:
-        return f"<CriteriaResult(id={self.id}, code={self.criteria_code}, status={self.status})>"
+        return f"<CriteriaResult(id={self.id}, criteria_id={self.criteria_id}, status={self.status})>"
 
 
 class NLPAnalysis(Base):
