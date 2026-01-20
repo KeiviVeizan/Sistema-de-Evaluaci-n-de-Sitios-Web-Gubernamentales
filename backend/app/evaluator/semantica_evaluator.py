@@ -18,7 +18,7 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
         self.criterios = {
             "SEM-01": {"name": "Elementos semánticos HTML5", "points": 12, "lineamiento": "WCAG 1.3.1 / HTML5"},
             "SEM-02": {"name": "Estructura de documento", "points": 10, "lineamiento": "HTML5 / WCAG 1.3.1"},
-            "SEM-03": {"name": "Uso de listas semánticas", "points": 8, "lineamiento": "HTML5"},
+            "SEM-03": {"name": "Estructura semántica HTML5", "points": 15, "lineamiento": "HTML5 / W3C"},
             "SEM-04": {"name": "Tablas con encabezados", "points": 10, "lineamiento": "WCAG 1.3.1"},
             "SEO-01": {"name": "Meta description", "points": 10, "lineamiento": "D.S. 3925 (BUSC-01)"},
             "SEO-02": {"name": "Meta keywords", "points": 8, "lineamiento": "D.S. 3925 (BUSC-02)"},
@@ -42,7 +42,7 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
         # Evaluar cada criterio
         self.add_result(self._evaluar_sem01(semantic_elements))
         self.add_result(self._evaluar_sem02(semantic_elements, structure))
-        self.add_result(self._evaluar_sem03(structure))
+        self.add_result(self._evaluar_sem03(semantic_elements, structure))
         self.add_result(self._evaluar_sem04(structure))
         self.add_result(self._evaluar_seo01(metadata))
         self.add_result(self._evaluar_seo02(metadata))
@@ -52,14 +52,6 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
         self.add_result(self._evaluar_lang02(text_corpus, metadata))
 
         return self.results
-
-    def _get_count(self, data: any, default: int = 0) -> int:
-        """Helper para extraer count de un valor que puede ser int o dict"""
-        if isinstance(data, int):
-            return data
-        elif isinstance(data, dict):
-            return data.get('count', default)
-        return default
 
     def _evaluar_sem01(self, semantic_elements: Dict) -> CriteriaEvaluation:
         """
@@ -73,11 +65,11 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
         optional_count = 0
 
         for elem in required_elements:
-            if self._get_count(semantic_elements.get(elem, 0)) > 0:
+            if self.extract_count(semantic_elements.get(elem, 0)) > 0:
                 required_count += 1
 
         for elem in optional_elements:
-            if self._get_count(semantic_elements.get(elem, 0)) > 0:
+            if self.extract_count(semantic_elements.get(elem, 0)) > 0:
                 optional_count += 1
 
         # Score: 3 puntos por cada elemento requerido, 1.5 por opcionales (hasta 3)
@@ -113,9 +105,9 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
         SEM-02: Estructura de documento
         Debe tener estructura lógica con header, main, footer
         """
-        has_header = self._get_count(semantic_elements.get('header', 0)) > 0
-        has_main = self._get_count(semantic_elements.get('main', 0)) > 0
-        has_footer = self._get_count(semantic_elements.get('footer', 0)) > 0
+        has_header = self.extract_count(semantic_elements.get('header', 0)) > 0
+        has_main = self.extract_count(semantic_elements.get('main', 0)) > 0
+        has_footer = self.extract_count(semantic_elements.get('footer', 0)) > 0
 
         components = sum([has_header, has_main, has_footer])
 
@@ -157,27 +149,135 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             }
         )
 
-    def _evaluar_sem03(self, structure: Dict) -> CriteriaEvaluation:
+    def _evaluar_sem03(self, semantic_elements: Dict, structure: Dict) -> CriteriaEvaluation:
         """
-        SEM-03: Uso de listas semánticas
-        Presencia de <ul>, <ol> para contenido apropiado
-        """
-        ul_count = structure.get('ul_count', 0)
-        ol_count = structure.get('ol_count', 0)
-        total_lists = ul_count + ol_count
+        SEM-03: Elementos semánticos HTML5
+        NO solo verifica presencia, sino CORRECTA ESTRUCTURA
 
-        if total_lists >= 3:
+        Evalúa:
+        1. Presencia de elementos básicos (30%)
+        2. Estructura jerárquica correcta (40%)
+        3. Sin anti-patrones (30%)
+        """
+        score = 0
+        max_score = 15
+        issues = []
+        recommendations = []
+
+        # Obtener análisis de estructura
+        hierarchy = structure.get('document_hierarchy', {})
+        analysis = hierarchy.get('structure_analysis', {})
+
+        # ═══════════════════════════════════════════════════════════
+        # PARTE 1: PRESENCIA DE ELEMENTOS BÁSICOS (30% = 4.5 puntos)
+        # ═══════════════════════════════════════════════════════════
+
+        required_elements = {
+            'header': semantic_elements.get('header', {}).get('present', False),
+            'nav': semantic_elements.get('nav', {}).get('present', False),
+            'main': semantic_elements.get('main', {}).get('present', False),
+            'footer': semantic_elements.get('footer', {}).get('present', False)
+        }
+
+        present_count = sum(required_elements.values())
+        score += (present_count / 4) * 4.5
+
+        for element, present in required_elements.items():
+            if not present:
+                issues.append(f"Falta elemento <{element}>")
+                recommendations.append(f"Agregar <{element}> para estructura semántica completa")
+
+        # ═══════════════════════════════════════════════════════════
+        # PARTE 2: ESTRUCTURA JERÁRQUICA CORRECTA (40% = 6 puntos)
+        # ═══════════════════════════════════════════════════════════
+
+        structure_score = 6.0
+
+        # 2.1: Solo debe haber 1 <main>
+        main_count = analysis.get('main_count', 0)
+        if main_count == 1:
+            # Perfecto
+            pass
+        elif main_count == 0:
+            structure_score -= 2
+            issues.append("No hay elemento <main>")
+            recommendations.append("Agregar <main> único para el contenido principal")
+        else:
+            structure_score -= 1.5
+            issues.append(f"Hay {main_count} elementos <main> (debe ser único)")
+            recommendations.append("Usar solo un <main> por página")
+
+        # 2.2: <main> NO debe estar dentro de <section>
+        if analysis.get('main_inside_section', False):
+            structure_score -= 2
+            issues.append("<main> está incorrectamente dentro de <section>")
+            recommendations.append("Mover <main> fuera de <section>. Estructura correcta: <main> contiene <section>, no al revés")
+
+        # 2.3: <nav> debería estar en <header> o <footer>
+        nav_count = analysis.get('nav_count', 0)
+        navs_floating = analysis.get('navs_floating', 0)
+
+        if nav_count > 0:
+            if navs_floating == nav_count:
+                # Todos los nav están flotantes
+                structure_score -= 1.5
+                issues.append("Todos los <nav> están fuera de <header>/<footer>")
+                recommendations.append("Colocar <nav> dentro de <header> para mejor semántica")
+            elif navs_floating > 0:
+                structure_score -= 0.5
+                issues.append(f"{navs_floating} de {nav_count} <nav> están mal ubicados")
+
+        # 2.4: Solo debería haber 1 <header> principal
+        header_count = analysis.get('header_count', 0)
+        if header_count > 1:
+            structure_score -= 0.5
+            issues.append(f"Hay {header_count} elementos <header> (generalmente debe ser 1 principal)")
+            recommendations.append("Considerar si todos los <header> son necesarios o usar <div> para sub-headers")
+
+        score += max(0, structure_score)
+
+        # ═══════════════════════════════════════════════════════════
+        # PARTE 3: AUSENCIA DE ANTI-PATRONES (30% = 4.5 puntos)
+        # ═══════════════════════════════════════════════════════════
+
+        antipattern_score = 4.5
+
+        # 3.1: Detectar "div-itis" (exceso de divs)
+        has_divitis = analysis.get('has_divitis', False)
+        div_ratio = analysis.get('div_ratio', 0)
+
+        if has_divitis:
+            antipattern_score -= 3
+            issues.append(f"Exceso de <div> genéricos ({int(div_ratio * 100)}% del contenido)")
+            recommendations.append("Reemplazar <div> por elementos semánticos donde sea apropiado (<section>, <article>, <aside>)")
+        elif div_ratio > 0.5:
+            antipattern_score -= 1.5
+            issues.append(f"Alto uso de <div> ({int(div_ratio * 100)}%)")
+            recommendations.append("Considerar usar más elementos semánticos HTML5")
+
+        # 3.2: Verificar uso de <section> y <article>
+        has_section = semantic_elements.get('section', {}).get('present', False)
+        has_article = semantic_elements.get('article', {}).get('present', False)
+
+        if not has_section and not has_article:
+            antipattern_score -= 1.5
+            issues.append("No usa <section> ni <article> para organizar contenido")
+            recommendations.append("Usar <section> para agrupar contenido temático y <article> para contenido independiente")
+
+        score += max(0, antipattern_score)
+
+        # ═══════════════════════════════════════════════════════════
+        # DETERMINAR STATUS
+        # ═══════════════════════════════════════════════════════════
+
+        percentage = (score / max_score) * 100
+
+        if percentage >= 90:
             status = "pass"
-            score = 8
-            message = f"{total_lists} listas encontradas"
-        elif total_lists >= 1:
+        elif percentage >= 70:
             status = "partial"
-            score = 4
-            message = f"Solo {total_lists} lista(s) encontrada(s)"
         else:
             status = "fail"
-            score = 0
-            message = "No se encontraron listas semánticas"
 
         return CriteriaEvaluation(
             criteria_id="SEM-03",
@@ -185,15 +285,20 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             dimension=self.dimension,
             lineamiento=self.criterios["SEM-03"]["lineamiento"],
             status=status,
-            score=score,
-            max_score=8,
+            score=round(score, 2),
+            max_score=max_score,
             details={
-                "ul_count": ul_count,
-                "ol_count": ol_count,
-                "total_lists": total_lists,
-                "message": message
+                "percentage": round(percentage, 2),
+                "elements_present": present_count,
+                "structure_correct": structure_score > 4,
+                "no_antipatterns": antipattern_score > 3,
+                "issues": issues,
+                "recommendations": recommendations,
+                "structure_analysis": analysis
             },
-            evidence={}
+            evidence={
+                "hierarchy": hierarchy.get('hierarchy', [])[:5]  # Primeras 5 capas
+            }
         )
 
     def _evaluar_sem04(self, structure: Dict) -> CriteriaEvaluation:

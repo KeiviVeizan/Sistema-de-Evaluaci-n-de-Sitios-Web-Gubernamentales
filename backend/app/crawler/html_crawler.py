@@ -1,6 +1,5 @@
 import re
 import logging
-import time
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from urllib.parse import urlparse, urljoin
@@ -8,6 +7,7 @@ from bs4 import BeautifulSoup, Doctype
 import requests
 from requests.exceptions import RequestException, Timeout, SSLError
 from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeout
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 logger = logging.getLogger(__name__)
 
@@ -61,17 +61,27 @@ class GobBoCrawler:
             timeout: Timeout en segundos para las peticiones HTTP
             user_agent: User-Agent personalizado para las peticiones
         """
+        from app import __version__
         self.timeout = timeout
-        self.user_agent = user_agent or "GOB.BO-Evaluator/1.0 (ADSIB)"
+        self.user_agent = user_agent or f"GOB.BO-Evaluator/{__version__} (ADSIB)"
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': self.user_agent})
 
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(multiplier=1, min=2, max=10),
+        retry=retry_if_exception_type((PlaywrightTimeout, ConnectionError)),
+        reraise=True
+    )
     def _fetch_page_with_playwright(self, url: str) -> Optional[str]:
         """
         Obtiene el HTML de una URL usando Playwright (ejecuta JavaScript).
 
         Esto permite extraer contenido de sitios web que cargan contenido dinámicamente
         con JavaScript (SPAs como React, Vue, Angular).
+
+        Implementa reintentos automáticos (hasta 3 intentos) con backoff exponencial
+        en caso de timeout o errores de conexión.
 
         Args:
             url: URL del sitio web a cargar
@@ -108,17 +118,19 @@ class GobBoCrawler:
                 logger.info(f"Navegando a {url} y esperando carga de JavaScript...")
                 page.goto(url, wait_until='networkidle')
 
-                # Esperar adicional para contenido dinámico
-                time.sleep(3)
+                # Esperar a que el DOM esté completamente cargado
+                page.wait_for_load_state('domcontentloaded')
 
                 # Scroll para activar lazy loading de imágenes y contenido
                 logger.info("Simulando scroll para activar lazy loading...")
-                page.evaluate('window.scrollTo(0, document.body.scrollHeight / 2);')
-                time.sleep(1)
-                page.evaluate('window.scrollTo(0, document.body.scrollHeight);')
-                time.sleep(1)
-                page.evaluate('window.scrollTo(0, 0);')  # Volver arriba
-                time.sleep(1)
+                page.evaluate('''
+                    window.scrollTo(0, document.body.scrollHeight / 2);
+                    setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 300);
+                    setTimeout(() => window.scrollTo(0, 0), 600);
+                ''')
+
+                # Una sola espera corta para lazy loading
+                page.wait_for_timeout(1000)
 
                 # Obtener HTML completamente renderizado
                 html = page.content()
@@ -168,9 +180,20 @@ class GobBoCrawler:
             dict: Diccionario con toda la información extraída
 
         Raises:
-            ValueError: Si la URL no es un dominio .gob.bo válido
+            ValueError: Si la URL es inválida o no es un dominio .gob.bo
             RequestException: Si ocurre un error en la petición HTTP
         """
+        # Validar que URL no sea None o vacía
+        if not url or not isinstance(url, str):
+            raise ValueError("URL debe ser un string no vacío")
+
+        # Limpiar URL
+        url = url.strip()
+
+        # Validar que comience con http:// o https://
+        if not url.startswith(('http://', 'https://')):
+            raise ValueError(f"URL inválida: debe comenzar con http:// o https://. URL recibida: {url}")
+
         # Validar que sea dominio .gob.bo
         if not self._is_gob_bo_domain(url):
             raise ValueError(f"La URL {url} no es un dominio .gob.bo válido")
@@ -201,13 +224,19 @@ class GobBoCrawler:
             robots_info = self._check_robots_txt(url)
 
             # Extraer toda la información
+            structure_data = self._extract_structure(soup, html)
+            document_hierarchy = self._extract_document_hierarchy(soup)
+
+            # Combinar structure data con document_hierarchy
+            structure_data['document_hierarchy'] = document_hierarchy
+
             extracted_data = {
                 'url': url,
                 'final_url': url,  # Playwright maneja redirecciones internamente
                 'crawled_at': datetime.utcnow().isoformat(),
                 'http_status_code': 200,  # Asumimos 200 si Playwright cargó correctamente
                 'robots_txt': robots_info,
-                'structure': self._extract_structure(soup, html),
+                'structure': structure_data,
                 'metadata': self._extract_metadata(soup),
                 'semantic_elements': self._extract_semantic_elements(soup),
                 'headings': self._extract_headings(soup),
@@ -339,7 +368,7 @@ class GobBoCrawler:
 
         return result
 
-    def _extract_structure(self, soup: BeautifulSoup, raw_html: str) -> Dict[str, Any]:
+    def _extract_structure(self, soup: BeautifulSoup, _raw_html: str) -> Dict[str, Any]:
         """
         Extrae la estructura del documento HTML.
 
@@ -1095,6 +1124,96 @@ class GobBoCrawler:
             'count': len(scripts),
             'inline_scripts_count': inline_scripts_count,
             'external_count': sum(1 for s in scripts if s['is_external'])
+        }
+
+    def _extract_document_hierarchy(self, soup: BeautifulSoup) -> Dict:
+        """
+        Extrae la jerarquía completa de elementos semánticos
+        Para validar estructura correcta según HTML5
+        """
+        body = soup.find('body')
+        if not body:
+            return {}
+
+        def get_element_hierarchy(element, depth=0):
+            """Recursivamente extrae jerarquía de tags semánticos"""
+            semantic_tags = ['header', 'nav', 'main', 'footer', 'section', 'article', 'aside']
+            hierarchy = []
+
+            for child in element.children:
+                if hasattr(child, 'name') and child.name in semantic_tags:
+                    hierarchy.append({
+                        'tag': child.name,
+                        'depth': depth,
+                        'id': child.get('id'),
+                        'class': child.get('class'),
+                        'parent': element.name,
+                        'children': get_element_hierarchy(child, depth + 1)
+                    })
+
+            return hierarchy
+
+        # Obtener jerarquía completa
+        hierarchy = get_element_hierarchy(body)
+
+        # Análisis de la estructura
+        header_elements = soup.find_all('header')
+        main_elements = soup.find_all('main')
+        footer_elements = soup.find_all('footer')
+        nav_elements = soup.find_all('nav')
+
+        # Verificar ubicación de nav
+        navs_in_header = 0
+        navs_in_footer = 0
+        navs_floating = 0
+
+        for nav in nav_elements:
+            parent = nav.parent
+            parent_chain = []
+            while parent and parent.name != 'body':
+                parent_chain.append(parent.name)
+                parent = parent.parent
+
+            if 'header' in parent_chain:
+                navs_in_header += 1
+            elif 'footer' in parent_chain:
+                navs_in_footer += 1
+            else:
+                navs_floating += 1
+
+        # Verificar si main está mal anidado
+        main_inside_section = False
+        if main_elements:
+            main = main_elements[0]
+            parent = main.parent
+            while parent and parent.name != 'body':
+                if parent.name == 'section':
+                    main_inside_section = True
+                    break
+                parent = parent.parent
+
+        # Contar divs vs elementos semánticos
+        total_divs = len(soup.find_all('div'))
+        total_semantic = len(soup.find_all(['header', 'nav', 'main', 'footer', 'section', 'article', 'aside']))
+
+        div_ratio = total_divs / (total_divs + total_semantic) if (total_divs + total_semantic) > 0 else 0
+
+        return {
+            'hierarchy': hierarchy,
+            'structure_analysis': {
+                'header_count': len(header_elements),
+                'main_count': len(main_elements),
+                'footer_count': len(footer_elements),
+                'nav_count': len(nav_elements),
+                'navs_in_header': navs_in_header,
+                'navs_in_footer': navs_in_footer,
+                'navs_floating': navs_floating,
+                'main_inside_section': main_inside_section,
+                'total_divs': total_divs,
+                'total_semantic': total_semantic,
+                'div_ratio': round(div_ratio, 2),
+                'has_divitis': div_ratio > 0.7  # Más de 70% divs es problema
+            }
         }
 
     def _extract_text_corpus(self, soup: BeautifulSoup) -> Dict[str, Any]:

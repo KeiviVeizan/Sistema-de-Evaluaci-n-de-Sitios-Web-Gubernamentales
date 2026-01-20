@@ -170,9 +170,7 @@ class EvaluadorUsabilidad(BaseEvaluator):
         NAV-01: Menú de navegación
         Debe existir elemento <nav> con enlaces
         """
-        nav_data = semantic_elements.get('nav', 0)
-        # FIX: nav_data es un dict con 'count', no un int
-        nav_count = nav_data.get('count', 0) if isinstance(nav_data, dict) else (nav_data if isinstance(nav_data, int) else 0)
+        nav_count = self.extract_count(semantic_elements.get('nav', 0))
         total_links = links.get('total_count', 0)
 
         if nav_count > 0 and total_links >= 3:

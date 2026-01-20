@@ -26,8 +26,8 @@ class Settings(BaseSettings):
 
     # Database Configuration
     database_url: str = Field(
-        default="postgresql://gob_admin:gob_dev_2024@localhost:5432/gob_evaluator",
-        description="URL de conexión a PostgreSQL"
+        default="postgresql://localhost:5432/gob_evaluator",
+        description="URL de conexión a PostgreSQL (configurar con usuario/contraseña en .env)"
     )
     db_pool_size: int = Field(default=10, description="Tamaño del pool de conexiones")
     db_max_overflow: int = Field(default=20, description="Máximo de conexiones adicionales")
