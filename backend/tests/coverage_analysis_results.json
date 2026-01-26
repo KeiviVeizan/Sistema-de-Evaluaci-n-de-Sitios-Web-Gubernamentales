@@ -1,0 +1,540 @@
+{
+  "results": [
+    {
+      "url": "https://www.aduana.gob.bo",
+      "architecture": "MPA",
+      "total_coverage_percent": 65.42,
+      "coverage_by_category": {
+        "links": 100,
+        "images": 100,
+        "forms": 100.0,
+        "sections": 27.78,
+        "buttons": 0.0,
+        "text_words": 49.54,
+        "labels": 0.0
+      },
+      "ground_truth": {
+        "links": 127,
+        "images": 45,
+        "forms": 2,
+        "sections": 18,
+        "buttons": 8,
+        "text_words": 3450,
+        "labels": 4
+      },
+      "extracted": {
+        "links": 281,
+        "images": 89,
+        "forms": 2,
+        "sections": 5,
+        "buttons": 0,
+        "labels": 0,
+        "text_words": 1709
+      },
+      "comparison": {
+        "links": {
+          "expected": 127,
+          "extracted": 281,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "images": {
+          "expected": 45,
+          "extracted": 89,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "forms": {
+          "expected": 2,
+          "extracted": 2,
+          "missing": 0,
+          "coverage_percent": 100.0
+        },
+        "sections": {
+          "expected": 18,
+          "extracted": 5,
+          "missing": 13,
+          "coverage_percent": 27.78
+        },
+        "buttons": {
+          "expected": 8,
+          "extracted": 0,
+          "missing": 8,
+          "coverage_percent": 0.0
+        },
+        "text_words": {
+          "expected": 3450,
+          "extracted": 1709,
+          "missing": 1741,
+          "coverage_percent": 49.54
+        },
+        "labels": {
+          "expected": 4,
+          "extracted": 0,
+          "missing": 4,
+          "coverage_percent": 0.0
+        }
+      },
+      "googlebot_comparison": {
+        "benchmark": 97.0,
+        "your_crawler": 65.42,
+        "difference": -31.58,
+        "better_than_googlebot": false
+      },
+      "inspection_date": "2025-01-25",
+      "notes": "Conteo manual de todos los elementos visibles en viewport completo tras scroll"
+    },
+    {
+      "url": "https://www.impuestos.gob.bo",
+      "architecture": "MPA",
+      "total_coverage_percent": 61.52,
+      "coverage_by_category": {
+        "links": 100,
+        "images": 100,
+        "forms": 66.67,
+        "sections": 41.67,
+        "buttons": 0.0,
+        "text_words": 38.41,
+        "labels": 0.0
+      },
+      "ground_truth": {
+        "links": 89,
+        "images": 23,
+        "forms": 3,
+        "sections": 12,
+        "buttons": 5,
+        "text_words": 2890,
+        "labels": 7
+      },
+      "extracted": {
+        "links": 197,
+        "images": 45,
+        "forms": 2,
+        "sections": 5,
+        "buttons": 0,
+        "labels": 0,
+        "text_words": 1110
+      },
+      "comparison": {
+        "links": {
+          "expected": 89,
+          "extracted": 197,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "images": {
+          "expected": 23,
+          "extracted": 45,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "forms": {
+          "expected": 3,
+          "extracted": 2,
+          "missing": 1,
+          "coverage_percent": 66.67
+        },
+        "sections": {
+          "expected": 12,
+          "extracted": 5,
+          "missing": 7,
+          "coverage_percent": 41.67
+        },
+        "buttons": {
+          "expected": 5,
+          "extracted": 0,
+          "missing": 5,
+          "coverage_percent": 0.0
+        },
+        "text_words": {
+          "expected": 2890,
+          "extracted": 1110,
+          "missing": 1780,
+          "coverage_percent": 38.41
+        },
+        "labels": {
+          "expected": 7,
+          "extracted": 0,
+          "missing": 7,
+          "coverage_percent": 0.0
+        }
+      },
+      "googlebot_comparison": {
+        "benchmark": 97.0,
+        "your_crawler": 61.52,
+        "difference": -35.48,
+        "better_than_googlebot": false
+      },
+      "inspection_date": "2025-01-25",
+      "notes": "Incluye elementos en footer y header"
+    },
+    {
+      "url": "https://www.minedu.gob.bo",
+      "architecture": "MPA",
+      "total_coverage_percent": 62.53,
+      "coverage_by_category": {
+        "links": 100,
+        "images": 74.63,
+        "forms": 100.0,
+        "sections": 13.64,
+        "buttons": 0.0,
+        "text_words": 57.79,
+        "labels": 0.0
+      },
+      "ground_truth": {
+        "links": 156,
+        "images": 67,
+        "forms": 1,
+        "sections": 22,
+        "buttons": 3,
+        "text_words": 4120,
+        "labels": 2
+      },
+      "extracted": {
+        "links": 212,
+        "images": 50,
+        "forms": 1,
+        "sections": 3,
+        "buttons": 0,
+        "labels": 0,
+        "text_words": 2381
+      },
+      "comparison": {
+        "links": {
+          "expected": 156,
+          "extracted": 212,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "images": {
+          "expected": 67,
+          "extracted": 50,
+          "missing": 17,
+          "coverage_percent": 74.63
+        },
+        "forms": {
+          "expected": 1,
+          "extracted": 1,
+          "missing": 0,
+          "coverage_percent": 100.0
+        },
+        "sections": {
+          "expected": 22,
+          "extracted": 3,
+          "missing": 19,
+          "coverage_percent": 13.64
+        },
+        "buttons": {
+          "expected": 3,
+          "extracted": 0,
+          "missing": 3,
+          "coverage_percent": 0.0
+        },
+        "text_words": {
+          "expected": 4120,
+          "extracted": 2381,
+          "missing": 1739,
+          "coverage_percent": 57.79
+        },
+        "labels": {
+          "expected": 2,
+          "extracted": 0,
+          "missing": 2,
+          "coverage_percent": 0.0
+        }
+      },
+      "googlebot_comparison": {
+        "benchmark": 97.0,
+        "your_crawler": 62.53,
+        "difference": -34.47,
+        "better_than_googlebot": false
+      },
+      "inspection_date": "2025-01-25",
+      "notes": "Sitio con muchas imagenes y noticias"
+    },
+    {
+      "url": "https://www.ruat.gob.bo",
+      "architecture": "MPA",
+      "total_coverage_percent": 56.68,
+      "coverage_by_category": {
+        "links": 100,
+        "images": 100,
+        "forms": 25.0,
+        "sections": 0.0,
+        "buttons": 100,
+        "text_words": 48.92,
+        "labels": 75.0
+      },
+      "ground_truth": {
+        "links": 45,
+        "images": 12,
+        "forms": 4,
+        "sections": 8,
+        "buttons": 6,
+        "text_words": 1850,
+        "labels": 12
+      },
+      "extracted": {
+        "links": 88,
+        "images": 26,
+        "forms": 1,
+        "sections": 0,
+        "buttons": 19,
+        "labels": 9,
+        "text_words": 905
+      },
+      "comparison": {
+        "links": {
+          "expected": 45,
+          "extracted": 88,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "images": {
+          "expected": 12,
+          "extracted": 26,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "forms": {
+          "expected": 4,
+          "extracted": 1,
+          "missing": 3,
+          "coverage_percent": 25.0
+        },
+        "sections": {
+          "expected": 8,
+          "extracted": 0,
+          "missing": 8,
+          "coverage_percent": 0.0
+        },
+        "buttons": {
+          "expected": 6,
+          "extracted": 19,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "text_words": {
+          "expected": 1850,
+          "extracted": 905,
+          "missing": 945,
+          "coverage_percent": 48.92
+        },
+        "labels": {
+          "expected": 12,
+          "extracted": 9,
+          "missing": 3,
+          "coverage_percent": 75.0
+        }
+      },
+      "googlebot_comparison": {
+        "benchmark": 97.0,
+        "your_crawler": 56.68,
+        "difference": -40.32,
+        "better_than_googlebot": false
+      },
+      "inspection_date": "2025-01-25",
+      "notes": "Sitio con formularios de consulta"
+    },
+    {
+      "url": "https://www.oopp.gob.bo",
+      "architecture": "MPA",
+      "total_coverage_percent": 59.2,
+      "coverage_by_category": {
+        "links": 100,
+        "images": 94.12,
+        "forms": 100,
+        "sections": 13.33,
+        "buttons": 0.0,
+        "text_words": 40.42,
+        "labels": 0.0
+      },
+      "ground_truth": {
+        "links": 78,
+        "images": 34,
+        "forms": 1,
+        "sections": 15,
+        "buttons": 4,
+        "text_words": 2650,
+        "labels": 3
+      },
+      "extracted": {
+        "links": 139,
+        "images": 32,
+        "forms": 2,
+        "sections": 2,
+        "buttons": 0,
+        "labels": 0,
+        "text_words": 1071
+      },
+      "comparison": {
+        "links": {
+          "expected": 78,
+          "extracted": 139,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "images": {
+          "expected": 34,
+          "extracted": 32,
+          "missing": 2,
+          "coverage_percent": 94.12
+        },
+        "forms": {
+          "expected": 1,
+          "extracted": 2,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "sections": {
+          "expected": 15,
+          "extracted": 2,
+          "missing": 13,
+          "coverage_percent": 13.33
+        },
+        "buttons": {
+          "expected": 4,
+          "extracted": 0,
+          "missing": 4,
+          "coverage_percent": 0.0
+        },
+        "text_words": {
+          "expected": 2650,
+          "extracted": 1071,
+          "missing": 1579,
+          "coverage_percent": 40.42
+        },
+        "labels": {
+          "expected": 3,
+          "extracted": 0,
+          "missing": 3,
+          "coverage_percent": 0.0
+        }
+      },
+      "googlebot_comparison": {
+        "benchmark": 97.0,
+        "your_crawler": 59.2,
+        "difference": -37.8,
+        "better_than_googlebot": false
+      },
+      "inspection_date": "2025-01-25",
+      "notes": "Ministerio de Obras Publicas"
+    },
+    {
+      "url": "https://www.mintrabajo.gob.bo",
+      "architecture": "MPA",
+      "total_coverage_percent": 69.5,
+      "coverage_by_category": {
+        "links": 100,
+        "images": 100,
+        "forms": 100.0,
+        "sections": 57.14,
+        "buttons": 0.0,
+        "text_words": 43.58,
+        "labels": 0.0
+      },
+      "ground_truth": {
+        "links": 92,
+        "images": 28,
+        "forms": 2,
+        "sections": 14,
+        "buttons": 5,
+        "text_words": 3100,
+        "labels": 5
+      },
+      "extracted": {
+        "links": 185,
+        "images": 84,
+        "forms": 2,
+        "sections": 8,
+        "buttons": 0,
+        "labels": 0,
+        "text_words": 1351
+      },
+      "comparison": {
+        "links": {
+          "expected": 92,
+          "extracted": 185,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "images": {
+          "expected": 28,
+          "extracted": 84,
+          "missing": 0,
+          "coverage_percent": 100
+        },
+        "forms": {
+          "expected": 2,
+          "extracted": 2,
+          "missing": 0,
+          "coverage_percent": 100.0
+        },
+        "sections": {
+          "expected": 14,
+          "extracted": 8,
+          "missing": 6,
+          "coverage_percent": 57.14
+        },
+        "buttons": {
+          "expected": 5,
+          "extracted": 0,
+          "missing": 5,
+          "coverage_percent": 0.0
+        },
+        "text_words": {
+          "expected": 3100,
+          "extracted": 1351,
+          "missing": 1749,
+          "coverage_percent": 43.58
+        },
+        "labels": {
+          "expected": 5,
+          "extracted": 0,
+          "missing": 5,
+          "coverage_percent": 0.0
+        }
+      },
+      "googlebot_comparison": {
+        "benchmark": 97.0,
+        "your_crawler": 69.5,
+        "difference": -27.5,
+        "better_than_googlebot": false
+      },
+      "inspection_date": "2025-01-25",
+      "notes": "Ministerio de Trabajo"
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "total_sites": 6,
+    "successful": 6,
+    "failed": 0,
+    "mpas": {
+      "count": 6,
+      "average_coverage": 62.48,
+      "min_coverage": 56.68,
+      "max_coverage": 69.5
+    },
+    "spas": {
+      "count": 0,
+      "average_coverage": null,
+      "min_coverage": null,
+      "max_coverage": null
+    },
+    "all_sites": {
+      "count": 6,
+      "average_coverage": 62.48,
+      "min_coverage": 56.68,
+      "max_coverage": 69.5
+    }
+  },
+  "googlebot_comparison": {
+    "mpas": {
+      "your_crawler": 62.48,
+      "googlebot": 97.0,
+      "difference": -34.52,
+      "better": false
+    }
+  }
+}

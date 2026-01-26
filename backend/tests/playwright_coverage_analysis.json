@@ -1,0 +1,286 @@
+{
+  "methodology": "Comparison: Playwright vs Static HTML",
+  "results": [
+    {
+      "url": "https://www.aduana.gob.bo",
+      "architecture_type": "MPA",
+      "without_js": {
+        "links": 162,
+        "images": 50,
+        "headings": 46,
+        "forms": 2,
+        "text_words": 946,
+        "buttons": 16
+      },
+      "with_playwright": {
+        "links": 281,
+        "images": 89,
+        "headings": 46,
+        "forms": 2,
+        "text_words": 1709,
+        "buttons": 0
+      },
+      "coverage_by_category": {
+        "links": 57.65,
+        "images": 56.18,
+        "headings": 100.0,
+        "forms": 100.0,
+        "text_words": 55.35,
+        "buttons": 0.0
+      },
+      "static_coverage_percent": 69.44,
+      "playwright_improvement_percent": 30.56,
+      "playwright_benefit": {
+        "additional_links": 119,
+        "additional_images": 39,
+        "additional_headings": 0,
+        "additional_forms": 0,
+        "additional_text_words": 763,
+        "additional_buttons": 0
+      },
+      "total_additional_elements": 882,
+      "interpretation": "MPA con mucho contenido dinamico. Playwright es importante, mejora 30.6%."
+    },
+    {
+      "url": "https://www.impuestos.gob.bo",
+      "architecture_type": "MPA",
+      "without_js": {
+        "links": 161,
+        "images": 33,
+        "headings": 23,
+        "forms": 2,
+        "text_words": 810,
+        "buttons": 9
+      },
+      "with_playwright": {
+        "links": 197,
+        "images": 45,
+        "headings": 23,
+        "forms": 2,
+        "text_words": 1110,
+        "buttons": 0
+      },
+      "coverage_by_category": {
+        "links": 81.73,
+        "images": 73.33,
+        "headings": 100.0,
+        "forms": 100.0,
+        "text_words": 72.97,
+        "buttons": 0.0
+      },
+      "static_coverage_percent": 83.32,
+      "playwright_improvement_percent": 16.68,
+      "playwright_benefit": {
+        "additional_links": 36,
+        "additional_images": 12,
+        "additional_headings": 0,
+        "additional_forms": 0,
+        "additional_text_words": 300,
+        "additional_buttons": 0
+      },
+      "total_additional_elements": 336,
+      "interpretation": "MPA con contenido dinamico. HTML estatico tiene 83.3% del contenido. Playwright mejora la extraccion en 16.7%."
+    },
+    {
+      "url": "https://www.minedu.gob.bo",
+      "architecture_type": "MPA",
+      "without_js": {
+        "links": 210,
+        "images": 50,
+        "headings": 7,
+        "forms": 1,
+        "text_words": 2400,
+        "buttons": 1
+      },
+      "with_playwright": {
+        "links": 212,
+        "images": 50,
+        "headings": 7,
+        "forms": 1,
+        "text_words": 2381,
+        "buttons": 0
+      },
+      "coverage_by_category": {
+        "links": 99.06,
+        "images": 100.0,
+        "headings": 100.0,
+        "forms": 100.0,
+        "text_words": 100.0,
+        "buttons": 0.0
+      },
+      "static_coverage_percent": 99.77,
+      "playwright_improvement_percent": 0.23,
+      "playwright_benefit": {
+        "additional_links": 2,
+        "additional_images": 0,
+        "additional_headings": 0,
+        "additional_forms": 0,
+        "additional_text_words": 0,
+        "additional_buttons": 0
+      },
+      "total_additional_elements": 2,
+      "interpretation": "MPA tradicional. HTML estatico contiene 99.8% del contenido. Playwright aporta poco beneficio adicional (0.2%)."
+    },
+    {
+      "url": "https://www.ruat.gob.bo",
+      "architecture_type": "SPA",
+      "without_js": {
+        "links": 0,
+        "images": 0,
+        "headings": 0,
+        "forms": 0,
+        "text_words": 0,
+        "buttons": 0
+      },
+      "with_playwright": {
+        "links": 88,
+        "images": 26,
+        "headings": 0,
+        "forms": 1,
+        "text_words": 905,
+        "buttons": 19
+      },
+      "coverage_by_category": {
+        "links": 0.0,
+        "images": 0.0,
+        "headings": 100.0,
+        "forms": 0.0,
+        "text_words": 0.0,
+        "buttons": 0.0
+      },
+      "static_coverage_percent": 20.0,
+      "playwright_improvement_percent": 80.0,
+      "playwright_benefit": {
+        "additional_links": 88,
+        "additional_images": 26,
+        "additional_headings": 0,
+        "additional_forms": 1,
+        "additional_text_words": 905,
+        "additional_buttons": 19
+      },
+      "total_additional_elements": 993,
+      "interpretation": "SPA pura. Solo 20.0% en HTML estatico. Playwright es ESENCIAL, aporta 80.0% del contenido."
+    },
+    {
+      "url": "https://www.oopp.gob.bo",
+      "architecture_type": "MPA",
+      "without_js": {
+        "links": 115,
+        "images": 32,
+        "headings": 22,
+        "forms": 2,
+        "text_words": 739,
+        "buttons": 10
+      },
+      "with_playwright": {
+        "links": 139,
+        "images": 32,
+        "headings": 22,
+        "forms": 2,
+        "text_words": 1071,
+        "buttons": 0
+      },
+      "coverage_by_category": {
+        "links": 82.73,
+        "images": 100.0,
+        "headings": 100.0,
+        "forms": 100.0,
+        "text_words": 69.0,
+        "buttons": 0.0
+      },
+      "static_coverage_percent": 86.38,
+      "playwright_improvement_percent": 13.62,
+      "playwright_benefit": {
+        "additional_links": 24,
+        "additional_images": 0,
+        "additional_headings": 0,
+        "additional_forms": 0,
+        "additional_text_words": 332,
+        "additional_buttons": 0
+      },
+      "total_additional_elements": 356,
+      "interpretation": "MPA con contenido dinamico. HTML estatico tiene 86.4% del contenido. Playwright mejora la extraccion en 13.6%."
+    },
+    {
+      "url": "https://www.mintrabajo.gob.bo",
+      "architecture_type": "MPA",
+      "without_js": {
+        "links": 111,
+        "images": 36,
+        "headings": 26,
+        "forms": 2,
+        "text_words": 786,
+        "buttons": 16
+      },
+      "with_playwright": {
+        "links": 185,
+        "images": 84,
+        "headings": 26,
+        "forms": 2,
+        "text_words": 1351,
+        "buttons": 0
+      },
+      "coverage_by_category": {
+        "links": 60.0,
+        "images": 42.86,
+        "headings": 100.0,
+        "forms": 100.0,
+        "text_words": 58.18,
+        "buttons": 0.0
+      },
+      "static_coverage_percent": 68.88,
+      "playwright_improvement_percent": 31.12,
+      "playwright_benefit": {
+        "additional_links": 74,
+        "additional_images": 48,
+        "additional_headings": 0,
+        "additional_forms": 0,
+        "additional_text_words": 565,
+        "additional_buttons": 0
+      },
+      "total_additional_elements": 639,
+      "interpretation": "MPA con mucho contenido dinamico. Playwright es importante, mejora 31.1%."
+    }
+  ],
+  "errors": [],
+  "summary": {
+    "total_sites": 6,
+    "successful": 6,
+    "failed": 0,
+    "mpas": {
+      "count": 5,
+      "avg_static_coverage": 81.56,
+      "avg_playwright_improvement": 18.44,
+      "min_static_coverage": 68.88,
+      "max_static_coverage": 99.77
+    },
+    "spas": {
+      "count": 1,
+      "avg_static_coverage": 20.0,
+      "avg_playwright_improvement": 80.0,
+      "min_static_coverage": 20.0,
+      "max_static_coverage": 20.0
+    },
+    "all_sites": {
+      "count": 6,
+      "avg_static_coverage": 71.3,
+      "avg_playwright_improvement": 28.7,
+      "min_static_coverage": 20.0,
+      "max_static_coverage": 99.77
+    }
+  },
+  "googlebot_comparison": {
+    "mpas": {
+      "static_only": 81.56,
+      "with_playwright": 100,
+      "googlebot_benchmark": 97.0,
+      "vs_googlebot": 3.0
+    },
+    "spas": {
+      "static_only": 20.0,
+      "with_playwright": 100,
+      "googlebot_benchmark": 85.0,
+      "vs_googlebot": 15.0
+    }
+  }
+}

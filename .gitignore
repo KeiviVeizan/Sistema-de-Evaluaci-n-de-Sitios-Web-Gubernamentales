@@ -71,3 +71,5 @@ reports/
 *.tmp
 *.bak
 *.swp
+nul
+backend/nul

@@ -247,6 +247,8 @@ class GobBoCrawler:
                 'external_resources': self._extract_external_resources(soup, url),
                 'stylesheets': self._extract_stylesheets(soup, url),
                 'scripts': self._extract_scripts(soup, url),
+                'language_parts': self._extract_language_parts(soup),  # ACC-10
+                'breadcrumbs': self._extract_breadcrumbs(soup),  # NAV-02
                 'text_corpus': self._extract_text_corpus(soup)
             }
 
@@ -1126,6 +1128,205 @@ class GobBoCrawler:
             'external_count': sum(1 for s in scripts if s['is_external'])
         }
 
+    def _extract_language_parts(self, soup: BeautifulSoup) -> Dict[str, Any]:
+        """
+        ACC-10: Detecta elementos con idioma diferente al de la página.
+
+        Evalúa criterio:
+        - ACC-10: Idioma de partes (WCAG 3.1.2 - Level AA)
+
+        Ejemplo: <p lang="en">Welcome</p> en página en español
+
+        Args:
+            soup: Objeto BeautifulSoup con el HTML parseado
+
+        Returns:
+            dict: Información sobre idiomas encontrados en la página
+        """
+        # Idioma principal de la página
+        html_tag = soup.find('html')
+        main_lang = html_tag.get('lang', '').lower() if html_tag else ''
+
+        # Si no hay idioma principal, asumir español para sitios .gob.bo
+        if not main_lang:
+            main_lang = 'es'
+
+        # Buscar todos los elementos con atributo lang
+        lang_elements = soup.find_all(attrs={'lang': True})
+
+        # Filtrar elementos con idioma DIFERENTE al principal
+        different_lang_elements = []
+        for elem in lang_elements:
+            elem_lang = elem.get('lang', '').lower().strip()
+
+            # Ignorar <html> (ya contado como principal)
+            if elem.name == 'html':
+                continue
+
+            # Ignorar si está vacío
+            if not elem_lang:
+                continue
+
+            # Ignorar si es el mismo idioma (comparar primeros 2 caracteres: es, en, pt)
+            if elem_lang[:2] == main_lang[:2]:
+                continue
+
+            # Obtener texto preview
+            text_preview = elem.get_text(strip=True)[:100]
+
+            different_lang_elements.append({
+                'tag': elem.name,
+                'lang': elem_lang,
+                'text_preview': text_preview,
+                'text_length': len(text_preview)
+            })
+
+        # Obtener lista única de idiomas encontrados
+        languages_found = list(set(
+            elem['lang'][:2] for elem in different_lang_elements
+        ))
+
+        return {
+            'main_language': main_lang,
+            'has_main_language': bool(main_lang) and len(main_lang) >= 2,
+            'elements_with_different_lang': different_lang_elements[:20],  # Limitar a 20
+            'count_different_lang': len(different_lang_elements),
+            'has_multilingual_content': len(different_lang_elements) > 0,
+            'languages_found': languages_found,
+            'acc_10_compliant': bool(main_lang) and len(main_lang) >= 2
+        }
+
+    def _extract_breadcrumbs(self, soup: BeautifulSoup) -> Dict[str, Any]:
+        """
+        NAV-02: Detecta breadcrumbs (migas de pan).
+
+        Evalúa criterio:
+        - NAV-02: Presencia de breadcrumbs para navegación
+
+        Patrones detectados:
+        1. <nav aria-label="breadcrumb">
+        2. <ol class="breadcrumb">
+        3. Schema.org BreadcrumbList
+        4. Navegación genérica con separadores > o /
+
+        Args:
+            soup: Objeto BeautifulSoup con el HTML parseado
+
+        Returns:
+            dict: Información sobre breadcrumbs encontrados
+        """
+        breadcrumbs_data = {
+            'has_breadcrumbs': False,
+            'breadcrumb_type': None,
+            'breadcrumb_items': [],
+            'breadcrumb_count': 0
+        }
+
+        # Patrón 1: <nav aria-label="breadcrumb"> o similar
+        breadcrumb_nav = soup.find('nav', attrs={'aria-label': re.compile(r'breadcrumb|migas|ruta', re.I)})
+        if breadcrumb_nav:
+            items = breadcrumb_nav.find_all('a')
+            if items:
+                breadcrumbs_data['has_breadcrumbs'] = True
+                breadcrumbs_data['breadcrumb_type'] = 'aria-label'
+                breadcrumbs_data['breadcrumb_items'] = [
+                    {'text': a.get_text(strip=True), 'href': a.get('href', '')}
+                    for a in items[:10]
+                ]
+                breadcrumbs_data['breadcrumb_count'] = len(items)
+                return breadcrumbs_data
+
+        # Patrón 2: <ol class="breadcrumb"> o <ul class="breadcrumb">
+        breadcrumb_list = soup.find(['ol', 'ul'], class_=re.compile(r'breadcrumb', re.I))
+        if breadcrumb_list:
+            items = breadcrumb_list.find_all('a')
+            if items:
+                breadcrumbs_data['has_breadcrumbs'] = True
+                breadcrumbs_data['breadcrumb_type'] = 'class-breadcrumb'
+                breadcrumbs_data['breadcrumb_items'] = [
+                    {'text': a.get_text(strip=True), 'href': a.get('href', '')}
+                    for a in items[:10]
+                ]
+                breadcrumbs_data['breadcrumb_count'] = len(items)
+                return breadcrumbs_data
+
+        # Patrón 3: Schema.org BreadcrumbList
+        breadcrumb_schema = soup.find(attrs={'itemtype': re.compile(r'schema\.org/BreadcrumbList', re.I)})
+        if breadcrumb_schema:
+            list_items = breadcrumb_schema.find_all(attrs={'itemtype': re.compile(r'schema\.org/ListItem', re.I)})
+            if list_items:
+                breadcrumbs_data['has_breadcrumbs'] = True
+                breadcrumbs_data['breadcrumb_type'] = 'schema.org'
+                items = []
+                for item in list_items[:10]:
+                    name_elem = item.find(attrs={'itemprop': 'name'})
+                    link_elem = item.find('a')
+                    items.append({
+                        'text': name_elem.get_text(strip=True) if name_elem else '',
+                        'href': link_elem.get('href', '') if link_elem else ''
+                    })
+                breadcrumbs_data['breadcrumb_items'] = items
+                breadcrumbs_data['breadcrumb_count'] = len(items)
+                return breadcrumbs_data
+
+        # Patrón 4: JSON-LD BreadcrumbList
+        json_ld_scripts = soup.find_all('script', type='application/ld+json')
+        for script in json_ld_scripts:
+            try:
+                import json
+                data = json.loads(script.string or '{}')
+                if isinstance(data, dict) and data.get('@type') == 'BreadcrumbList':
+                    items = data.get('itemListElement', [])
+                    if items:
+                        breadcrumbs_data['has_breadcrumbs'] = True
+                        breadcrumbs_data['breadcrumb_type'] = 'json-ld'
+                        breadcrumbs_data['breadcrumb_items'] = [
+                            {
+                                'text': item.get('item', {}).get('name', item.get('name', '')),
+                                'href': item.get('item', {}).get('@id', '')
+                            }
+                            for item in items[:10]
+                        ]
+                        breadcrumbs_data['breadcrumb_count'] = len(items)
+                        return breadcrumbs_data
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+        # Patrón 5: Búsqueda genérica en <nav> con separadores típicos
+        # IMPORTANTE: Solo considerar navs pequeños (breadcrumbs típicamente tienen 2-8 items)
+        for nav in soup.find_all('nav'):
+            nav_text = nav.get_text()
+            links = nav.find_all('a')
+
+            # Si tiene separadores típicos de breadcrumbs, pocos links (2-10) y es nav pequeño
+            if ((' > ' in nav_text or ' / ' in nav_text or ' » ' in nav_text)
+                    and 2 <= len(links) <= 10
+                    and len(nav_text) < 500):  # Nav pequeño (no menú principal)
+                breadcrumbs_data['has_breadcrumbs'] = True
+                breadcrumbs_data['breadcrumb_type'] = 'generic-separator'
+                breadcrumbs_data['breadcrumb_items'] = [
+                    {'text': a.get_text(strip=True), 'href': a.get('href', '')}
+                    for a in links[:10]
+                ]
+                breadcrumbs_data['breadcrumb_count'] = len(links)
+                return breadcrumbs_data
+
+        # Patrón 6: Div o span con clase que contenga "breadcrumb"
+        breadcrumb_div = soup.find(['div', 'span'], class_=re.compile(r'breadcrumb', re.I))
+        if breadcrumb_div:
+            items = breadcrumb_div.find_all('a')
+            if items:
+                breadcrumbs_data['has_breadcrumbs'] = True
+                breadcrumbs_data['breadcrumb_type'] = 'div-breadcrumb'
+                breadcrumbs_data['breadcrumb_items'] = [
+                    {'text': a.get_text(strip=True), 'href': a.get('href', '')}
+                    for a in items[:10]
+                ]
+                breadcrumbs_data['breadcrumb_count'] = len(items)
+                return breadcrumbs_data
+
+        return breadcrumbs_data
+
     def _extract_document_hierarchy(self, soup: BeautifulSoup) -> Dict:
         """
         Extrae la jerarquía completa de elementos semánticos
@@ -1351,8 +1552,8 @@ class GobBoCrawler:
                 sections.append({
                     'heading': heading_text,
                     'heading_level': heading_level,
-                    'paragraphs': paragraphs[:5],
-                    'content': content[:1000],
+                    'paragraphs': paragraphs[:10],  # Aumentado de 5 a 10
+                    'content': content[:3000],  # Aumentado de 1000 a 3000
                     'word_count': len(content.split())
                 })
 
@@ -1376,12 +1577,14 @@ class GobBoCrawler:
         for a in soup.find_all('a', href=True):
             text = a.get_text(strip=True)
             href = a.get('href', '')
+            title = a.get('title', None)
 
             if text:
                 is_generic = any(phrase in text.lower() for phrase in generic_phrases)
                 link_texts.append({
                     'text': text,
-                    'href': href[:100],  # Limitar URL
+                    'url': href[:100],  # Renombrado de 'href' a 'url' para NLP
+                    'title': title,
                     'is_generic': is_generic,
                     'length': len(text)
                 })
@@ -1421,37 +1624,37 @@ class GobBoCrawler:
 
         return {
             # Textos específicos
-            'header_text': header_text[:500],
-            'footer_text': footer_text[:1000],  # AGREGADO: Texto del footer para contacto
+            'header_text': header_text[:1000],  # Aumentado de 500
+            'footer_text': footer_text[:2000],  # Aumentado de 1000
             'has_bolivia_service_text': has_bolivia_service,
             'title': title_text,
-            'meta_description': meta_desc[:300],
+            'meta_description': meta_desc[:500],  # Aumentado de 300
 
             # Secciones para análisis de coherencia
-            'sections': sections[:20],  # Limitar a 20 secciones
+            'sections': sections[:30],  # Aumentado de 20
             'total_sections': len(sections),
             'sections_with_content': len([s for s in sections if len(s['paragraphs']) > 0]),
 
             # Navegación
-            'navigation_texts': nav_texts[:50],  # Limitar a 50
+            'navigation_texts': nav_texts[:100],  # Aumentado de 50
             'total_nav_items': len(nav_texts),
 
             # Enlaces (para análisis de claridad)
-            'link_texts': link_texts[:100],  # Limitar a 100
+            'link_texts': link_texts[:200],  # Aumentado de 100
             'total_links': len(link_texts),
             'generic_links': len([l for l in link_texts if l['is_generic']]),
-            'generic_link_examples': [l['text'] for l in link_texts if l['is_generic']][:10],
+            'generic_link_examples': [l['text'] for l in link_texts if l['is_generic']][:20],
 
             # Botones
-            'button_texts': button_texts[:30],
+            'button_texts': button_texts[:50],  # Aumentado de 30
             'total_buttons': len(button_texts),
 
             # Formularios
-            'label_texts': label_texts[:50],
+            'label_texts': label_texts[:100],  # Aumentado de 50
             'total_labels': len(label_texts),
 
-            # Texto completo
-            'full_text': full_text[:5000],  # Primeros 5000 caracteres
+            # Texto completo para NLP (aumentado significativamente)
+            'full_text': full_text[:50000],  # Aumentado de 5000 a 50000 (~7000-10000 palabras)
             'total_words': total_words,
             'total_characters': len(full_text)
         }
