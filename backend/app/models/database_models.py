@@ -121,9 +121,11 @@ class Evaluation(Base):
         back_populates="evaluation",
         cascade="all, delete-orphan"
     )
-    nlp_analyses: Mapped[List["NLPAnalysis"]] = relationship(
+    # Relación 1:1 con análisis NLP (uselist=False)
+    nlp_analysis: Mapped[Optional["NLPAnalysis"]] = relationship(
         back_populates="evaluation",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        uselist=False
     )
 
     def __repr__(self) -> str:
@@ -171,38 +173,224 @@ class CriteriaResult(Base):
 
 class NLPAnalysis(Base):
     """
-    Modelo para análisis de lenguaje natural.
+    Modelo para análisis de lenguaje natural (NLP).
 
     Almacena resultados del análisis NLP usando BETO para evaluar
-    la calidad del contenido textual del sitio web.
+    la calidad del contenido textual del sitio web gubernamental.
+
+    Evalúa 3 dimensiones principales:
+    - Coherencia semántica: Similitud entre headings y contenido (BETO embeddings)
+    - Ambigüedades: Detección de textos genéricos/vagos (enlaces, labels, headings)
+    - Claridad: Legibilidad del texto (Índice Fernández Huerta)
+
+    Relación: 1:1 con Evaluation (una evaluación tiene un análisis NLP)
+
+    Estructura JSONB esperada:
+
+    coherence_details = {
+        "sections_analyzed": int,
+        "coherent_sections": int,
+        "incoherent_sections": int,
+        "average_similarity": float,
+        "threshold_used": float,
+        "section_scores": [
+            {
+                "heading": str,
+                "heading_level": int,
+                "word_count": int,
+                "similarity_score": float,
+                "is_coherent": bool,
+                "recommendation": str | None
+            }
+        ]
+    }
+
+    ambiguity_details = {
+        "total_analyzed": int,
+        "problematic_count": int,
+        "clear_count": int,
+        "by_category": {"genérico": int, "ambiguo": int, ...},
+        "by_element_type": {"link": int, "label": int, "heading": int},
+        "problematic_items": [
+            {
+                "text": str,
+                "element_type": str,
+                "category": str,
+                "recommendation": str,
+                "wcag_criterion": str
+            }
+        ]
+    }
+
+    clarity_details = {
+        "total_analyzed": int,
+        "clear_count": int,
+        "unclear_count": int,
+        "avg_fernandez_huerta": float,
+        "reading_difficulty": str,
+        "avg_sentence_length": float,
+        "avg_syllables_per_word": float,
+        "complex_words_percentage": float
+    }
+
+    wcag_compliance = {
+        "ACC-07": bool,  # Labels or Instructions (WCAG 3.3.2)
+        "ACC-08": bool,  # Link Purpose (WCAG 2.4.4)
+        "ACC-09": bool,  # Headings and Labels (WCAG 2.4.6)
+        "total_criteria": int,
+        "passed_criteria": int,
+        "compliance_percentage": float
+    }
     """
 
-    __tablename__ = "nlp_analyses"
+    __tablename__ = "nlp_analysis"
 
+    # =========================================================================
+    # Identificadores
+    # =========================================================================
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    # Relación 1:1 con evaluación (UNIQUE garantiza unicidad)
     evaluation_id: Mapped[int] = mapped_column(
         ForeignKey("evaluations.id", ondelete="CASCADE"),
+        unique=True,
+        nullable=False,
+        index=True
+    )
+
+    # =========================================================================
+    # Scores principales (0-100)
+    # =========================================================================
+    # Score global: 40% coherencia + 40% ambigüedad + 20% claridad
+    nlp_global_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        index=True
+    )
+
+    # Coherencia semántica (embeddings BETO + similitud coseno)
+    coherence_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        index=True
+    )
+
+    # Claridad de textos (% de textos sin ambigüedades)
+    ambiguity_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        index=True
+    )
+
+    # Legibilidad (Índice Fernández Huerta)
+    clarity_score: Mapped[float] = mapped_column(
+        Float,
+        nullable=False,
+        index=True
+    )
+
+    # =========================================================================
+    # Detalles de análisis (JSONB)
+    # =========================================================================
+    coherence_details: Mapped[dict] = mapped_column(
+        JSON,
+        nullable=False,
+        default=dict
+    )
+
+    ambiguity_details: Mapped[dict] = mapped_column(
+        JSON,
+        nullable=False,
+        default=dict
+    )
+
+    clarity_details: Mapped[dict] = mapped_column(
+        JSON,
+        nullable=False,
+        default=dict
+    )
+
+    # =========================================================================
+    # Recomendaciones priorizadas
+    # =========================================================================
+    # Lista de strings ordenadas por prioridad
+    recommendations: Mapped[list] = mapped_column(
+        JSON,
+        nullable=False,
+        default=list
+    )
+
+    # =========================================================================
+    # Cumplimiento WCAG
+    # =========================================================================
+    wcag_compliance: Mapped[dict] = mapped_column(
+        JSON,
+        nullable=False,
+        default=dict
+    )
+
+    # =========================================================================
+    # Timestamps
+    # =========================================================================
+    analyzed_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        nullable=False,
+        index=True
+    )
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
         nullable=False
     )
 
-    # Muestra de texto analizada
-    text_sample: Mapped[str] = mapped_column(Text, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime,
+        default=datetime.utcnow,
+        onupdate=datetime.utcnow,
+        nullable=False
+    )
 
-    # Puntajes
-    ambiguity_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-    clarity_score: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
-
-    # Problemas detectados
-    issues_detected: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
-
-    # Timestamp
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
-
+    # =========================================================================
     # Relaciones
-    evaluation: Mapped["Evaluation"] = relationship(back_populates="nlp_analyses")
+    # =========================================================================
+    evaluation: Mapped["Evaluation"] = relationship(back_populates="nlp_analysis")
 
     def __repr__(self) -> str:
-        return f"<NLPAnalysis(id={self.id}, evaluation_id={self.evaluation_id})>"
+        """Representación string para debugging."""
+        return (
+            f"<NLPAnalysis(id={self.id}, "
+            f"evaluation_id={self.evaluation_id}, "
+            f"global_score={self.nlp_global_score:.1f})>"
+        )
+
+    def to_dict(self) -> dict:
+        """
+        Serializa el modelo a diccionario.
+
+        Returns:
+            Dict con todos los campos serializados correctamente,
+            incluyendo JSONB y arrays.
+        """
+        return {
+            "id": self.id,
+            "evaluation_id": self.evaluation_id,
+            "scores": {
+                "global": self.nlp_global_score,
+                "coherence": self.coherence_score,
+                "ambiguity": self.ambiguity_score,
+                "clarity": self.clarity_score
+            },
+            "coherence_details": self.coherence_details or {},
+            "ambiguity_details": self.ambiguity_details or {},
+            "clarity_details": self.clarity_details or {},
+            "recommendations": self.recommendations or [],
+            "wcag_compliance": self.wcag_compliance or {},
+            "analyzed_at": self.analyzed_at.isoformat() if self.analyzed_at else None,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
+        }
 
 
 class ExtractedContent(Base):

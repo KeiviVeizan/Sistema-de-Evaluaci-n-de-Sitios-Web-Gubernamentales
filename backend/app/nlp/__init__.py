@@ -28,6 +28,7 @@ from app.nlp.coherence import CoherenceAnalyzer, SectionCoherence
 from app.nlp.ambiguity import AmbiguityDetector, AmbiguityResult, AmbiguityCategory
 from app.nlp.clarity import ClarityAnalyzer, ClarityResult
 from app.nlp.models import BETOModelManager
+from app.nlp.adapter import NLPDataAdapter
 
 __all__ = [
     # Orquestador (punto de entrada principal)
@@ -41,6 +42,9 @@ __all__ = [
 
     # Modelo BETO
     'BETOModelManager',
+
+    # Adaptador de datos
+    'NLPDataAdapter',
 
     # Resultados
     'SectionCoherence',

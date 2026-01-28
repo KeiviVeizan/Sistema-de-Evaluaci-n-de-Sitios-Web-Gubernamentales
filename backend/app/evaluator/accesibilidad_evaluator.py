@@ -39,6 +39,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
         forms = extracted_content.get('forms', {})
         media = extracted_content.get('media', {})
         links = extracted_content.get('links', {})
+        language_parts = extracted_content.get('language_parts', {})
 
         # Evaluar cada criterio
         self.add_result(self._evaluar_acc01(images))
@@ -51,8 +52,8 @@ class EvaluadorAccesibilidad(BaseEvaluator):
         self.add_result(self._evaluar_acc07(forms))
         self.add_result(self._evaluar_acc08(links))
         self.add_result(self._evaluar_acc09(headings, forms))
-        # ACC-10 es complejo (requiere detección de idiomas)
-        self.add_result(self._evaluar_acc10_placeholder())
+        # ACC-10 usa datos de language_parts del crawler
+        self.add_result(self._evaluar_acc10(language_parts))
 
         return self.results
 
@@ -467,22 +468,63 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             }
         )
 
-    def _evaluar_acc10_placeholder(self) -> CriteriaEvaluation:
+    def _evaluar_acc10(self, language_parts: Dict) -> CriteriaEvaluation:
         """
         ACC-10: Idioma de partes
-        Placeholder - requiere detección de cambios de idioma
+        Verifica que elementos con idioma diferente tengan lang declarado
         """
+        main_lang = language_parts.get('main_language', '')
+        has_main_lang = language_parts.get('has_main_language', False)
+        elements_diff_lang = language_parts.get('elements_with_different_lang', [])
+        count_diff_lang = language_parts.get('count_different_lang', 0)
+        acc_10_compliant = language_parts.get('acc_10_compliant', False)
+
+        # Si no hay idioma principal declarado, falla
+        if not has_main_lang:
+            return CriteriaEvaluation(
+                criteria_id="ACC-10",
+                criteria_name=self.criterios["ACC-10"]["name"],
+                dimension=self.dimension,
+                lineamiento=self.criterios["ACC-10"]["lineamiento"],
+                status="fail",
+                score=0,
+                max_score=12,
+                details={
+                    "main_language": main_lang,
+                    "has_main_language": False,
+                    "message": "No se declaró el idioma principal del documento"
+                },
+                evidence={"html_lang": main_lang}
+            )
+
+        # Si el sitio tiene idioma principal y maneja bien los elementos con idioma diferente
+        if acc_10_compliant:
+            status = "pass"
+            score = 12
+            message = f"Idioma principal '{main_lang}' declarado correctamente"
+            if count_diff_lang > 0:
+                message += f". {count_diff_lang} elementos con idioma diferente correctamente marcados"
+        else:
+            status = "partial"
+            score = 6
+            message = f"Idioma principal declarado pero posibles elementos sin marcar"
+
         return CriteriaEvaluation(
             criteria_id="ACC-10",
             criteria_name=self.criterios["ACC-10"]["name"],
             dimension=self.dimension,
             lineamiento=self.criterios["ACC-10"]["lineamiento"],
-            status="na",
-            score=12,
+            status=status,
+            score=score,
             max_score=12,
             details={
-                "message": "Análisis de idiomas en partes específicas pendiente",
-                "note": "Requiere detección de idiomas con NLP"
+                "main_language": main_lang,
+                "has_main_language": has_main_lang,
+                "elements_with_different_lang": count_diff_lang,
+                "languages_found": language_parts.get('languages_found', []),
+                "message": message
             },
-            evidence={}
+            evidence={
+                "different_lang_elements": elements_diff_lang[:5]
+            }
         )

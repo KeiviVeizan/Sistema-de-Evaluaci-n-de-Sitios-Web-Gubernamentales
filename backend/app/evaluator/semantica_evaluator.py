@@ -1,83 +1,313 @@
 """
-Evaluador de Semántica Técnica (15% de la dimensión de 30%)
-Evalúa 10 criterios: SEM-01 a SEM-04, SEO-01 a SEO-03, FMT-01, FMT-02, más 2 adicionales
+Evaluador de Semantica Web (15%)
+Evalua 10 criterios tecnicos: SEM-01 a SEM-04, SEO-01 a SEO-04, FMT-01 a FMT-02
+
+MEJORADO: Evalua BUENAS PRACTICAS HTML5, no solo existencia de tags.
 """
+import re
+import logging
 from typing import Dict, List
+from urllib.parse import urlparse, parse_qs
 from .base_evaluator import BaseEvaluator, CriteriaEvaluation
+from .buenas_practicas_html5 import (
+    BUENAS_PRACTICAS,
+    DIVITIS_RULES,
+    detectar_violaciones,
+    calcular_penalizacion_total,
+    generar_recomendaciones
+)
+from .recomendaciones_semanticas import RecomendacionesSemanticas
+
+logger = logging.getLogger(__name__)
 
 
-class EvaluadorSemanticaTecnica(BaseEvaluator):
+class EvaluadorSemantica(BaseEvaluator):
     """
-    Evaluador de criterios de semántica técnica y SEO
+    Evaluador de criterios de semantica web tecnica.
+
+    Evalua 10 criterios en 3 grupos:
+    - SEM: HTML5 semantico (4 criterios)
+    - SEO: Optimizacion SEO (4 criterios)
+    - FMT: Formato tecnico (2 criterios)
+
+    IMPORTANTE: Evalua BUENAS PRACTICAS, no solo existencia de tags.
     """
+
+    # Tags HTML5 semanticos esperados
+    SEMANTIC_TAGS = ['header', 'nav', 'main', 'article', 'section', 'aside', 'footer']
 
     def __init__(self):
         super().__init__(dimension="semantica")
 
-        # Pesos según tabla_final.xlsx
+        # Pesos segun especificacion
         self.criterios = {
-            "SEM-01": {"name": "Elementos semánticos HTML5", "points": 12, "lineamiento": "WCAG 1.3.1 / HTML5"},
-            "SEM-02": {"name": "Estructura de documento", "points": 10, "lineamiento": "HTML5 / WCAG 1.3.1"},
-            "SEM-03": {"name": "Estructura semántica HTML5", "points": 15, "lineamiento": "HTML5 / W3C"},
-            "SEM-04": {"name": "Tablas con encabezados", "points": 10, "lineamiento": "WCAG 1.3.1"},
-            "SEO-01": {"name": "Meta description", "points": 10, "lineamiento": "D.S. 3925 (BUSC-01)"},
-            "SEO-02": {"name": "Meta keywords", "points": 8, "lineamiento": "D.S. 3925 (BUSC-02)"},
-            "SEO-03": {"name": "URLs amigables", "points": 10, "lineamiento": "SEO best practices"},
-            "FMT-01": {"name": "Responsive design", "points": 12, "lineamiento": "D.S. 3925 (FMT-01)"},
-            "FMT-02": {"name": "Validación HTML", "points": 10, "lineamiento": "HTML5 standards"},
-            "LANG-02": {"name": "Contenido en español", "points": 10, "lineamiento": "D.S. 3925 (LANG-02)"}
+            # Grupo SEM - Semantica HTML5
+            "SEM-01": {"name": "Etiquetas HTML5 semanticas (buenas practicas)", "points": 14, "lineamiento": "W3C HTML5 / MDN Best Practices"},
+            "SEM-02": {"name": "DOCTYPE HTML5", "points": 10, "lineamiento": "HTML5 DOCTYPE Declaration"},
+            "SEM-03": {"name": "Jerarquia de headings valida", "points": 10, "lineamiento": "WCAG 1.3.1 / H42"},
+            "SEM-04": {"name": "Evitar divitis (anti-patron)", "points": 10, "lineamiento": "W3C Semantic Web / MDN"},
+            # Grupo SEO - Optimizacion
+            "SEO-01": {"name": "Titulo de pagina descriptivo", "points": 10, "lineamiento": "SEO Best Practices"},
+            "SEO-02": {"name": "Meta descripcion presente", "points": 10, "lineamiento": "SEO Best Practices"},
+            "SEO-03": {"name": "Meta keywords (opcional)", "points": 10, "lineamiento": "SEO Best Practices"},
+            "SEO-04": {"name": "URLs amigables", "points": 10, "lineamiento": "SEO Best Practices"},
+            # Grupo FMT - Formato tecnico
+            "FMT-01": {"name": "Encoding UTF-8 declarado", "points": 10, "lineamiento": "W3C Encoding Standards"},
+            "FMT-02": {"name": "Viewport para responsive", "points": 10, "lineamiento": "Mobile-First Design"}
         }
 
     def evaluate(self, extracted_content: Dict) -> List[CriteriaEvaluation]:
-        """Evalúa todos los criterios de semántica técnica"""
+        """Evalua todos los criterios de semantica tecnica"""
         self.clear_results()
 
         # Extraer datos relevantes
         metadata = extracted_content.get('metadata', {})
         structure = extracted_content.get('structure', {})
         semantic_elements = extracted_content.get('semantic_elements', {})
-        links = extracted_content.get('links', {})
-        text_corpus = extracted_content.get('text_corpus', {})
+        headings = extracted_content.get('headings', {})
+        url = extracted_content.get('url', '')
 
-        # Evaluar cada criterio
-        self.add_result(self._evaluar_sem01(semantic_elements))
-        self.add_result(self._evaluar_sem02(semantic_elements, structure))
-        self.add_result(self._evaluar_sem03(semantic_elements, structure))
-        self.add_result(self._evaluar_sem04(structure))
+        # Extraer document_hierarchy del structure (datos de buenas practicas)
+        document_hierarchy = structure.get('document_hierarchy', {})
+        structure_analysis = document_hierarchy.get('structure_analysis', {})
+
+        # Grupo SEM - Semantica HTML5 (con buenas practicas)
+        self.add_result(self._evaluar_sem01_buenas_practicas(semantic_elements, structure_analysis))
+        self.add_result(self._evaluar_sem02(structure))
+        self.add_result(self._evaluar_sem03(headings))
+        self.add_result(self._evaluar_sem04_antidivitis(structure_analysis))
+
+        # Grupo SEO - Optimizacion
         self.add_result(self._evaluar_seo01(metadata))
         self.add_result(self._evaluar_seo02(metadata))
-        self.add_result(self._evaluar_seo03(links))
-        self.add_result(self._evaluar_fmt01(metadata))
-        self.add_result(self._evaluar_fmt02(structure))
-        self.add_result(self._evaluar_lang02(text_corpus, metadata))
+        self.add_result(self._evaluar_seo03(metadata))
+        self.add_result(self._evaluar_seo04(url))
+
+        # Grupo FMT - Formato tecnico
+        self.add_result(self._evaluar_fmt01(structure))
+        self.add_result(self._evaluar_fmt02(metadata))
 
         return self.results
 
-    def _evaluar_sem01(self, semantic_elements: Dict) -> CriteriaEvaluation:
+    # ========================================================================
+    # GRUPO SEM - Semantica HTML5 (con buenas practicas)
+    # ========================================================================
+
+    def _evaluar_sem01_buenas_practicas(self, semantic_elements: Dict, structure_analysis: Dict) -> CriteriaEvaluation:
         """
-        SEM-01: Elementos semánticos HTML5
-        Uso de header, nav, main, article, section, aside, footer
+        SEM-01: Etiquetas HTML5 semanticas CORRECTAMENTE USADAS
+
+        No solo verifica existencia, tambien:
+        - Jerarquia correcta segun estandares W3C
+        - Sin violaciones estructurales
+        - Uso apropiado de cada tag
+
+        Score maximo: 14 puntos
         """
-        required_elements = ['header', 'nav', 'main', 'footer']
-        optional_elements = ['article', 'section', 'aside']
+        issues = []
+        scores = []
 
-        required_count = 0
-        optional_count = 0
+        # Verificar si tenemos datos de structure_analysis
+        has_structure_data = bool(structure_analysis)
 
-        for elem in required_elements:
-            if self.extract_count(semantic_elements.get(elem, 0)) > 0:
-                required_count += 1
+        if not has_structure_data:
+            logger.warning("SEM-01: No hay datos de structure_analysis del crawler")
+            # Fallback: solo verificar existencia (comportamiento anterior)
+            return self._evaluar_sem01_fallback(semantic_elements)
 
-        for elem in optional_elements:
-            if self.extract_count(semantic_elements.get(elem, 0)) > 0:
-                optional_count += 1
+        # ================================================================
+        # 1. EVALUACION DE <main> (critico - 3 puntos)
+        # ================================================================
+        main_count = structure_analysis.get('main_count', 0)
+        main_inside_section = structure_analysis.get('main_inside_section', False)
 
-        # Score: 3 puntos por cada elemento requerido, 1.5 por opcionales (hasta 3)
-        score = (required_count * 3) + min(optional_count, 2)
+        if main_count == 1 and not main_inside_section:
+            scores.append(3.0)  # Perfecto
+        elif main_count == 1:
+            scores.append(1.5)  # Existe pero mal ubicado
+            issues.append(f"<main> esta dentro de <section> (incorrecto segun W3C)")
+        elif main_count > 1:
+            scores.append(0.5)
+            issues.append(f"Multiples <main> ({main_count}), debe ser unico")
+        else:
+            scores.append(0.0)
+            issues.append("Falta <main> para contenido principal")
 
-        if required_count == 4 and optional_count >= 2:
+        # ================================================================
+        # 2. EVALUACION DE <header> (importante - 2 puntos)
+        # ================================================================
+        header_count = structure_analysis.get('header_count', 0)
+        if header_count >= 1:
+            scores.append(2.0)
+        else:
+            scores.append(0.0)
+            issues.append("Falta <header> para contenido introductorio")
+
+        # ================================================================
+        # 3. EVALUACION DE <footer> (importante - 2 puntos)
+        # ================================================================
+        footer_count = structure_analysis.get('footer_count', 0)
+        if footer_count >= 1:
+            scores.append(2.0)
+        else:
+            scores.append(0.0)
+            issues.append("Falta <footer> para informacion de cierre")
+
+        # ================================================================
+        # 4. EVALUACION DE <nav> (importante - 2 puntos)
+        # ================================================================
+        nav_count = structure_analysis.get('nav_count', 0)
+        navs_in_header = structure_analysis.get('navs_in_header', 0)
+        navs_floating = structure_analysis.get('navs_floating', 0)
+
+        if nav_count >= 1:
+            if navs_in_header >= 1 or navs_floating == 0:
+                scores.append(2.0)  # Nav bien ubicado
+            else:
+                scores.append(1.5)  # Nav existe pero mal ubicado
+                issues.append(f"<nav> fuera de <header>/<footer> ({navs_floating} flotantes)")
+        else:
+            scores.append(0.0)
+            issues.append("Falta <nav> para navegacion")
+
+        # ================================================================
+        # 5. EVALUACION DE <article> (recomendado - 1.5 puntos)
+        # ================================================================
+        article_present = self.extract_present(semantic_elements.get('article', {}))
+        if article_present:
+            scores.append(1.5)
+        else:
+            scores.append(0.0)
+            issues.append("Sin <article> (recomendado para contenido autonomo)")
+
+        # ================================================================
+        # 6. EVALUACION DE <section> (recomendado - 1.5 puntos)
+        # ================================================================
+        section_present = self.extract_present(semantic_elements.get('section', {}))
+        if section_present:
+            scores.append(1.5)
+        else:
+            scores.append(0.0)
+            issues.append("Sin <section> (recomendado para agrupar contenido)")
+
+        # ================================================================
+        # 7. EVALUACION DE <aside> (opcional - 2 puntos)
+        # ================================================================
+        aside_present = self.extract_present(semantic_elements.get('aside', {}))
+        if aside_present:
+            scores.append(2.0)
+        else:
+            scores.append(0.0)
+            issues.append("Sin <aside> (recomendado para contenido relacionado)")
+
+        # ================================================================
+        # PENALIZACION POR VIOLACIONES ESTRUCTURALES
+        # ================================================================
+        violaciones = detectar_violaciones(structure_analysis)
+        penalizacion = calcular_penalizacion_total(violaciones)
+
+        # Filtrar violaciones que no sean de divitis (esas van en SEM-04)
+        violaciones_estructura = [v for v in violaciones
+                                  if 'divitis' not in v.get('mensaje', '').lower()]
+
+        # Agregar violaciones a issues
+        for v in violaciones_estructura:
+            issues.append(f"VIOLACION: {v['mensaje']}")
+
+        # Calcular score final
+        total_score = sum(scores) - penalizacion
+        total_score = max(0.0, min(14.0, total_score))
+
+        # Determinar status
+        if total_score >= 11:
             status = "pass"
-        elif required_count >= 3:
+            message = f"Buen uso de HTML5 semantico ({total_score:.1f}/14)"
+        elif total_score >= 7:
+            status = "partial"
+            message = f"Uso parcial de HTML5 semantico ({total_score:.1f}/14)"
+        else:
+            status = "fail"
+            message = f"Uso deficiente de HTML5 semantico ({total_score:.1f}/14)"
+
+        # Generar recomendaciones EDUCATIVAS detalladas
+        recomendaciones_basicas = generar_recomendaciones(violaciones_estructura, structure_analysis)
+        recomendacion_detallada = None
+
+        # Determinar cual recomendacion detallada mostrar (prioridad)
+        if main_count == 0:
+            # Falta estructura basica
+            elementos_faltantes = []
+            if main_count == 0:
+                elementos_faltantes.append('main')
+            if header_count == 0:
+                elementos_faltantes.append('header')
+            if footer_count == 0:
+                elementos_faltantes.append('footer')
+            if nav_count == 0:
+                elementos_faltantes.append('nav')
+            recomendacion_detallada = RecomendacionesSemanticas.falta_estructura_base(elementos_faltantes)
+        elif main_count > 1 or main_inside_section:
+            # Main mal ubicado
+            recomendacion_detallada = RecomendacionesSemanticas.main_mal_ubicado(main_count, main_inside_section)
+        elif navs_floating > 0 and nav_count > 0:
+            # Nav fuera de header
+            recomendacion_detallada = RecomendacionesSemanticas.nav_mal_ubicado(navs_floating, nav_count)
+
+        return CriteriaEvaluation(
+            criteria_id="SEM-01",
+            criteria_name=self.criterios["SEM-01"]["name"],
+            dimension=self.dimension,
+            lineamiento=self.criterios["SEM-01"]["lineamiento"],
+            status=status,
+            score=round(total_score, 2),
+            max_score=14,
+            details={
+                "main_count": main_count,
+                "main_inside_section": main_inside_section,
+                "header_count": header_count,
+                "footer_count": footer_count,
+                "nav_count": nav_count,
+                "navs_in_header": navs_in_header,
+                "navs_floating": navs_floating,
+                "article_present": article_present,
+                "section_present": section_present,
+                "aside_present": aside_present,
+                "violations_count": len(violaciones_estructura),
+                "penalty_applied": round(penalizacion, 2),
+                "issues": issues,
+                "message": message
+            },
+            evidence={
+                "recomendaciones": recomendaciones_basicas[:5],
+                "recomendacion_detallada": recomendacion_detallada,
+                "structure_analysis_available": has_structure_data
+            }
+        )
+
+    def _evaluar_sem01_fallback(self, semantic_elements: Dict) -> CriteriaEvaluation:
+        """
+        Fallback para SEM-01 cuando no hay datos de structure_analysis.
+        Solo verifica existencia de tags (comportamiento anterior).
+        """
+        logger.warning("SEM-01: Usando evaluacion fallback (solo existencia)")
+
+        tags_found = []
+        tags_missing = []
+
+        for tag in self.SEMANTIC_TAGS:
+            tag_data = semantic_elements.get(tag, {})
+            is_present = self.extract_present(tag_data)
+            if is_present:
+                tags_found.append(tag)
+            else:
+                tags_missing.append(tag)
+
+        tags_count = len(tags_found)
+        score = min(tags_count * 2.0, 14.0)
+
+        if tags_count >= 5:
+            status = "pass"
+        elif tags_count >= 3:
             status = "partial"
         else:
             status = "fail"
@@ -88,44 +318,37 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             dimension=self.dimension,
             lineamiento=self.criterios["SEM-01"]["lineamiento"],
             status=status,
-            score=round(score, 2),
-            max_score=12,
+            score=score,
+            max_score=14,
             details={
-                "required_elements": {elem: semantic_elements.get(elem, 0) for elem in required_elements},
-                "optional_elements": {elem: semantic_elements.get(elem, 0) for elem in optional_elements},
-                "required_count": required_count,
-                "optional_count": optional_count,
-                "message": f"{required_count}/4 elementos requeridos, {optional_count}/3 opcionales"
+                "tags_found": tags_found,
+                "tags_missing": tags_missing,
+                "tags_count": tags_count,
+                "note": "Evaluacion basica (sin datos de jerarquia)",
+                "message": f"Tags presentes: {tags_count}/7 (evaluacion basica)"
             },
-            evidence=semantic_elements
+            evidence={
+                "warning": "Actualizar crawler para obtener structure_analysis"
+            }
         )
 
-    def _evaluar_sem02(self, semantic_elements: Dict, structure: Dict) -> CriteriaEvaluation:
+    def _evaluar_sem02(self, structure: Dict) -> CriteriaEvaluation:
         """
-        SEM-02: Estructura de documento
-        Debe tener estructura lógica con header, main, footer
+        SEM-02: DOCTYPE HTML5
+        Verificar que el HTML declare <!DOCTYPE html>
+        Score: 10.0 si existe, 0 si no
         """
-        has_header = self.extract_count(semantic_elements.get('header', 0)) > 0
-        has_main = self.extract_count(semantic_elements.get('main', 0)) > 0
-        has_footer = self.extract_count(semantic_elements.get('footer', 0)) > 0
+        has_doctype = structure.get('has_html5_doctype', False)
+        doctype_text = structure.get('doctype_text', '')
 
-        components = sum([has_header, has_main, has_footer])
-
-        # 10 puntos totales: header=4, main=4, footer=2
-        score = 0
-        if has_header:
-            score += 4
-        if has_main:
-            score += 4
-        if has_footer:
-            score += 2
-
-        if components == 3:
+        if has_doctype:
             status = "pass"
-        elif components == 2:
-            status = "partial"
+            score = 10.0
+            message = "DOCTYPE HTML5 declarado correctamente"
         else:
             status = "fail"
+            score = 0.0
+            message = "DOCTYPE HTML5 no declarado o incorrecto"
 
         return CriteriaEvaluation(
             criteria_id="SEM-02",
@@ -136,148 +359,50 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             score=score,
             max_score=10,
             details={
-                "has_header": has_header,
-                "has_main": has_main,
-                "has_footer": has_footer,
-                "components": components,
-                "message": f"Estructura con {components}/3 componentes principales"
+                "has_html5_doctype": has_doctype,
+                "doctype_found": doctype_text if doctype_text else "No detectado",
+                "message": message
             },
             evidence={
-                "header_count": self._get_count(semantic_elements.get('header', 0)),
-                "main_count": self._get_count(semantic_elements.get('main', 0)),
-                "footer_count": self._get_count(semantic_elements.get('footer', 0))
+                "expected": "<!DOCTYPE html>",
+                "found": doctype_text
             }
         )
 
-    def _evaluar_sem03(self, semantic_elements: Dict, structure: Dict) -> CriteriaEvaluation:
+    def _evaluar_sem03(self, headings: Dict) -> CriteriaEvaluation:
         """
-        SEM-03: Elementos semánticos HTML5
-        NO solo verifica presencia, sino CORRECTA ESTRUCTURA
-
-        Evalúa:
-        1. Presencia de elementos básicos (30%)
-        2. Estructura jerárquica correcta (40%)
-        3. Sin anti-patrones (30%)
+        SEM-03: Jerarquia de headings valida
+        - Exactamente 1 <h1>
+        - Sin saltos en jerarquia (h1->h3 sin h2)
+        Score: 10 si cumple ambos, 5 si cumple uno, 0 si ninguno
         """
-        score = 0
-        max_score = 15
-        issues = []
-        recommendations = []
+        h1_count = headings.get('h1_count', 0)
+        has_single_h1 = headings.get('has_single_h1', False)
+        hierarchy_valid = headings.get('hierarchy_valid', False)
+        hierarchy_errors = headings.get('hierarchy_errors', [])
+        by_level = headings.get('by_level', {})
 
-        # Obtener análisis de estructura
-        hierarchy = structure.get('document_hierarchy', {})
-        analysis = hierarchy.get('structure_analysis', {})
-
-        # ═══════════════════════════════════════════════════════════
-        # PARTE 1: PRESENCIA DE ELEMENTOS BÁSICOS (30% = 4.5 puntos)
-        # ═══════════════════════════════════════════════════════════
-
-        required_elements = {
-            'header': semantic_elements.get('header', {}).get('present', False),
-            'nav': semantic_elements.get('nav', {}).get('present', False),
-            'main': semantic_elements.get('main', {}).get('present', False),
-            'footer': semantic_elements.get('footer', {}).get('present', False)
-        }
-
-        present_count = sum(required_elements.values())
-        score += (present_count / 4) * 4.5
-
-        for element, present in required_elements.items():
-            if not present:
-                issues.append(f"Falta elemento <{element}>")
-                recommendations.append(f"Agregar <{element}> para estructura semántica completa")
-
-        # ═══════════════════════════════════════════════════════════
-        # PARTE 2: ESTRUCTURA JERÁRQUICA CORRECTA (40% = 6 puntos)
-        # ═══════════════════════════════════════════════════════════
-
-        structure_score = 6.0
-
-        # 2.1: Solo debe haber 1 <main>
-        main_count = analysis.get('main_count', 0)
-        if main_count == 1:
-            # Perfecto
-            pass
-        elif main_count == 0:
-            structure_score -= 2
-            issues.append("No hay elemento <main>")
-            recommendations.append("Agregar <main> único para el contenido principal")
-        else:
-            structure_score -= 1.5
-            issues.append(f"Hay {main_count} elementos <main> (debe ser único)")
-            recommendations.append("Usar solo un <main> por página")
-
-        # 2.2: <main> NO debe estar dentro de <section>
-        if analysis.get('main_inside_section', False):
-            structure_score -= 2
-            issues.append("<main> está incorrectamente dentro de <section>")
-            recommendations.append("Mover <main> fuera de <section>. Estructura correcta: <main> contiene <section>, no al revés")
-
-        # 2.3: <nav> debería estar en <header> o <footer>
-        nav_count = analysis.get('nav_count', 0)
-        navs_floating = analysis.get('navs_floating', 0)
-
-        if nav_count > 0:
-            if navs_floating == nav_count:
-                # Todos los nav están flotantes
-                structure_score -= 1.5
-                issues.append("Todos los <nav> están fuera de <header>/<footer>")
-                recommendations.append("Colocar <nav> dentro de <header> para mejor semántica")
-            elif navs_floating > 0:
-                structure_score -= 0.5
-                issues.append(f"{navs_floating} de {nav_count} <nav> están mal ubicados")
-
-        # 2.4: Solo debería haber 1 <header> principal
-        header_count = analysis.get('header_count', 0)
-        if header_count > 1:
-            structure_score -= 0.5
-            issues.append(f"Hay {header_count} elementos <header> (generalmente debe ser 1 principal)")
-            recommendations.append("Considerar si todos los <header> son necesarios o usar <div> para sub-headers")
-
-        score += max(0, structure_score)
-
-        # ═══════════════════════════════════════════════════════════
-        # PARTE 3: AUSENCIA DE ANTI-PATRONES (30% = 4.5 puntos)
-        # ═══════════════════════════════════════════════════════════
-
-        antipattern_score = 4.5
-
-        # 3.1: Detectar "div-itis" (exceso de divs)
-        has_divitis = analysis.get('has_divitis', False)
-        div_ratio = analysis.get('div_ratio', 0)
-
-        if has_divitis:
-            antipattern_score -= 3
-            issues.append(f"Exceso de <div> genéricos ({int(div_ratio * 100)}% del contenido)")
-            recommendations.append("Reemplazar <div> por elementos semánticos donde sea apropiado (<section>, <article>, <aside>)")
-        elif div_ratio > 0.5:
-            antipattern_score -= 1.5
-            issues.append(f"Alto uso de <div> ({int(div_ratio * 100)}%)")
-            recommendations.append("Considerar usar más elementos semánticos HTML5")
-
-        # 3.2: Verificar uso de <section> y <article>
-        has_section = semantic_elements.get('section', {}).get('present', False)
-        has_article = semantic_elements.get('article', {}).get('present', False)
-
-        if not has_section and not has_article:
-            antipattern_score -= 1.5
-            issues.append("No usa <section> ni <article> para organizar contenido")
-            recommendations.append("Usar <section> para agrupar contenido temático y <article> para contenido independiente")
-
-        score += max(0, antipattern_score)
-
-        # ═══════════════════════════════════════════════════════════
-        # DETERMINAR STATUS
-        # ═══════════════════════════════════════════════════════════
-
-        percentage = (score / max_score) * 100
-
-        if percentage >= 90:
+        # Calcular score
+        if has_single_h1 and hierarchy_valid:
             status = "pass"
-        elif percentage >= 70:
+            score = 10.0
+            message = "Jerarquia de headings correcta"
+        elif has_single_h1 or hierarchy_valid:
             status = "partial"
+            score = 5.0
+            issues = []
+            if not has_single_h1:
+                if h1_count == 0:
+                    issues.append("Falta <h1>")
+                else:
+                    issues.append(f"Multiples <h1> ({h1_count})")
+            if not hierarchy_valid:
+                issues.append("Saltos en jerarquia")
+            message = "Problemas: " + ", ".join(issues)
         else:
             status = "fail"
+            score = 0.0
+            message = "Jerarquia de headings incorrecta"
 
         return CriteriaEvaluation(
             criteria_id="SEM-03",
@@ -285,48 +410,116 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             dimension=self.dimension,
             lineamiento=self.criterios["SEM-03"]["lineamiento"],
             status=status,
-            score=round(score, 2),
-            max_score=max_score,
+            score=score,
+            max_score=10,
             details={
-                "percentage": round(percentage, 2),
-                "elements_present": present_count,
-                "structure_correct": structure_score > 4,
-                "no_antipatterns": antipattern_score > 3,
-                "issues": issues,
-                "recommendations": recommendations,
-                "structure_analysis": analysis
+                "h1_count": h1_count,
+                "has_single_h1": has_single_h1,
+                "hierarchy_valid": hierarchy_valid,
+                "hierarchy_errors_count": len(hierarchy_errors),
+                "message": message
             },
             evidence={
-                "hierarchy": hierarchy.get('hierarchy', [])[:5]  # Primeras 5 capas
+                "headings_by_level": by_level,
+                "hierarchy_errors": hierarchy_errors[:5]
             }
         )
 
-    def _evaluar_sem04(self, structure: Dict) -> CriteriaEvaluation:
+    def _evaluar_sem04_antidivitis(self, structure_analysis: Dict) -> CriteriaEvaluation:
         """
-        SEM-04: Tablas con encabezados
-        Las tablas deben tener <th> o scope
-        """
-        table_count = structure.get('table_count', 0)
+        SEM-04: Evitar divitis (exceso de <div>)
 
-        if table_count == 0:
-            # No hay tablas, criterio N/A
+        Evalua:
+        - Ratio divs vs tags semanticos
+        - Profundidad de anidamiento
+        - Patron divitis detectado
+
+        Score maximo: 10 puntos
+        """
+        # Verificar si tenemos datos
+        if not structure_analysis:
+            logger.warning("SEM-04: No hay datos de structure_analysis del crawler")
             return CriteriaEvaluation(
                 criteria_id="SEM-04",
                 criteria_name=self.criterios["SEM-04"]["name"],
                 dimension=self.dimension,
                 lineamiento=self.criterios["SEM-04"]["lineamiento"],
                 status="na",
-                score=10,
+                score=0.0,
                 max_score=10,
-                details={"message": "No se encontraron tablas"},
-                evidence={}
+                details={
+                    "error": "Datos de divitis no disponibles",
+                    "message": "Actualizar crawler para analisis de divitis"
+                },
+                evidence={
+                    "warning": "Crawler debe proporcionar structure_analysis"
+                }
             )
 
-        # Por ahora asumimos que si hay tablas, cumplen (placeholder)
-        # En implementación real, verificaríamos la estructura
-        status = "pass"
-        score = 10
-        message = f"{table_count} tabla(s) encontrada(s)"
+        # Extraer datos
+        total_divs = structure_analysis.get('total_divs', 0)
+        total_semantic = structure_analysis.get('total_semantic', 0)
+        div_ratio = structure_analysis.get('div_ratio', 0.0)
+        has_divitis = structure_analysis.get('has_divitis', False)
+
+        # Calcular score
+        score = 10.0
+        issues = []
+
+        # Penalizacion por divitis severa
+        if has_divitis or div_ratio > DIVITIS_RULES['ratio_threshold_fail']:
+            score -= 5.0
+            severity = "CRITICO" if div_ratio > 0.8 else "SEVERO"
+            issues.append(f"{severity}: Divitis detectada ({int(div_ratio*100)}% divs vs semanticos)")
+        elif div_ratio > DIVITIS_RULES['ratio_threshold_warning']:
+            score -= 2.5
+            issues.append(f"Uso excesivo de divs ({int(div_ratio*100)}% del contenido)")
+
+        # Penalizacion por ratio muy pobre de semantica
+        if total_semantic > 0:
+            semantic_ratio = total_semantic / (total_divs + total_semantic) if (total_divs + total_semantic) > 0 else 0
+            if semantic_ratio < 0.2:  # Menos del 20% semantico
+                score -= 3.0
+                issues.append(f"Muy pocos elementos semanticos ({total_semantic} vs {total_divs} divs)")
+            elif semantic_ratio < 0.3:
+                score -= 1.5
+                issues.append(f"Pocos elementos semanticos (ratio: {semantic_ratio:.2f})")
+        else:
+            score -= 4.0
+            issues.append("Sin elementos semanticos detectados")
+
+        # Penalizacion por total excesivo de divs
+        if total_divs > 100:
+            score -= 1.0
+            issues.append(f"Exceso de divs totales ({total_divs})")
+
+        score = max(0.0, score)
+
+        # Determinar status
+        if score >= 8:
+            status = "pass"
+            message = "Estructura HTML limpia (sin divitis)"
+        elif score >= 5:
+            status = "partial"
+            message = "Estructura HTML aceptable (divitis moderada)"
+        else:
+            status = "fail"
+            message = "Estructura HTML problematica (divitis severa)"
+
+        # Recomendaciones EDUCATIVAS detalladas
+        recomendaciones = []
+        recomendacion_educativa = None
+
+        if has_divitis or div_ratio > DIVITIS_RULES['ratio_threshold_warning']:
+            # Generar recomendacion educativa con ejemplos de codigo
+            recomendacion_educativa = RecomendacionesSemanticas.divitis_severa(
+                div_ratio=div_ratio,
+                total_divs=total_divs,
+                total_semantic=total_semantic
+            )
+            # Mantener tambien las recomendaciones simples para compatibilidad
+            recomendaciones.append("Reemplazar <div> wrappers por elementos semanticos: <section>, <article>, <aside>")
+            recomendaciones.append("Usar <figure> para imagenes con caption en lugar de <div>")
 
         return CriteriaEvaluation(
             criteria_id="SEM-04",
@@ -334,36 +527,52 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             dimension=self.dimension,
             lineamiento=self.criterios["SEM-04"]["lineamiento"],
             status=status,
-            score=score,
+            score=round(score, 2),
             max_score=10,
             details={
-                "table_count": table_count,
+                "total_divs": total_divs,
+                "total_semantic": total_semantic,
+                "div_ratio": round(div_ratio, 2),
+                "has_divitis": has_divitis,
+                "issues": issues,
                 "message": message,
-                "note": "Verificación detallada de <th> pendiente"
+                "recomendacion_educativa": recomendacion_educativa
             },
-            evidence={}
+            evidence={
+                "recomendaciones": recomendaciones,
+                "recomendacion_detallada": RecomendacionesSemanticas.formatear_recomendacion(recomendacion_educativa) if recomendacion_educativa else None,
+                "threshold_warning": DIVITIS_RULES['ratio_threshold_warning'],
+                "threshold_fail": DIVITIS_RULES['ratio_threshold_fail']
+            }
         )
+
+    # ========================================================================
+    # GRUPO SEO - Optimizacion para Motores de Busqueda
+    # ========================================================================
 
     def _evaluar_seo01(self, metadata: Dict) -> CriteriaEvaluation:
         """
-        SEO-01: Meta description
-        Debe tener meta description de al menos 50 caracteres
+        SEO-01: Titulo de pagina descriptivo
+        - Existe <title>
+        - Tiene >10 caracteres (descriptivo)
+        Score: 10 si cumple, 5 si solo existe pero corto, 0 si no existe
         """
-        description = metadata.get('description') or ''
-        desc_length = len(description)
+        title = metadata.get('title', '')
+        title_length = metadata.get('title_length', len(title) if title else 0)
+        has_title = metadata.get('has_title', bool(title))
 
-        if desc_length >= 50:
+        if has_title and title_length >= 10:
             status = "pass"
-            score = 10
-            message = f"Meta description presente ({desc_length} caracteres)"
-        elif desc_length > 0:
+            score = 10.0
+            message = f"Titulo descriptivo presente ({title_length} caracteres)"
+        elif has_title:
             status = "partial"
-            score = 5
-            message = f"Meta description muy corta ({desc_length} caracteres)"
+            score = 5.0
+            message = f"Titulo muy corto ({title_length} caracteres, minimo recomendado: 10)"
         else:
             status = "fail"
-            score = 0
-            message = "No hay meta description"
+            score = 0.0
+            message = "No se encontro titulo de pagina"
 
         return CriteriaEvaluation(
             criteria_id="SEO-01",
@@ -374,34 +583,40 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             score=score,
             max_score=10,
             details={
-                "description": description,
-                "length": desc_length,
-                "min_required": 50,
+                "has_title": has_title,
+                "title_length": title_length,
+                "is_descriptive": title_length >= 10,
+                "recommended_length": "50-60 caracteres",
                 "message": message
             },
-            evidence={"meta_description": description}
+            evidence={
+                "title": title[:100] if title else "No presente"
+            }
         )
 
     def _evaluar_seo02(self, metadata: Dict) -> CriteriaEvaluation:
         """
-        SEO-02: Meta keywords
-        Debe tener meta keywords
+        SEO-02: Meta descripcion presente
+        - Existe <meta name="description">
+        - Tiene >50 caracteres
+        Score: 10 si cumple, 5 si corta, 0 si no existe
         """
-        keywords = metadata.get('keywords') or ''
-        has_keywords = len(keywords) > 0
+        description = metadata.get('description', '')
+        description_length = metadata.get('description_length', len(description) if description else 0)
+        has_description = metadata.get('has_description', bool(description))
 
-        if has_keywords and len(keywords) >= 20:
+        if has_description and description_length >= 50:
             status = "pass"
-            score = 8
-            message = "Meta keywords presente"
-        elif has_keywords:
+            score = 10.0
+            message = f"Meta descripcion presente ({description_length} caracteres)"
+        elif has_description:
             status = "partial"
-            score = 4
-            message = "Meta keywords muy breve"
+            score = 5.0
+            message = f"Meta descripcion muy corta ({description_length} caracteres, minimo: 50)"
         else:
             status = "fail"
-            score = 0
-            message = "No hay meta keywords"
+            score = 0.0
+            message = "No se encontro meta descripcion"
 
         return CriteriaEvaluation(
             criteria_id="SEO-02",
@@ -410,69 +625,40 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             lineamiento=self.criterios["SEO-02"]["lineamiento"],
             status=status,
             score=score,
-            max_score=8,
+            max_score=10,
             details={
-                "keywords": keywords,
-                "has_keywords": has_keywords,
-                "length": len(keywords),
+                "has_description": has_description,
+                "description_length": description_length,
+                "is_adequate": description_length >= 50,
+                "recommended_length": "150-160 caracteres",
                 "message": message
             },
-            evidence={"meta_keywords": keywords}
+            evidence={
+                "description": description[:200] if description else "No presente"
+            }
         )
 
-    def _evaluar_seo03(self, links: Dict) -> CriteriaEvaluation:
+    def _evaluar_seo03(self, metadata: Dict) -> CriteriaEvaluation:
         """
-        SEO-03: URLs amigables
-        URLs no deben tener muchos parámetros o IDs numéricos
+        SEO-03: Meta keywords (opcional pero recomendado)
+        - Verificar <meta name="keywords">
+        Score: 10 si existe, 0 si no
+        Nota: Es un criterio menos critico en SEO moderno
         """
-        links_list = links.get('links', [])
+        keywords = metadata.get('keywords', '')
+        has_keywords = metadata.get('has_keywords', bool(keywords))
 
-        if len(links_list) == 0:
-            return CriteriaEvaluation(
-                criteria_id="SEO-03",
-                criteria_name=self.criterios["SEO-03"]["name"],
-                dimension=self.dimension,
-                lineamiento=self.criterios["SEO-03"]["lineamiento"],
-                status="na",
-                score=10,
-                max_score=10,
-                details={"message": "No hay enlaces para evaluar"},
-                evidence={}
-            )
-
-        friendly_urls = 0
-        unfriendly_urls = 0
-
-        for link in links_list[:50]:  # Revisar primeros 50 enlaces
-            href = link.get('href', '').lower()
-
-            # URLs relativas o con rutas semánticas son amigables
-            if not href or href.startswith('#'):
-                continue
-
-            # Indicadores de URL no amigable
-            if '?' in href and href.count('=') > 2:
-                unfriendly_urls += 1
-            elif href.count('id=') > 0:
-                unfriendly_urls += 1
-            else:
-                friendly_urls += 1
-
-        total_analyzed = friendly_urls + unfriendly_urls
-
-        if total_analyzed == 0:
-            compliance = 100
-        else:
-            compliance = (friendly_urls / total_analyzed) * 100
-
-        score = (compliance / 100) * 10
-
-        if compliance >= 80:
+        if has_keywords:
             status = "pass"
-        elif compliance >= 60:
-            status = "partial"
+            score = 10.0
+            keyword_list = [k.strip() for k in keywords.split(',') if k.strip()]
+            keyword_count = len(keyword_list)
+            message = f"Meta keywords presente ({keyword_count} keywords)"
         else:
             status = "fail"
+            score = 0.0
+            keyword_count = 0
+            message = "No se encontro meta keywords (opcional pero recomendado)"
 
         return CriteriaEvaluation(
             criteria_id="SEO-03",
@@ -480,38 +666,120 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             dimension=self.dimension,
             lineamiento=self.criterios["SEO-03"]["lineamiento"],
             status=status,
-            score=round(score, 2),
+            score=score,
             max_score=10,
             details={
-                "friendly_urls": friendly_urls,
-                "unfriendly_urls": unfriendly_urls,
-                "total_analyzed": total_analyzed,
-                "compliance_percentage": round(compliance, 2),
-                "message": f"{friendly_urls}/{total_analyzed} URLs amigables"
+                "has_keywords": has_keywords,
+                "keyword_count": keyword_count,
+                "note": "Meta keywords es menos importante en SEO moderno pero aun recomendado",
+                "message": message
             },
-            evidence={}
+            evidence={
+                "keywords": keywords[:200] if keywords else "No presente"
+            }
         )
 
-    def _evaluar_fmt01(self, metadata: Dict) -> CriteriaEvaluation:
+    def _evaluar_seo04(self, url: str) -> CriteriaEvaluation:
         """
-        FMT-01: Responsive design
-        Debe tener viewport meta tag
+        SEO-04: URLs amigables
+        - URL no tiene >2 parametros query (?var1=&var2=)
+        - No tiene IDs numericos largos
+        Score: 10 si URL limpia, 5 si tiene 1-2 params, 0 si >2
         """
-        viewport = metadata.get('viewport') or ''
-        has_viewport = len(viewport) > 0
+        if not url:
+            return CriteriaEvaluation(
+                criteria_id="SEO-04",
+                criteria_name=self.criterios["SEO-04"]["name"],
+                dimension=self.dimension,
+                lineamiento=self.criterios["SEO-04"]["lineamiento"],
+                status="na",
+                score=10.0,
+                max_score=10,
+                details={"message": "URL no disponible para analisis"},
+                evidence={}
+            )
 
-        if has_viewport and 'width=device-width' in viewport:
-            status = "pass"
-            score = 12
-            message = "Viewport configurado para responsive design"
-        elif has_viewport:
+        try:
+            parsed = urlparse(url)
+            query_params = parse_qs(parsed.query)
+            param_count = len(query_params)
+
+            path = parsed.path
+            has_long_numeric_id = bool(re.search(r'/\d{5,}/', path)) or bool(re.search(r'/\d{5,}$', path))
+
+            issues = []
+
+            if param_count == 0 and not has_long_numeric_id:
+                status = "pass"
+                score = 10.0
+                message = "URL amigable y limpia"
+            elif param_count <= 2 and not has_long_numeric_id:
+                status = "partial"
+                score = 5.0
+                if param_count > 0:
+                    issues.append(f"{param_count} parametros query")
+                message = "URL aceptable: " + ", ".join(issues) if issues else "URL aceptable"
+            else:
+                status = "fail"
+                score = 0.0
+                if param_count > 2:
+                    issues.append(f"Demasiados parametros ({param_count})")
+                if has_long_numeric_id:
+                    issues.append("IDs numericos largos en URL")
+                message = "URL no amigable: " + ", ".join(issues)
+
+        except Exception as e:
             status = "partial"
-            score = 6
-            message = "Viewport presente pero no optimizado"
+            score = 5.0
+            param_count = 0
+            has_long_numeric_id = False
+            message = f"Error analizando URL: {str(e)}"
+
+        return CriteriaEvaluation(
+            criteria_id="SEO-04",
+            criteria_name=self.criterios["SEO-04"]["name"],
+            dimension=self.dimension,
+            lineamiento=self.criterios["SEO-04"]["lineamiento"],
+            status=status,
+            score=score,
+            max_score=10,
+            details={
+                "url_analyzed": url[:100],
+                "query_param_count": param_count,
+                "has_long_numeric_id": has_long_numeric_id,
+                "is_friendly": status == "pass",
+                "message": message
+            },
+            evidence={
+                "url": url
+            }
+        )
+
+    # ========================================================================
+    # GRUPO FMT - Formato y Estructura Tecnica
+    # ========================================================================
+
+    def _evaluar_fmt01(self, structure: Dict) -> CriteriaEvaluation:
+        """
+        FMT-01: Encoding UTF-8 declarado
+        Verificar <meta charset="UTF-8"> o equivalente
+        Score: 10 si existe, 0 si no
+        """
+        has_utf8 = structure.get('has_utf8_charset', False)
+        charset_declared = structure.get('charset_declared', '')
+
+        if has_utf8 or (charset_declared and charset_declared.lower() == 'utf-8'):
+            status = "pass"
+            score = 10.0
+            message = "Encoding UTF-8 declarado correctamente"
+        elif charset_declared:
+            status = "partial"
+            score = 5.0
+            message = f"Encoding declarado pero no es UTF-8: {charset_declared}"
         else:
             status = "fail"
-            score = 0
-            message = "No hay meta viewport"
+            score = 0.0
+            message = "No se declaro encoding de caracteres"
 
         return CriteriaEvaluation(
             criteria_id="FMT-01",
@@ -520,38 +788,41 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             lineamiento=self.criterios["FMT-01"]["lineamiento"],
             status=status,
             score=score,
-            max_score=12,
+            max_score=10,
             details={
-                "viewport": viewport,
-                "has_viewport": has_viewport,
-                "is_responsive": 'width=device-width' in viewport if has_viewport else False,
+                "has_utf8": has_utf8,
+                "charset_declared": charset_declared if charset_declared else "No declarado",
+                "expected": "UTF-8",
                 "message": message
             },
-            evidence={"meta_viewport": viewport}
+            evidence={
+                "declaration": f'<meta charset="{charset_declared}">' if charset_declared else "No encontrado"
+            }
         )
 
-    def _evaluar_fmt02(self, structure: Dict) -> CriteriaEvaluation:
+    def _evaluar_fmt02(self, metadata: Dict) -> CriteriaEvaluation:
         """
-        FMT-02: Validación HTML
-        Estructura básica debe estar presente
+        FMT-02: Viewport para responsive design
+        Verificar <meta name="viewport" content="width=device-width">
+        Score: 10 si existe, 0 si no
         """
-        # FIX: El crawler guarda 'has_html5_doctype', no 'has_doctype'
-        has_doctype = structure.get('has_html5_doctype', False)
-        has_html = structure.get('has_html', False)
-        has_head = structure.get('has_head', False)
-        has_body = structure.get('has_body', False)
+        viewport = metadata.get('viewport', '')
+        has_viewport = metadata.get('has_viewport', bool(viewport))
 
-        components = sum([has_doctype, has_html, has_head, has_body])
+        has_device_width = 'width=device-width' in viewport.lower().replace(' ', '') if viewport else False
 
-        # 2.5 puntos por cada componente
-        score = components * 2.5
-
-        if components == 4:
+        if has_viewport and has_device_width:
             status = "pass"
-        elif components >= 3:
+            score = 10.0
+            message = "Viewport configurado correctamente para responsive"
+        elif has_viewport:
             status = "partial"
+            score = 5.0
+            message = "Viewport presente pero puede no ser optimo"
         else:
             status = "fail"
+            score = 0.0
+            message = "No se encontro meta viewport (sitio no responsive)"
 
         return CriteriaEvaluation(
             criteria_id="FMT-02",
@@ -562,54 +833,17 @@ class EvaluadorSemanticaTecnica(BaseEvaluator):
             score=score,
             max_score=10,
             details={
-                "has_doctype": has_doctype,
-                "has_html": has_html,
-                "has_head": has_head,
-                "has_body": has_body,
-                "components": components,
-                "message": f"Estructura HTML con {components}/4 componentes básicos"
-            },
-            evidence={}
-        )
-
-    def _evaluar_lang02(self, text_corpus: Dict, metadata: Dict) -> CriteriaEvaluation:
-        """
-        LANG-02: Contenido en español
-        El contenido principal debe estar en español
-        """
-        total_words = text_corpus.get('total_words', 0)
-        lang = metadata.get('lang', '')
-
-        # Si el idioma está declarado como español y hay contenido, asumimos que cumple
-        if lang and lang.lower().startswith('es') and total_words > 100:
-            status = "pass"
-            score = 10
-            message = f"Contenido en español ({total_words} palabras)"
-        elif total_words > 100:
-            status = "partial"
-            score = 5
-            message = "Hay contenido pero el idioma no está claramente definido"
-        else:
-            status = "fail"
-            score = 0
-            message = "No se detectó contenido suficiente en español"
-
-        return CriteriaEvaluation(
-            criteria_id="LANG-02",
-            criteria_name=self.criterios["LANG-02"]["name"],
-            dimension=self.dimension,
-            lineamiento=self.criterios["LANG-02"]["lineamiento"],
-            status=status,
-            score=score,
-            max_score=10,
-            details={
-                "total_words": total_words,
-                "declared_lang": lang,
-                "is_spanish": lang and lang.lower().startswith('es') if lang else False,
+                "has_viewport": has_viewport,
+                "has_device_width": has_device_width,
+                "viewport_content": viewport if viewport else "No declarado",
+                "recommended": "width=device-width, initial-scale=1",
                 "message": message
             },
             evidence={
-                "lang": lang,
-                "word_count": total_words
+                "viewport": viewport if viewport else "No encontrado"
             }
         )
+
+
+# Alias para compatibilidad con codigo existente
+EvaluadorSemanticaTecnica = EvaluadorSemantica

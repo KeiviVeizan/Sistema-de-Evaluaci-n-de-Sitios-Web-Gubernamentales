@@ -28,6 +28,30 @@ from app.schemas.pydantic_schemas import (
     HealthResponse
 )
 
+# Nuevos schemas para API de evaluación
+from app.schemas.evaluation_schemas import (
+    # Enums
+    EvaluationStatusEnum,
+    CriteriaStatusEnum,
+
+    # Request schemas
+    EvaluateURLRequest,
+
+    # Response schemas
+    ScoresByDimension,
+    NLPScores,
+    CriteriaResultItem,
+    NLPAnalysisDetail,
+    EvaluationSummary,
+    EvaluateURLResponse,
+    EvaluationListItem,
+    EvaluationListResponse,
+
+    # API Status
+    APIStatusResponse,
+    HealthCheckResponse,
+)
+
 __all__ = [
     # Website
     "WebsiteBase",
@@ -49,5 +73,27 @@ __all__ = [
     "NLPAnalysisResponse",
 
     # Health
-    "HealthResponse"
+    "HealthResponse",
+
+    # === Nuevos schemas API Evaluación ===
+    # Enums
+    "EvaluationStatusEnum",
+    "CriteriaStatusEnum",
+
+    # Request
+    "EvaluateURLRequest",
+
+    # Response
+    "ScoresByDimension",
+    "NLPScores",
+    "CriteriaResultItem",
+    "NLPAnalysisDetail",
+    "EvaluationSummary",
+    "EvaluateURLResponse",
+    "EvaluationListItem",
+    "EvaluationListResponse",
+
+    # API Status
+    "APIStatusResponse",
+    "HealthCheckResponse",
 ]
