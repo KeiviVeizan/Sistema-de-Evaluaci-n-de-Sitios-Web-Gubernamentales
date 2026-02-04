@@ -1,0 +1,11 @@
+:root {
+  --color-primary: #800000;
+  --color-primary-dark: #5c0000;
+  --color-primary-light: #a03030;
+  --color-text: #333333;
+  --color-text-light: #666666;
+  --color-bg: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.08);
+  --font-main: 'Roboto', sans-serif;
+  --header-height: 64px;
+}

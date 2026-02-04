@@ -71,6 +71,7 @@ app = FastAPI(
 
 
 # Configurar CORS
+logger.info(f"CORS allowed_origins: {settings.allowed_origins}")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins,
@@ -87,53 +88,68 @@ app.include_router(evaluation_router, prefix=settings.api_v1_prefix)
 
 
 # Health check endpoint (fuera del prefijo API)
-@app.get("/health", tags=["Health"])
+@app.get(
+    "/health",
+    tags=["Health"],
+    summary="Health check",
+    description="Verifica el estado del servicio y sus dependencias"
+)
 async def health_check(db: Session = Depends(get_db)):
     """
-    Endpoint de health check para verificar el estado del servicio.
+    Endpoint de health check con verificacion de dependencias.
 
-    Verifica:
-    - Conexión a base de datos PostgreSQL
-    - Conexión a Redis
-    - Estado general del servicio
-
-    Returns:
-        dict: Estado del servicio, base de datos y Redis
+    - database: CRITICO - sistema no funciona sin BD
+    - redis: OPCIONAL - sistema funciona sin cache (degraded mode)
     """
-    from app.schemas import HealthResponse
     from datetime import datetime
     from sqlalchemy import text
+    from app.cache import cache_manager
 
-    # Verificar PostgreSQL
+    # Verificar PostgreSQL (CRITICO)
     db_status = "connected"
+    db_healthy = True
     try:
         db.execute(text("SELECT 1"))
         db.commit()
     except Exception as e:
         db_status = f"error: {str(e)[:100]}"
+        db_healthy = False
         logger.error(f"Database health check failed: {e}")
 
-    # Verificar Redis
-    redis_status = "connected"
-    try:
-        import redis
-        r = redis.Redis.from_url(settings.redis_url, socket_connect_timeout=2, socket_timeout=2)
-        r.ping()
-        r.close()
-    except Exception as e:
-        redis_status = f"error: {str(e)[:100]}"
-        logger.error(f"Redis health check failed: {e}")
+    # Verificar Redis (OPCIONAL)
+    redis_stats = cache_manager.get_stats()
+    redis_healthy = redis_stats.get("available", False)
 
-    # Status general
-    overall_status = "healthy" if (db_status == "connected" and redis_status == "connected") else "unhealthy"
+    # El sistema esta healthy si la BD funciona (Redis es opcional)
+    overall_status = "healthy" if db_healthy else "critical"
 
-    return HealthResponse(
-        status=overall_status,
-        database=db_status,
-        redis=redis_status,
-        version=__version__,
-        timestamp=datetime.utcnow()
-    )
+    # Si Redis no esta pero BD si, es "degraded" pero operativo
+    if db_healthy and not redis_healthy:
+        overall_status = "degraded"
+
+    return {
+        "status": overall_status,
+        "timestamp": datetime.now().isoformat(),
+        "components": {
+            "database": {
+                "status": db_status,
+                "healthy": db_healthy,
+                "critical": True
+            },
+            "redis": {
+                "status": redis_stats.get("status", "unknown"),
+                "healthy": redis_healthy,
+                "critical": False,
+                "stats": redis_stats if redis_healthy else None
+            }
+        },
+        "version": __version__,
+        "message": (
+            "Sistema operativo" if overall_status == "healthy" else
+            "Sistema operativo sin cache (Redis no disponible)" if overall_status == "degraded" else
+            "Sistema no operativo - BD desconectada"
+        )
+    }
 
 
 # Root endpoint

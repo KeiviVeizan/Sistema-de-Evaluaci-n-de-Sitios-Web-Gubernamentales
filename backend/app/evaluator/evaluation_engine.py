@@ -3,12 +3,12 @@ Motor de evaluacion que orquesta todos los evaluadores.
 
 Este motor coordina la ejecucion de los evaluadores:
 - Accesibilidad (30%): 10 criterios WCAG
-- Usabilidad (30%): 8 criterios de navegacion/identidad
+- Usabilidad (30%): 9 criterios de navegacion/identidad
 - Semantica Tecnica (15%): 10 criterios HTML5
 - Semantica Contenido NLP (15%): 3 criterios BETO
 - Soberania (10%): 4 criterios D.S. 3925
 
-Total: 35 criterios (32 heuristicos + 3 NLP)
+Total: 36 criterios (33 heuristicos + 3 NLP)
 """
 import logging
 from typing import Dict, List, Any, Optional
@@ -88,7 +88,7 @@ class EvaluationEngine:
         """
         self.db = db
 
-        # Inicializar evaluadores REALES (32 criterios heuristicos)
+        # Inicializar evaluadores REALES (33 criterios heuristicos)
         self.evaluadores = {
             "accesibilidad": EvaluadorAccesibilidad(),
             "usabilidad": EvaluadorUsabilidad(),
@@ -112,19 +112,19 @@ class EvaluationEngine:
 
         logger.info("EvaluationEngine inicializado con evaluadores REALES:")
         logger.info("  - EvaluadorAccesibilidad (10 criterios)")
-        logger.info("  - EvaluadorUsabilidad (8 criterios)")
+        logger.info("  - EvaluadorUsabilidad (9 criterios)")
         logger.info("  - EvaluadorSemantica (10 criterios)")
         logger.info("  - EvaluadorSoberania (4 criterios)")
         if HAS_NLP:
             logger.info("  - NLPAnalyzer (3 criterios: coherencia, ambiguedad, claridad)")
-        logger.info(f"  Total: {32 + (3 if HAS_NLP else 0)} criterios")
+        logger.info(f"  Total: {33 + (3 if HAS_NLP else 0)} criterios")
 
     def evaluar_sitio(self, website_id: int) -> Dict:
         """
         Evalúa un sitio completo con evaluadores heuristicos + NLP.
 
         1. Obtiene el contenido extraído
-        2. Ejecuta evaluadores heuristicos (32 criterios)
+        2. Ejecuta evaluadores heuristicos (33 criterios)
         3. Ejecuta análisis NLP (3 criterios)
         4. Guarda resultados en BD (criteria_results + nlp_analysis)
         5. Calcula scores finales ponderados
@@ -163,7 +163,7 @@ class EvaluationEngine:
         try:
             all_results = []
 
-            # 3. Ejecutar evaluadores heuristicos (32 criterios)
+            # 3. Ejecutar evaluadores heuristicos (33 criterios)
             for dimension_name, evaluador in self.evaluadores.items():
                 results = evaluador.evaluate(extracted_data)
 
@@ -461,23 +461,26 @@ class EvaluationEngine:
 
     def evaluate_url(self, url: str) -> Dict[str, Any]:
         """
-        Evalua una URL directamente sin usar base de datos.
+        Evalua una URL directamente sin usar base de datos (SYNC).
 
-        Este metodo es util para:
-        - Testing end-to-end
-        - Evaluacion rapida sin persistencia
-        - Demostraciones
+        Este metodo es SYNC y sera ejecutado en un ThreadPoolExecutor
+        desde el endpoint async de FastAPI.
 
         Ejecuta:
-        - 32 criterios heuristicos
-        - 3 criterios NLP (si disponible)
-        - Total: 35 criterios
+        - 33 criterios heuristicos (ACC, USA, SEM, SOB)
+        - Analisis NLP complementario (coherencia, ambiguedad, claridad)
+        - Total: 33 criterios + 3 criterios NLP = 36 resultados
 
         Args:
             url: URL del sitio a evaluar
 
         Returns:
-            Dict con resultados completos de la evaluacion
+            Dict con resultados completos incluyendo:
+            - url, status, timestamp
+            - scores (por dimension + total)
+            - criteria_results (lista de criterios evaluados)
+            - nlp_analysis (analisis NLP completo)
+            - summary (estadisticas)
         """
         if not self.crawler:
             raise RuntimeError("Crawler no disponible. Instalar dependencias.")
@@ -485,7 +488,7 @@ class EvaluationEngine:
         logger.info(f"Iniciando evaluacion de: {url}")
         logger.info("=" * 60)
 
-        # 1. Crawlear el sitio
+        # 1. Crawlear el sitio (SYNC)
         logger.info("[1/3] Extrayendo contenido...")
         extracted_content = self.crawler.crawl(url)
 
@@ -664,7 +667,10 @@ class EvaluationEngine:
 
 def evaluar_url(url: str) -> Dict[str, Any]:
     """
-    Funcion de conveniencia para evaluar una URL directamente.
+    Funcion de conveniencia para evaluar una URL directamente (SYNC).
+
+    Esta funcion es SYNC y sera ejecutada en un ThreadPoolExecutor
+    desde el endpoint async de FastAPI.
 
     Ejemplo de uso:
         from app.evaluator.evaluation_engine import evaluar_url

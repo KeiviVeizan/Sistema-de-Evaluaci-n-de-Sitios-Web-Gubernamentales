@@ -21,7 +21,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
-        case_sensitive=False
+        case_sensitive=False,
+        extra="ignore"  # Ignora variables extra en .env
     )
 
     # Database Configuration
@@ -57,7 +58,7 @@ class Settings(BaseSettings):
     )
     debug: bool = Field(default=True, description="Modo debug")
     allowed_origins: List[str] = Field(
-        default=["http://localhost:3000", "http://localhost:8000"],
+        default=["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"],
         description="Orígenes permitidos para CORS"
     )
 
@@ -119,7 +120,15 @@ class Settings(BaseSettings):
     def parse_allowed_origins(cls, v):
         """Parsea los orígenes permitidos desde string o lista."""
         if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
+            v = v.strip()
+            if v.startswith('[') and v.endswith(']'):
+                v = v[1:-1]
+            origins = []
+            for origin in v.split(","):
+                origin = origin.strip().strip('"').strip("'")
+                if origin:
+                    origins.append(origin)
+            return origins
         return v
 
     @field_validator("secret_key")

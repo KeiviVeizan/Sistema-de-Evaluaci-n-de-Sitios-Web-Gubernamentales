@@ -99,12 +99,12 @@ class CriteriaResultItem(BaseModel):
     criteria_id: str = Field(..., example="ACC-01")
     criteria_name: str = Field(..., example="Texto alternativo en imagenes")
     dimension: str = Field(..., example="accesibilidad")
-    lineamiento: str = Field(..., example="WCAG 2.0 - 1.1.1")
+    lineamiento: str = Field(default="", example="WCAG 2.0 - 1.1.1")
     status: str = Field(..., example="pass")
     score: float = Field(..., ge=0, example=1.0)
     max_score: float = Field(..., ge=0, example=1.0)
-    details: Optional[Dict[str, Any]] = None
-    evidence: Optional[Dict[str, Any]] = None
+    details: Optional[Any] = Field(default=None, description="Detalles del criterio (flexible)")
+    evidence: Optional[Any] = Field(default=None, description="Evidencias (dict, list, o cualquier estructura)")
 
 
 class NLPAnalysisDetail(BaseModel):

@@ -1,0 +1,21 @@
+.animated-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+
+.animated-bg__dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--color-primary);
+  opacity: 0;
+  will-change: transform, opacity;
+  transition: opacity 0.3s ease;
+}

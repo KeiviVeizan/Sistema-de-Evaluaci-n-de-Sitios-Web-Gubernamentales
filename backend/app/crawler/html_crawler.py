@@ -67,21 +67,12 @@ class GobBoCrawler:
         self.session = requests.Session()
         self.session.headers.update({'User-Agent': self.user_agent})
 
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(multiplier=1, min=2, max=10),
-        retry=retry_if_exception_type((PlaywrightTimeout, ConnectionError)),
-        reraise=True
-    )
     def _fetch_page_with_playwright(self, url: str) -> Optional[str]:
         """
-        Obtiene el HTML de una URL usando Playwright (ejecuta JavaScript).
+        Obtiene el HTML de una URL usando Playwright SYNC (ejecuta JavaScript).
 
-        Esto permite extraer contenido de sitios web que cargan contenido dinámicamente
+        Esto permite extraer contenido de sitios web que cargan contenido dinamicamente
         con JavaScript (SPAs como React, Vue, Angular).
-
-        Implementa reintentos automáticos (hasta 3 intentos) con backoff exponencial
-        en caso de timeout o errores de conexión.
 
         Args:
             url: URL del sitio web a cargar
@@ -90,38 +81,38 @@ class GobBoCrawler:
             str: HTML completamente renderizado, o None si hay error
         """
         try:
-            logger.info(f"Usando Playwright para cargar {url}")
+            logger.info(f"Usando Playwright SYNC para cargar {url}")
 
             with sync_playwright() as p:
                 # Lanzar navegador Chromium en modo headless
                 browser = p.chromium.launch(
                     headless=True,
                     args=[
-                        '--disable-dev-shm-usage',  # Evitar problemas de memoria compartida
-                        '--no-sandbox',              # Necesario en algunos entornos
-                        '--disable-web-security'     # Para sitios con CORS estricto
+                        '--disable-dev-shm-usage',
+                        '--no-sandbox',
+                        '--disable-web-security'
                     ]
                 )
 
-                # Crear contexto de navegación con configuración
+                # Crear contexto de navegacion con configuracion
                 context = browser.new_context(
                     user_agent=self.user_agent,
                     viewport={'width': 1920, 'height': 1080},
-                    ignore_https_errors=True  # Manejar certificados SSL inválidos
+                    ignore_https_errors=True
                 )
 
-                # Crear nueva página
+                # Crear nueva pagina
                 page = context.new_page()
-                page.set_default_timeout(self.timeout * 1000)  # Convertir a milisegundos
+                page.set_default_timeout(self.timeout * 1000)
 
-                # Navegar a la URL y esperar a que la red esté inactiva
+                # Navegar a la URL y esperar a que la red este inactiva
                 logger.info(f"Navegando a {url} y esperando carga de JavaScript...")
                 page.goto(url, wait_until='networkidle')
 
-                # Esperar a que el DOM esté completamente cargado
+                # Esperar a que el DOM este completamente cargado
                 page.wait_for_load_state('domcontentloaded')
 
-                # Scroll para activar lazy loading de imágenes y contenido
+                # Scroll para activar lazy loading de imagenes y contenido
                 logger.info("Simulando scroll para activar lazy loading...")
                 page.evaluate('''
                     window.scrollTo(0, document.body.scrollHeight / 2);
@@ -171,37 +162,40 @@ class GobBoCrawler:
 
     def crawl(self, url: str) -> Dict[str, Any]:
         """
-        Crawlea un sitio web y extrae toda la información necesaria.
+        Crawlea un sitio web y extrae toda la informacion necesaria (SYNC).
+
+        Este metodo es SYNC y sera ejecutado en un ThreadPoolExecutor
+        desde el endpoint async de FastAPI.
 
         Args:
             url: URL del sitio web a crawlear
 
         Returns:
-            dict: Diccionario con toda la información extraída
+            dict: Diccionario con toda la informacion extraida
 
         Raises:
-            ValueError: Si la URL es inválida o no es un dominio .gob.bo
-            RequestException: Si ocurre un error en la petición HTTP
+            ValueError: Si la URL es invalida o no es un dominio .gob.bo
+            RequestException: Si ocurre un error en la peticion HTTP
         """
-        # Validar que URL no sea None o vacía
+        # Validar que URL no sea None o vacia
         if not url or not isinstance(url, str):
-            raise ValueError("URL debe ser un string no vacío")
+            raise ValueError("URL debe ser un string no vacio")
 
         # Limpiar URL
         url = url.strip()
 
         # Validar que comience con http:// o https://
         if not url.startswith(('http://', 'https://')):
-            raise ValueError(f"URL inválida: debe comenzar con http:// o https://. URL recibida: {url}")
+            raise ValueError(f"URL invalida: debe comenzar con http:// o https://. URL recibida: {url}")
 
         # Validar que sea dominio .gob.bo
         if not self._is_gob_bo_domain(url):
-            raise ValueError(f"La URL {url} no es un dominio .gob.bo válido")
+            raise ValueError(f"La URL {url} no es un dominio .gob.bo valido")
 
         logger.info(f"Iniciando crawling de {url}")
 
         try:
-            # Usar Playwright para obtener HTML con JavaScript ejecutado
+            # Usar Playwright SYNC para obtener HTML con JavaScript ejecutado
             html = self._fetch_page_with_playwright(url)
 
             if not html:
@@ -236,6 +230,7 @@ class GobBoCrawler:
                 'crawled_at': datetime.utcnow().isoformat(),
                 'http_status_code': 200,  # Asumimos 200 si Playwright cargó correctamente
                 'robots_txt': robots_info,
+                'raw_html': html,  # HTML crudo para SEM-04 (separación contenido-presentación)
                 'structure': structure_data,
                 'metadata': self._extract_metadata(soup),
                 'semantic_elements': self._extract_semantic_elements(soup),

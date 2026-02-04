@@ -6,14 +6,21 @@ Incluye:
 - POST /evaluate/{website_id}: Evaluar sitio existente
 - GET /results/{evaluation_id}: Obtener resultados
 - GET /evaluations: Listar evaluaciones
-- DELETE /evaluation/{evaluation_id}: Eliminar evaluación
+- DELETE /evaluation/{evaluation_id}: Eliminar evaluacion
+
+ARQUITECTURA:
+- Endpoints async (no bloquean servidor)
+- Evaluacion sync ejecutada en ThreadPoolExecutor
+- Patron recomendado por FastAPI para operaciones I/O-bound
 """
 from datetime import datetime
 from typing import Optional, List
+from concurrent.futures import ThreadPoolExecutor
+import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.evaluator.evaluation_engine import EvaluationEngine
+from app.evaluator.evaluation_engine import evaluar_url as ejecutar_evaluacion
 from app.models.database_models import Evaluation, CriteriaResult, Website, NLPAnalysis
 from app.schemas.evaluation_schemas import (
     EvaluateURLRequest,
@@ -29,6 +36,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/evaluation", tags=["Evaluation"])
+
+# Thread pool para operaciones I/O-bound (crawling con Playwright)
+# max_workers=3 permite hasta 3 evaluaciones concurrentes
+_executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="gob_evaluator")
 
 
 # ============================================================================
@@ -74,94 +85,79 @@ async def evaluate_url(
     - **force_recrawl**: Forzar re-crawling (default: False)
     """
     try:
-        logger.info(f"Iniciando evaluación de URL: {request.url}")
+        logger.info(f"Iniciando evaluacion de URL: {request.url}")
 
-        # Crear instancia del motor de evaluación
-        engine = EvaluationEngine(db)
+        # Ejecutar evaluacion SYNC en thread pool (no bloquea event loop)
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            _executor,
+            ejecutar_evaluacion,
+            str(request.url)
+        )
 
-        # Evaluar la URL usando el método evaluar_url
-        result = engine.evaluar_url(request.url, force_recrawl=request.force_recrawl)
+        logger.info(f"Evaluacion completada - Score: {result.get('scores', {}).get('total', 0):.1f}%")
 
-        # Obtener la evaluación de la BD para datos adicionales
-        evaluation = db.query(Evaluation).filter(
-            Evaluation.id == result.get('evaluation_id')
-        ).first()
-
-        # Obtener criterios evaluados
+        # Obtener criterios directamente del resultado (ya vienen de evaluate_url)
+        raw_criteria = result.get('criteria_results', [])
         criteria_results = []
-        if evaluation:
-            db_criteria = db.query(CriteriaResult).filter(
-                CriteriaResult.evaluation_id == evaluation.id
-            ).all()
-
-            for cr in db_criteria:
+        for cr in raw_criteria:
+            # Manejar tanto objetos con to_dict() como dicts directos
+            if isinstance(cr, dict):
                 criteria_results.append(CriteriaResultItem(
-                    criteria_id=cr.criteria_id,
-                    criteria_name=cr.criteria_name,
-                    dimension=cr.dimension,
-                    lineamiento=cr.lineamiento or "",
-                    status=cr.status,
-                    score=cr.score,
-                    max_score=cr.max_score,
-                    details=cr.details,
-                    evidence=cr.evidence
+                    criteria_id=cr.get('criteria_id', ''),
+                    criteria_name=cr.get('criteria_name', ''),
+                    dimension=cr.get('dimension', ''),
+                    lineamiento=cr.get('lineamiento', ''),
+                    status=cr.get('status', 'na'),
+                    score=cr.get('score', 0),
+                    max_score=cr.get('max_score', 10),
+                    details=cr.get('details', {}),
+                    evidence=cr.get('evidence', [])
                 ))
 
-        # Obtener análisis NLP si existe
+        # Obtener analisis NLP directamente del resultado
+        nlp_data = result.get('nlp_analysis')
         nlp_analysis = None
-        if evaluation:
-            nlp_record = db.query(NLPAnalysis).filter(
-                NLPAnalysis.evaluation_id == evaluation.id
-            ).first()
+        if nlp_data:
+            nlp_analysis = NLPAnalysisDetail(
+                global_score=nlp_data.get('global_score', 0),
+                coherence_score=nlp_data.get('coherence_score', 0),
+                ambiguity_score=nlp_data.get('ambiguity_score', 0),
+                clarity_score=nlp_data.get('clarity_score', 0),
+                wcag_compliance=nlp_data.get('wcag_compliance', {}),
+                total_sections_analyzed=nlp_data.get('coherence_details', {}).get('sections_analyzed', 0) if nlp_data.get('coherence_details') else 0,
+                total_texts_analyzed=nlp_data.get('ambiguity_details', {}).get('total_analyzed', 0) if nlp_data.get('ambiguity_details') else 0,
+                recommendations=nlp_data.get('recommendations', []),
+                details={
+                    'coherence': nlp_data.get('coherence_details'),
+                    'ambiguity': nlp_data.get('ambiguity_details'),
+                    'clarity': nlp_data.get('clarity_details')
+                }
+            )
 
-            if nlp_record:
-                nlp_analysis = NLPAnalysisDetail(
-                    global_score=nlp_record.nlp_global_score,
-                    coherence_score=nlp_record.coherence_score,
-                    ambiguity_score=nlp_record.ambiguity_score,
-                    clarity_score=nlp_record.clarity_score,
-                    wcag_compliance=nlp_record.wcag_compliance or {},
-                    total_sections_analyzed=nlp_record.coherence_details.get('sections_analyzed', 0) if nlp_record.coherence_details else 0,
-                    total_texts_analyzed=nlp_record.ambiguity_details.get('total_analyzed', 0) if nlp_record.ambiguity_details else 0,
-                    recommendations=nlp_record.recommendations or [],
-                    details={
-                        'coherence': nlp_record.coherence_details,
-                        'ambiguity': nlp_record.ambiguity_details,
-                        'clarity': nlp_record.clarity_details
-                    }
-                )
+        # Usar summary directamente del resultado
+        summary_data = result.get('summary', {})
 
-        # Contar criterios por estado
-        passed = len([c for c in criteria_results if c.status == 'pass'])
-        failed = len([c for c in criteria_results if c.status == 'fail'])
-        partial = len([c for c in criteria_results if c.status == 'partial'])
-        not_applicable = len([c for c in criteria_results if c.status == 'na'])
-
-        # Contar criterios NLP (ACC-07, ACC-08, ACC-09)
-        nlp_criteria_ids = ['ACC-07', 'ACC-08', 'ACC-09']
-        nlp_criteria = len([c for c in criteria_results if c.criteria_id in nlp_criteria_ids])
-        heuristic_criteria = len(criteria_results) - nlp_criteria
-
-        # Construir respuesta
+        # Construir respuesta usando datos directos del resultado
         response = EvaluateURLResponse(
-            url=request.url,
+            url=str(request.url),
             status=result.get('status', 'completed'),
-            timestamp=datetime.now().isoformat(),
+            timestamp=result.get('timestamp', datetime.now().isoformat()),
             scores=result.get('scores', {}),
             nlp_analysis=nlp_analysis,
             criteria_results=criteria_results,
             summary=EvaluationSummary(
-                total_criteria=len(criteria_results),
-                heuristic_criteria=heuristic_criteria,
-                nlp_criteria=nlp_criteria,
-                passed=passed,
-                failed=failed,
-                partial=partial,
-                not_applicable=not_applicable
+                total_criteria=summary_data.get('total_criteria', len(criteria_results)),
+                heuristic_criteria=summary_data.get('heuristic_criteria', 32),
+                nlp_criteria=summary_data.get('nlp_criteria', 3 if nlp_analysis else 0),
+                passed=summary_data.get('passed', 0),
+                failed=summary_data.get('failed', 0),
+                partial=summary_data.get('partial', 0),
+                not_applicable=summary_data.get('not_applicable', 0)
             )
         )
 
-        logger.info(f"Evaluación completada: {request.url} - Score: {result.get('scores', {}).get('total', 0)}%")
+        logger.info(f"Response construido: {len(criteria_results)} criterios, NLP: {'Si' if nlp_analysis else 'No'}")
         return response
 
     except ValueError as e:

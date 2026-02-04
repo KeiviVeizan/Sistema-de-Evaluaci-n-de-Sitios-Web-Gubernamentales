@@ -1,0 +1,139 @@
+.hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 2rem;
+  margin-top: calc(-1 * var(--header-height));
+}
+
+.hero__title {
+  font-size: 2.75rem;
+  font-weight: 700;
+  color: var(--color-text);
+  text-align: center;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+  perspective: 500px;
+}
+
+.hero__letter {
+  will-change: transform, opacity;
+}
+
+.hero__title-accent {
+  color: var(--color-primary);
+}
+
+.hero__subtitle {
+  font-size: 1.1rem;
+  font-weight: 300;
+  color: var(--color-text-light);
+  text-align: center;
+  margin-bottom: 2.5rem;
+  max-width: 500px;
+}
+
+.hero__search {
+  display: flex;
+  align-items: center;
+  width: 90%;
+  max-width: 620px;
+  background: var(--color-bg);
+  border-radius: 50px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+}
+
+.hero__search:focus-within {
+  box-shadow: 0 6px 32px rgba(128, 0, 0, 0.15);
+}
+
+.hero__search-icon {
+  display: flex;
+  align-items: center;
+  padding-left: 1.25rem;
+  color: var(--color-text-light);
+}
+
+.hero__input {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 1.1rem 1rem;
+  font-size: 1rem;
+  color: var(--color-text);
+  background: transparent;
+}
+
+.hero__input::placeholder {
+  color: #aaa;
+}
+
+.hero__button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: none;
+  background: var(--color-primary);
+  color: white;
+  padding: 1.1rem 2rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.3s ease;
+}
+
+.hero__button:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.hero__button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.hero__spinner {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.hero__error {
+  margin-top: 1rem;
+  padding: 0.75rem 1.5rem;
+  background: #fff0f0;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+  color: var(--color-primary);
+  font-size: 0.875rem;
+  max-width: 620px;
+  text-align: center;
+}
+
+.hero__hint {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.hero__hint code {
+  background: #f5f5f5;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}

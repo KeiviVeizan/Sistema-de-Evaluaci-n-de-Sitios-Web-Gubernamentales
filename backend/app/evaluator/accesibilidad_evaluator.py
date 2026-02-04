@@ -16,16 +16,16 @@ class EvaluadorAccesibilidad(BaseEvaluator):
 
         # Pesos según tabla_final.xlsx
         self.criterios = {
-            "ACC-01": {"name": "Texto alternativo en imágenes", "points": 15, "lineamiento": "D.S. 3925 (FMT-02) / WCAG 1.1.1"},
+            "ACC-01": {"name": "Texto alternativo en imágenes", "points": 14, "lineamiento": "D.S. 3925 (FMT-02) / WCAG 1.1.1"},
             "ACC-02": {"name": "Idioma de la página", "points": 10, "lineamiento": "D.S. 3925 (LANG-01) / WCAG 3.1.1"},
             "ACC-03": {"name": "Título descriptivo de página", "points": 10, "lineamiento": "D.S. 3925 (BUSC-03) / WCAG 2.4.2"},
             "ACC-04": {"name": "Estructura de encabezados", "points": 12, "lineamiento": "WCAG 1.3.1, 2.4.6"},
-            "ACC-05": {"name": "Sin auto reproducción multimedia", "points": 8, "lineamiento": "D.S. 3925 (PROH-04) / WCAG 1.4.2"},
-            "ACC-06": {"name": "Contraste texto-fondo", "points": 15, "lineamiento": "WCAG 1.4.3"},
+            "ACC-05": {"name": "Sin auto reproducción multimedia", "points": 10, "lineamiento": "D.S. 3925 (PROH-04) / WCAG 1.4.2"},
+            "ACC-06": {"name": "Contraste texto-fondo", "points": 12, "lineamiento": "WCAG 1.4.3"},
             "ACC-07": {"name": "Etiquetas en formularios", "points": 12, "lineamiento": "WCAG 3.3.2"},
-            "ACC-08": {"name": "Enlaces descriptivos", "points": 10, "lineamiento": "WCAG 2.4.4"},
-            "ACC-09": {"name": "Encabezados y etiquetas descriptivas", "points": 8, "lineamiento": "WCAG 2.4.6"},
-            "ACC-10": {"name": "Idioma de partes", "points": 12, "lineamiento": "WCAG 3.1.2"}
+            "ACC-08": {"name": "Enlaces descriptivos", "points": 8, "lineamiento": "WCAG 2.4.4"},
+            "ACC-09": {"name": "Encabezados y etiquetas descriptivas", "points": 6, "lineamiento": "WCAG 2.4.6"},
+            "ACC-10": {"name": "Idioma de partes", "points": 6, "lineamiento": "WCAG 3.1.2"}
         }
 
     def evaluate(self, extracted_content: Dict) -> List[CriteriaEvaluation]:
@@ -73,16 +73,16 @@ class EvaluadorAccesibilidad(BaseEvaluator):
                 dimension=self.dimension,
                 lineamiento=self.criterios["ACC-01"]["lineamiento"],
                 status="na",
-                score=15,  # Full points si no aplica
-                max_score=15,
+                score=14,  # Full points si no aplica
+                max_score=14,
                 details={"message": "No se encontraron imágenes en el sitio"},
                 evidence={"total_images": 0}
             )
 
         compliance = (with_alt / total) * 100
 
-        # Scoring: 100% = 15pts, 90% = 13.5pts, etc.
-        score = (compliance / 100) * 15
+        # Scoring: 100% = 14pts proporcional
+        score = (compliance / 100) * 14
 
         if compliance == 100:
             status = "pass"
@@ -98,7 +98,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             lineamiento=self.criterios["ACC-01"]["lineamiento"],
             status=status,
             score=round(score, 2),
-            max_score=15,
+            max_score=14,
             details={
                 "total_images": total,
                 "with_alt": with_alt,
@@ -256,7 +256,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             message = "Se detectó contenido multimedia con reproducción automática"
         else:
             status = "pass"
-            score = 8
+            score = 10
             message = "No hay reproducción automática de multimedia"
 
         return CriteriaEvaluation(
@@ -266,7 +266,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             lineamiento=self.criterios["ACC-05"]["lineamiento"],
             status=status,
             score=score,
-            max_score=8,
+            max_score=10,
             details={
                 "has_autoplay": has_autoplay,
                 "audio_count": media.get('audio_count', 0),
@@ -287,8 +287,8 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             dimension=self.dimension,
             lineamiento=self.criterios["ACC-06"]["lineamiento"],
             status="na",
-            score=15,  # Por ahora full points
-            max_score=15,
+            score=12,  # Por ahora full points
+            max_score=12,
             details={
                 "message": "Análisis de contraste pendiente de implementación completa",
                 "note": "Requiere análisis de estilos CSS"
@@ -366,15 +366,15 @@ class EvaluadorAccesibilidad(BaseEvaluator):
                 dimension=self.dimension,
                 lineamiento=self.criterios["ACC-08"]["lineamiento"],
                 status="na",
-                score=10,
-                max_score=10,
+                score=8,
+                max_score=8,
                 details={"message": "No se encontraron enlaces"},
                 evidence={}
             )
 
         problematic = generic + empty
         compliance = ((total - problematic) / total) * 100
-        score = (compliance / 100) * 10
+        score = (compliance / 100) * 8
 
         if compliance >= 95:
             status = "pass"
@@ -390,7 +390,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             lineamiento=self.criterios["ACC-08"]["lineamiento"],
             status=status,
             score=round(score, 2),
-            max_score=10,
+            max_score=8,
             details={
                 "total_links": total,
                 "generic_text": generic,
@@ -432,14 +432,14 @@ class EvaluadorAccesibilidad(BaseEvaluator):
                 dimension=self.dimension,
                 lineamiento=self.criterios["ACC-09"]["lineamiento"],
                 status="na",
-                score=8,
-                max_score=8,
+                score=6,
+                max_score=6,
                 details={"message": "No hay headings ni formularios para evaluar"},
                 evidence={}
             )
 
         compliance = ((total_elements - problematic) / total_elements) * 100
-        score = (compliance / 100) * 8
+        score = (compliance / 100) * 6
 
         if compliance >= 95:
             status = "pass"
@@ -455,7 +455,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             lineamiento=self.criterios["ACC-09"]["lineamiento"],
             status=status,
             score=round(score, 2),
-            max_score=8,
+            max_score=6,
             details={
                 "total_elements": total_elements,
                 "empty_headings": len(empty_headings),
@@ -488,7 +488,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
                 lineamiento=self.criterios["ACC-10"]["lineamiento"],
                 status="fail",
                 score=0,
-                max_score=12,
+                max_score=6,
                 details={
                     "main_language": main_lang,
                     "has_main_language": False,
@@ -500,13 +500,13 @@ class EvaluadorAccesibilidad(BaseEvaluator):
         # Si el sitio tiene idioma principal y maneja bien los elementos con idioma diferente
         if acc_10_compliant:
             status = "pass"
-            score = 12
+            score = 6
             message = f"Idioma principal '{main_lang}' declarado correctamente"
             if count_diff_lang > 0:
                 message += f". {count_diff_lang} elementos con idioma diferente correctamente marcados"
         else:
             status = "partial"
-            score = 6
+            score = 3
             message = f"Idioma principal declarado pero posibles elementos sin marcar"
 
         return CriteriaEvaluation(
@@ -516,7 +516,7 @@ class EvaluadorAccesibilidad(BaseEvaluator):
             lineamiento=self.criterios["ACC-10"]["lineamiento"],
             status=status,
             score=score,
-            max_score=12,
+            max_score=6,
             details={
                 "main_language": main_lang,
                 "has_main_language": has_main_lang,
