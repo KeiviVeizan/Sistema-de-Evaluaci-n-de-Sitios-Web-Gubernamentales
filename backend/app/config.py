@@ -56,6 +56,10 @@ class Settings(BaseSettings):
         default="dev-secret-key-change-in-production-min-32-characters",
         description="Clave secreta para JWT y encriptación"
     )
+    jwt_algorithm: str = Field(default="HS256", description="Algoritmo JWT")
+    access_token_expire_minutes: int = Field(
+        default=480, description="Duración del token en minutos (8 horas)"
+    )
     debug: bool = Field(default=True, description="Modo debug")
     allowed_origins: List[str] = Field(
         default=["http://localhost:3000", "http://localhost:5173", "http://localhost:8000"],
@@ -113,6 +117,40 @@ class Settings(BaseSettings):
     ds3925_min_score: float = Field(
         default=70.0,
         description="Puntaje mínimo D.S. 3925 para considerarse aceptable"
+    )
+
+    # Email Configuration (para 2FA y notificaciones)
+    mail_username: str = Field(
+        default="",
+        description="Usuario de correo (Gmail)"
+    )
+    mail_password: str = Field(
+        default="",
+        description="Contraseña de aplicación de Gmail"
+    )
+    mail_from: str = Field(
+        default="noreply@evaluador.gob.bo",
+        description="Dirección de correo remitente"
+    )
+    mail_from_name: str = Field(
+        default="Evaluador GOB.BO",
+        description="Nombre del remitente"
+    )
+    mail_server: str = Field(
+        default="smtp.gmail.com",
+        description="Servidor SMTP"
+    )
+    mail_port: int = Field(
+        default=587,
+        description="Puerto SMTP"
+    )
+    mail_tls: bool = Field(
+        default=True,
+        description="Usar TLS"
+    )
+    mail_ssl: bool = Field(
+        default=False,
+        description="Usar SSL"
     )
 
     @field_validator("allowed_origins", mode="before")

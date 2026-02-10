@@ -21,7 +21,7 @@ function LetterSpan({ text, className }) {
   );
 }
 
-export default function Hero({ loading, onEvaluationStart, onEvaluationComplete, onEvaluationError }) {
+export default function Hero({ loading, onEvaluationStart, onEvaluationComplete, onEvaluationError, compact = false }) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
   const animatedRef = useRef(false);
@@ -106,7 +106,7 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
   };
 
   return (
-    <section className="hero">
+    <section className={compact ? 'hero hero--compact' : 'hero'}>
       <h1 className="hero__title">
         <LetterSpan text="Evaluador de " />
         <LetterSpan text="Sitios Web" className="hero__title-accent" />

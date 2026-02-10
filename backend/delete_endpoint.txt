@@ -1,0 +1,33 @@
+@router.delete(
+    "/institutions/{institution_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Eliminar institución (Solo Superadmin)",
+)
+def delete_institution(
+    institution_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_superadmin),
+):
+    """
+    Elimina una institución y todos sus datos relacionados.
+    
+    ADVERTENCIA: Esta operación es irreversible y eliminará:
+    - La institución
+    - Todos los usuarios asociados (responsables)
+    - Todas las evaluaciones relacionadas (si existen)
+    """
+    institution = db.query(Institution).filter(Institution.id == institution_id).first()
+    if not institution:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Institución no encontrada",
+        )
+    
+    institution_name = institution.name
+    
+    # Eliminar la institución (cascade eliminará usuarios relacionados)
+    db.delete(institution)
+    db.commit()
+    
+    logger.warning(f"Institución ELIMINADA: {institution_name} (ID: {institution_id}) por {current_user.username}")
+    return None

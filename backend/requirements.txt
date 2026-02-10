@@ -48,3 +48,6 @@ tldextract==5.1.1
 
 # CORS y seguridad
 python-cors==1.0.0
+
+# Email
+fastapi-mail==1.4.1

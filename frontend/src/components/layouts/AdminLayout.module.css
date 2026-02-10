@@ -1,0 +1,406 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f3f4f6;
+}
+
+/* Overlay para móvil */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 40;
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .overlay {
+    display: block;
+  }
+}
+
+/* Sidebar */
+.sidebar {
+  width: 260px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 50;
+  transition: transform 0.3s ease;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    transform: translateX(-100%);
+  }
+
+  .sidebarOpen {
+    transform: translateX(0);
+  }
+}
+
+.sidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logo {
+  height: 36px;
+}
+
+.logoText {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--color-primary);
+  letter-spacing: -0.025em;
+}
+
+.closeSidebar {
+  display: none;
+  margin-left: auto;
+  padding: 4px;
+  background: none;
+  border: none;
+  color: var(--color-text-light);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.closeSidebar:hover {
+  background: #f3f4f6;
+  color: var(--color-text);
+}
+
+@media (max-width: 1024px) {
+  .closeSidebar {
+    display: flex;
+  }
+}
+
+/* Navegación */
+.nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  color: var(--color-text-light);
+  text-decoration: none;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  transition: all 0.2s;
+  font-size: 0.9375rem;
+}
+
+.navItem:hover {
+  background: #f3f4f6;
+  color: var(--color-text);
+}
+
+.navItemActive {
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  color: white;
+}
+
+.navItemActive:hover {
+  background: linear-gradient(135deg, var(--color-primary-dark) 0%, var(--color-primary-dark) 100%);
+  color: white;
+}
+
+/* Footer del sidebar */
+.sidebarFooter {
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.userDetails {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.userName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roleBadge {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.badgeSuperAdmin {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badgeSecretary {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badgeEvaluator {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badgeEntityUser {
+  background: #f3e8ff;
+  color: #6b21a8;
+}
+
+/* Contenido principal */
+.main {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Cuando la página ocupa todo el espacio, evitar scroll en el main */
+.mainFull {
+  flex: 1;
+  margin-left: 260px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 1024px) {
+  .main,
+  .mainFull {
+    margin-left: 0;
+  }
+}
+
+/* Header */
+.header {
+  height: 64px;
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.menuButton {
+  display: none;
+  padding: 8px;
+  background: none;
+  border: none;
+  color: var(--color-text);
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.menuButton:hover {
+  background: #f3f4f6;
+}
+
+@media (max-width: 1024px) {
+  .menuButton {
+    display: flex;
+  }
+}
+
+.headerTitle {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.headerActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Menú de usuario */
+.userMenu {
+  position: relative;
+}
+
+.userMenuButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.userMenuButton:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.userMenuAvatar {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.userMenuName {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+@media (max-width: 640px) {
+  .userMenuName {
+    display: none;
+  }
+}
+
+.rotated {
+  transform: rotate(180deg);
+}
+
+.userMenuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+
+.userMenuDropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 240px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  overflow: hidden;
+}
+
+.userMenuHeader {
+  padding: 16px;
+  background: #f9fafb;
+}
+
+.userMenuEmail {
+  font-size: 0.875rem;
+  color: var(--color-text);
+  font-weight: 500;
+  margin-bottom: 6px;
+}
+
+.roleBadgeSmall {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 2px 8px;
+  border-radius: 9999px;
+}
+
+.userMenuDivider {
+  height: 1px;
+  background: #e5e7eb;
+}
+
+.userMenuItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: var(--color-text);
+  text-decoration: none;
+  background: none;
+  border: none;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.userMenuItem:hover {
+  background: #f9fafb;
+}
+
+.logoutItem {
+  color: #dc2626;
+}
+
+.logoutItem:hover {
+  background: #fef2f2;
+}
+
+/* Contenido */
+.content {
+  flex: 1;
+  padding: 24px;
+}
+
+/* Sin padding para páginas que ocupan todo el espacio (ej: evaluaciones) */
+.contentFull {
+  flex: 1;
+  padding: 0;
+  overflow: hidden;
+  background: var(--color-bg, #ffffff);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 640px) {
+  .content {
+    padding: 16px;
+  }
+}

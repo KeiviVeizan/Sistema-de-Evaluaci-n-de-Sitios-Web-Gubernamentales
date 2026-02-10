@@ -1,0 +1,28 @@
+/* Ocupa exactamente el área del content sin padding ni scroll */
+.wrapper {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 64px);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg, #ffffff);
+}
+
+/* Cuando hay resultados, permitir scroll */
+.wrapperResults {
+  position: relative;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg, #ffffff);
+}
+
+/* Confinar el fondo animado al área del wrapper */
+.wrapper :global(.animated-bg) {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}

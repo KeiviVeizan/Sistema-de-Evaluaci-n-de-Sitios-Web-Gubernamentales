@@ -1,8 +1,8 @@
 """
 Modelos de base de datos usando SQLAlchemy ORM.
 
-Define las tablas para sitios web, evaluaciones, resultados de criterios
-y análisis NLP.
+Define las tablas para usuarios, instituciones, sitios web, evaluaciones,
+resultados de criterios y análisis NLP.
 """
 
 from datetime import datetime
@@ -15,6 +15,14 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 import enum
 
 from app.database import Base
+
+
+class UserRole(str, enum.Enum):
+    """Roles de usuario en el sistema."""
+    SUPERADMIN = "superadmin"
+    SECRETARY = "secretary"
+    EVALUATOR = "evaluator"
+    ENTITY_USER = "entity_user"
 
 
 class CrawlStatus(str, enum.Enum):
@@ -38,6 +46,66 @@ class CriteriaStatus(str, enum.Enum):
     PASS = "pass"
     FAIL = "fail"
     NOT_APPLICABLE = "na"
+
+
+class Institution(Base):
+    """
+    Modelo para instituciones gubernamentales.
+
+    Cada institución tiene un dominio .gob.bo y puede tener
+    múltiples usuarios asociados.
+    """
+
+    __tablename__ = "institutions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    domain: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relaciones
+    users: Mapped[List["User"]] = relationship(back_populates="institution", cascade="all, delete-orphan")
+
+    def __repr__(self) -> str:
+        return f"<Institution(id={self.id}, name={self.name}, domain={self.domain})>"
+
+
+class User(Base):
+    """
+    Modelo para usuarios del sistema.
+
+    Soporta roles: superadmin, secretary, evaluator.
+    Los usuarios pueden estar asociados a una institución.
+    """
+
+    __tablename__ = "users"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    full_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    position: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    role: Mapped[UserRole] = mapped_column(
+        SQLEnum(UserRole),
+        default=UserRole.EVALUATOR,
+        nullable=False
+    )
+    institution_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("institutions.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Relaciones
+    institution: Mapped[Optional["Institution"]] = relationship(back_populates="users")
+
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, username={self.username}, role={self.role})>"
 
 
 class Website(Base):
@@ -177,80 +245,12 @@ class NLPAnalysis(Base):
 
     Almacena resultados del análisis NLP usando BETO para evaluar
     la calidad del contenido textual del sitio web gubernamental.
-
-    Evalúa 3 dimensiones principales:
-    - Coherencia semántica: Similitud entre headings y contenido (BETO embeddings)
-    - Ambigüedades: Detección de textos genéricos/vagos (enlaces, labels, headings)
-    - Claridad: Legibilidad del texto (Índice Fernández Huerta)
-
-    Relación: 1:1 con Evaluation (una evaluación tiene un análisis NLP)
-
-    Estructura JSONB esperada:
-
-    coherence_details = {
-        "sections_analyzed": int,
-        "coherent_sections": int,
-        "incoherent_sections": int,
-        "average_similarity": float,
-        "threshold_used": float,
-        "section_scores": [
-            {
-                "heading": str,
-                "heading_level": int,
-                "word_count": int,
-                "similarity_score": float,
-                "is_coherent": bool,
-                "recommendation": str | None
-            }
-        ]
-    }
-
-    ambiguity_details = {
-        "total_analyzed": int,
-        "problematic_count": int,
-        "clear_count": int,
-        "by_category": {"genérico": int, "ambiguo": int, ...},
-        "by_element_type": {"link": int, "label": int, "heading": int},
-        "problematic_items": [
-            {
-                "text": str,
-                "element_type": str,
-                "category": str,
-                "recommendation": str,
-                "wcag_criterion": str
-            }
-        ]
-    }
-
-    clarity_details = {
-        "total_analyzed": int,
-        "clear_count": int,
-        "unclear_count": int,
-        "avg_fernandez_huerta": float,
-        "reading_difficulty": str,
-        "avg_sentence_length": float,
-        "avg_syllables_per_word": float,
-        "complex_words_percentage": float
-    }
-
-    wcag_compliance = {
-        "ACC-07": bool,  # Labels or Instructions (WCAG 3.3.2)
-        "ACC-08": bool,  # Link Purpose (WCAG 2.4.4)
-        "ACC-09": bool,  # Headings and Labels (WCAG 2.4.6)
-        "total_criteria": int,
-        "passed_criteria": int,
-        "compliance_percentage": float
-    }
     """
 
     __tablename__ = "nlp_analysis"
 
-    # =========================================================================
-    # Identificadores
-    # =========================================================================
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    # Relación 1:1 con evaluación (UNIQUE garantiza unicidad)
     evaluation_id: Mapped[int] = mapped_column(
         ForeignKey("evaluations.id", ondelete="CASCADE"),
         unique=True,
@@ -258,107 +258,32 @@ class NLPAnalysis(Base):
         index=True
     )
 
-    # =========================================================================
     # Scores principales (0-100)
-    # =========================================================================
-    # Score global: 40% coherencia + 40% ambigüedad + 20% claridad
-    nlp_global_score: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-        index=True
-    )
+    nlp_global_score: Mapped[float] = mapped_column(Float, nullable=False, index=True)
+    coherence_score: Mapped[float] = mapped_column(Float, nullable=False, index=True)
+    ambiguity_score: Mapped[float] = mapped_column(Float, nullable=False, index=True)
+    clarity_score: Mapped[float] = mapped_column(Float, nullable=False, index=True)
 
-    # Coherencia semántica (embeddings BETO + similitud coseno)
-    coherence_score: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-        index=True
-    )
+    # Detalles de análisis (JSON)
+    coherence_details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    ambiguity_details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
+    clarity_details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
-    # Claridad de textos (% de textos sin ambigüedades)
-    ambiguity_score: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-        index=True
-    )
-
-    # Legibilidad (Índice Fernández Huerta)
-    clarity_score: Mapped[float] = mapped_column(
-        Float,
-        nullable=False,
-        index=True
-    )
-
-    # =========================================================================
-    # Detalles de análisis (JSONB)
-    # =========================================================================
-    coherence_details: Mapped[dict] = mapped_column(
-        JSON,
-        nullable=False,
-        default=dict
-    )
-
-    ambiguity_details: Mapped[dict] = mapped_column(
-        JSON,
-        nullable=False,
-        default=dict
-    )
-
-    clarity_details: Mapped[dict] = mapped_column(
-        JSON,
-        nullable=False,
-        default=dict
-    )
-
-    # =========================================================================
     # Recomendaciones priorizadas
-    # =========================================================================
-    # Lista de strings ordenadas por prioridad
-    recommendations: Mapped[list] = mapped_column(
-        JSON,
-        nullable=False,
-        default=list
-    )
+    recommendations: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
 
-    # =========================================================================
     # Cumplimiento WCAG
-    # =========================================================================
-    wcag_compliance: Mapped[dict] = mapped_column(
-        JSON,
-        nullable=False,
-        default=dict
-    )
+    wcag_compliance: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
-    # =========================================================================
     # Timestamps
-    # =========================================================================
-    analyzed_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        nullable=False,
-        index=True
-    )
+    analyzed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        nullable=False
-    )
-
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
-        nullable=False
-    )
-
-    # =========================================================================
     # Relaciones
-    # =========================================================================
     evaluation: Mapped["Evaluation"] = relationship(back_populates="nlp_analysis")
 
     def __repr__(self) -> str:
-        """Representación string para debugging."""
         return (
             f"<NLPAnalysis(id={self.id}, "
             f"evaluation_id={self.evaluation_id}, "
@@ -366,13 +291,6 @@ class NLPAnalysis(Base):
         )
 
     def to_dict(self) -> dict:
-        """
-        Serializa el modelo a diccionario.
-
-        Returns:
-            Dict con todos los campos serializados correctamente,
-            incluyendo JSONB y arrays.
-        """
         return {
             "id": self.id,
             "evaluation_id": self.evaluation_id,
@@ -397,9 +315,7 @@ class ExtractedContent(Base):
     """
     Modelo para contenido extraído del sitio web.
 
-    Almacena todo el contenido HTML extraído por el crawler, incluyendo
-    estructura del documento, metadatos, elementos semánticos, imágenes,
-    enlaces, formularios, multimedia y recursos externos.
+    Almacena todo el contenido HTML extraído por el crawler.
     """
 
     __tablename__ = "extracted_content"
@@ -415,95 +331,42 @@ class ExtractedContent(Base):
     crawled_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     http_status_code: Mapped[Optional[int]] = mapped_column(nullable=True)
 
-    # Robots.txt (Buena práctica SEO)
-    robots_txt: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="exists, accessible, allows_crawling, has_sitemap"
-    )
+    # Robots.txt
+    robots_txt: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Estructura del documento (SEM-01, SEM-02, SEM-04)
-    html_structure: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="DOCTYPE, charset, elementos obsoletos"
-    )
+    # Estructura del documento
+    html_structure: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Metadatos (ACC-02, ACC-03, SEO-01, SEO-02, SEO-03)
-    page_metadata: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="title, lang, description, keywords, viewport"
-    )
+    # Metadatos
+    page_metadata: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Elementos semánticos HTML5 (SEM-03, NAV-01)
-    semantic_elements: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="header, nav, main, footer, article, section"
-    )
+    # Elementos semánticos HTML5
+    semantic_elements: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Headings (ACC-04, ACC-09)
-    headings: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="h1-h6 con texto y jerarquía"
-    )
+    # Headings
+    headings: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Imágenes (ACC-01, FMT-02)
-    images: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="src, alt, dimensiones"
-    )
+    # Imágenes
+    images: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Enlaces (ACC-08, PART-01 a PART-05)
-    links: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="clasificados por tipo: social, messaging, email, phone"
-    )
+    # Enlaces
+    links: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Formularios (ACC-07)
-    forms: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="inputs con/sin label"
-    )
+    # Formularios
+    forms: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Multimedia (ACC-05)
-    media: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="audio, video con/sin autoplay"
-    )
+    # Multimedia
+    media: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
-    # Recursos externos (PROH-01 a PROH-04)
-    external_resources: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="iframes, CDN, fuentes, trackers"
-    )
+    # Recursos externos
+    external_resources: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     # Estilos y scripts
-    stylesheets: Mapped[Optional[list]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="lista de CSS con clasificación"
-    )
-
-    scripts: Mapped[Optional[list]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="lista de JS con clasificación"
-    )
+    stylesheets: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
+    scripts: Mapped[Optional[list]] = mapped_column(JSON, nullable=True)
 
     # Corpus textual para análisis NLP
-    text_corpus: Mapped[Optional[dict]] = mapped_column(
-        JSON,
-        nullable=True,
-        comment="texto estructurado para análisis de coherencia"
-    )
+    text_corpus: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     # Relaciones
     website: Mapped["Website"] = relationship(back_populates="extracted_content")

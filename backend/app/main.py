@@ -13,10 +13,13 @@ from pathlib import Path
 from sqlalchemy.orm import Session
 
 from app.config import settings
-from app.database import init_db, get_db
+from app.database import init_db, get_db, SessionLocal
 from app.api.routes import router as api_router
 from app.api.crawler_routes import router as crawler_router
 from app.api.evaluation_routes import router as evaluation_router
+from app.api.auth_routes import router as auth_router
+from app.api.admin_routes import router as admin_router
+from app.auth.seed import seed_users
 from app import __version__, __description__
 
 
@@ -48,6 +51,13 @@ async def lifespan(_app: FastAPI):
     try:
         init_db()
         logger.info("Base de datos inicializada correctamente")
+
+        # Crear usuarios seed (solo si no existen)
+        db = SessionLocal()
+        try:
+            seed_users(db)
+        finally:
+            db.close()
     except Exception as e:
         logger.error(f"Error al inicializar base de datos: {e}")
         raise
@@ -85,6 +95,8 @@ app.add_middleware(
 app.include_router(api_router, prefix=settings.api_v1_prefix)
 app.include_router(crawler_router, prefix=settings.api_v1_prefix)
 app.include_router(evaluation_router, prefix=settings.api_v1_prefix)
+app.include_router(auth_router, prefix=settings.api_v1_prefix)
+app.include_router(admin_router, prefix=settings.api_v1_prefix)
 
 
 # Health check endpoint (fuera del prefijo API)

@@ -89,7 +89,7 @@ def init_db() -> None:
     from app.models import database_models  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
-    print("✓ Base de datos inicializada correctamente")
+    print("[OK] Base de datos inicializada correctamente")
 
 
 def drop_db() -> None:
@@ -100,7 +100,7 @@ def drop_db() -> None:
     en desarrollo o testing.
     """
     Base.metadata.drop_all(bind=engine)
-    print("✓ Todas las tablas eliminadas")
+    print("[OK] Todas las tablas eliminadas")
 
 
 def reset_db() -> None:
@@ -112,4 +112,4 @@ def reset_db() -> None:
     """
     drop_db()
     init_db()
-    print("✓ Base de datos reiniciada")
+    print("[OK] Base de datos reiniciada")

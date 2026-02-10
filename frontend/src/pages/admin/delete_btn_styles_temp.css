@@ -1,0 +1,39 @@
+/* Card Delete Button - RED */
+.cardDeleteBtn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: #dc2626;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    opacity: 0;
+    transform: scale(0.9);
+    z-index: 20;
+}
+
+.card:hover .cardDeleteBtn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.cardDeleteBtn:hover {
+    background: #b91c1c;
+    transform: scale(1.05);
+}
+
+.cardDeleteBtn:active {
+    transform: scale(0.95);
+}
+
+.cardDeleteBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

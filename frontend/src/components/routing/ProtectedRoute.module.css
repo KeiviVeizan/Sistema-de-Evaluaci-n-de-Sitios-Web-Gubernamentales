@@ -1,0 +1,65 @@
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  gap: 16px;
+  color: var(--color-text-light);
+  font-size: 0.9375rem;
+}
+
+.spinner {
+  color: var(--color-primary);
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.accessDenied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  text-align: center;
+  padding: 24px;
+}
+
+.accessDeniedIcon {
+  color: #dc2626;
+  margin-bottom: 16px;
+}
+
+.accessDenied h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 8px;
+}
+
+.accessDenied p {
+  font-size: 0.9375rem;
+  color: var(--color-text-light);
+  margin: 0 0 8px;
+}
+
+.roleInfo {
+  margin-top: 16px;
+  padding: 12px 20px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  font-size: 0.875rem;
+}
+
+.roleInfo strong {
+  color: var(--color-primary);
+  text-transform: capitalize;
+}
