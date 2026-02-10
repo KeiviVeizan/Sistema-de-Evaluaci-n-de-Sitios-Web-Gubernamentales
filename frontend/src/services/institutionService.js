@@ -10,10 +10,11 @@ const institutionService = {
    * @param {number} options.limit - Cantidad de registros
    * @returns {Promise} Lista de instituciones con total
    */
-  async getAll({ search = '', letter = '', skip = 0, limit = 500 } = {}) {
+  async getAll({ search = '', letter = '', domain = '', skip = 0, limit = 500 } = {}) {
     const params = { skip, limit };
     if (search) params.search = search;
     if (letter) params.letter = letter;
+    if (domain) params.domain = domain;
 
     const response = await api.get('/admin/institutions', { params });
     return response.data;

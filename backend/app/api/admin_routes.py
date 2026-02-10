@@ -260,6 +260,7 @@ def list_institutions(
     limit: int = Query(50, ge=1, le=1000),
     search: str = Query(None, description="Buscar por nombre"),
     letter: str = Query(None, description="Filtrar por letra inicial"),
+    domain: str = Query(None, description="Filtrar por dominio exacto"),
     db: Session = Depends(get_db),
     current_user: User = Depends(allow_admin_secretary),
 ):
@@ -271,6 +272,13 @@ def list_institutions(
 
     if letter:
         query = query.filter(Institution.name.ilike(f"{letter}%"))
+
+    if domain:
+        # Normalizar: quitar www. para comparación
+        normalized = domain.replace("www.", "", 1) if domain.startswith("www.") else domain
+        query = query.filter(
+            Institution.domain.ilike(normalized) | Institution.domain.ilike(f"www.{normalized}")
+        )
 
     total = query.count()
     institutions = query.offset(skip).limit(limit).all()

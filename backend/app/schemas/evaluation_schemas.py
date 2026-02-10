@@ -213,6 +213,56 @@ class EvaluationListResponse(BaseModel):
 # API STATUS SCHEMAS
 # ============================================================================
 
+# ============================================================================
+# SAVE EVALUATION SCHEMAS
+# ============================================================================
+
+class CriterionResultInput(BaseModel):
+    """Resultado de un criterio individual para guardar."""
+    criterion_id: str = Field(..., description="ID del criterio (ej: ACC-01)")
+    status: str = Field(..., description="Estado: pass, fail, partial, na")
+    score: Optional[float] = Field(None, description="Puntaje real obtenido (si se omite se calcula desde status)")
+    max_score: Optional[float] = Field(None, description="Puntaje máximo posible del criterio")
+    observations: Optional[str] = Field(None, description="Observaciones del evaluador")
+
+
+class SaveEvaluationRequest(BaseModel):
+    """Request para guardar una evaluacion manual."""
+    institution_id: int = Field(..., description="ID de la institucion evaluada")
+    criteria_results: List[CriterionResultInput] = Field(
+        ...,
+        description="Resultados de cada criterio evaluado",
+        min_length=1
+    )
+    scores_override: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Scores ya calculados por el engine (si se proporcionan, se usan directamente sin recalcular)"
+    )
+
+
+class DimensionScore(BaseModel):
+    """Puntaje de una dimension."""
+    dimension: str
+    score: float = Field(..., ge=0, le=100, description="Puntaje porcentual")
+    passed: int
+    failed: int
+    partial: int
+    not_applicable: int
+
+
+class SaveEvaluationResponse(BaseModel):
+    """Respuesta al guardar una evaluacion."""
+    evaluation_id: int
+    institution_id: int
+    scores: Dict[str, Any] = Field(..., description="Puntajes por dimension y total")
+    total_score: float = Field(..., ge=0, le=100)
+    created_at: str
+
+
+# ============================================================================
+# API STATUS SCHEMAS
+# ============================================================================
+
 class APIStatusResponse(BaseModel):
     """Estado de la API."""
     message: str

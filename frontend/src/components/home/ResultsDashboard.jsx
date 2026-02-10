@@ -26,7 +26,7 @@ const DIMENSIONS = [
   { key: 'accesibilidad', scoreKey: 'accesibilidad', label: 'Accesibilidad',            Icon: Eye },
   { key: 'usabilidad',    scoreKey: 'usabilidad',    label: 'Usabilidad',                Icon: Monitor },
   { key: 'semantica',     scoreKey: 'semantica_tecnica', label: 'Semántica Técnica',     Icon: Code },
-  { key: 'sovereignty',   scoreKey: 'soberania',     label: 'Soberanía Digital',          Icon: Server },
+  { key: 'soberania',     scoreKey: 'soberania',     label: 'Soberanía Digital',          Icon: Server },
   { key: 'nlp',           scoreKey: 'semantica_nlp', label: 'Análisis Semántico (IA)',    Icon: Brain },
 ];
 

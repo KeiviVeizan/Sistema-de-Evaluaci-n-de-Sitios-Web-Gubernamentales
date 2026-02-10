@@ -82,7 +82,7 @@ class EvaluadorSoberania(BaseEvaluator):
     ]
 
     def __init__(self):
-        super().__init__(dimension='sovereignty')
+        super().__init__(dimension='soberania')
 
         # Definicion de criterios
         self.criterios = {

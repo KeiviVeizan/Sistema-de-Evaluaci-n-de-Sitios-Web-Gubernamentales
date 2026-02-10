@@ -21,7 +21,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.evaluator.evaluation_engine import evaluar_url as ejecutar_evaluacion
-from app.models.database_models import Evaluation, CriteriaResult, Website, NLPAnalysis
+from app.models.database_models import (
+    Evaluation, EvaluationStatus, CriteriaResult, Website, NLPAnalysis, Institution
+)
 from app.schemas.evaluation_schemas import (
     EvaluateURLRequest,
     EvaluateURLResponse,
@@ -30,6 +32,8 @@ from app.schemas.evaluation_schemas import (
     EvaluationSummary,
     EvaluationListItem,
     EvaluationListResponse,
+    SaveEvaluationRequest,
+    SaveEvaluationResponse,
 )
 import logging
 
@@ -166,6 +170,270 @@ async def evaluate_url(
     except Exception as e:
         logger.error(f"Error durante evaluación de {request.url}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+
+# ============================================================================
+# Metadatos de criterios: dimension, nombre, max_score, pesos por dimension
+# ============================================================================
+
+# Pesos de cada dimension en el puntaje total (deben sumar 1.0)
+_DIMENSION_WEIGHTS = {
+    'accesibilidad':     0.30,
+    'usabilidad':        0.30,
+    'semantica_tecnica': 0.15,
+    'semantica_nlp':     0.15,
+    'soberania':         0.10,
+}
+
+# Alias: evaluadores usan semantica, el sistema usa semantica_tecnica
+_DIMENSION_ALIASES = {
+    'semantica': 'semantica_tecnica',
+}
+
+# Mapa criterion_id -> metadatos (IDs reales de los evaluadores)
+_CRITERIA_META: dict = {
+    # Accesibilidad
+    'ACC-01': {'name': 'Texto alternativo en imágenes', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-02': {'name': 'Contraste de color', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-03': {'name': 'Navegación por teclado', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-04': {'name': 'Etiquetas en formularios', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-05': {'name': 'Idioma declarado', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-06': {'name': 'Estructura de encabezados', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-07': {'name': 'Coherencia semántica NLP', 'dimension': 'semantica_nlp', 'max_score': 10.0},
+    'ACC-07-NLP': {'name': 'Coherencia semántica NLP', 'dimension': 'semantica_nlp', 'max_score': 1.0},
+    'ACC-08': {'name': 'Detección de ambigüedad NLP', 'dimension': 'semantica_nlp', 'max_score': 10.0},
+    'ACC-08-NLP': {'name': 'Propósito de enlaces (NLP)', 'dimension': 'semantica_nlp', 'max_score': 1.0},
+    'ACC-09': {'name': 'Claridad y legibilidad NLP', 'dimension': 'semantica_nlp', 'max_score': 10.0},
+    'ACC-09-NLP': {'name': 'Encabezados y etiquetas (NLP)', 'dimension': 'semantica_nlp', 'max_score': 1.0},
+    'ACC-10': {'name': 'Subtítulos en multimedia', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    # Usabilidad (IDs reales: IDEN-*, NAV-*, PART-*)
+    'IDEN-01': {'name': 'Nombre institución en título', 'dimension': 'usabilidad', 'max_score': 14.0},
+    'IDEN-02': {'name': "Leyenda 'Bolivia a tu servicio'", 'dimension': 'usabilidad', 'max_score': 12.0},
+    'NAV-01': {'name': 'Menú de navegación', 'dimension': 'usabilidad', 'max_score': 16.0},
+    'NAV-02': {'name': 'Buscador interno', 'dimension': 'usabilidad', 'max_score': 14.0},
+    'PART-01': {'name': 'Enlaces a redes sociales (mín. 2)', 'dimension': 'usabilidad', 'max_score': 12.0},
+    'PART-02': {'name': 'Enlace a app mensajería', 'dimension': 'usabilidad', 'max_score': 10.0},
+    'PART-03': {'name': 'Enlace a correo electrónico', 'dimension': 'usabilidad', 'max_score': 10.0},
+    'PART-04': {'name': 'Enlace a teléfono', 'dimension': 'usabilidad', 'max_score': 8.0},
+    'PART-05': {'name': 'Botones compartir en RRSS', 'dimension': 'usabilidad', 'max_score': 4.0},
+    # Semantica tecnica (IDs reales: SEM-*, SEO-*, FMT-*)
+    'SEM-01': {'name': 'Uso de DOCTYPE HTML5', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
+    'SEM-02': {'name': 'Codificación UTF-8', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
+    'SEM-03': {'name': 'Elementos semánticos HTML5', 'dimension': 'semantica_tecnica', 'max_score': 14.0},
+    'SEM-04': {'name': 'Separación contenido-presentación', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
+    'SEO-01': {'name': 'Meta descripción', 'dimension': 'semantica_tecnica', 'max_score': 8.0},
+    'SEO-02': {'name': 'Meta Keywords', 'dimension': 'semantica_tecnica', 'max_score': 4.0},
+    'SEO-03': {'name': 'Meta viewport', 'dimension': 'semantica_tecnica', 'max_score': 12.0},
+    'SEO-04': {'name': 'Jerarquía de headings válida', 'dimension': 'semantica_tecnica', 'max_score': 14.0},
+    'FMT-01': {'name': 'Uso de formatos abiertos', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
+    'FMT-02': {'name': 'Imágenes optimizadas', 'dimension': 'semantica_tecnica', 'max_score': 8.0},
+    # Soberania digital (IDs reales: PROH-*)
+    'PROH-01': {'name': 'Sin iframes externos', 'dimension': 'soberania', 'max_score': 25.0},
+    'PROH-02': {'name': 'Sin CDNs externos no autorizados', 'dimension': 'soberania', 'max_score': 25.0},
+    'PROH-03': {'name': 'Sin fuentes externas', 'dimension': 'soberania', 'max_score': 20.0},
+    'PROH-04': {'name': 'Sin trackers externos', 'dimension': 'soberania', 'max_score': 30.0},
+}
+
+
+def _status_to_score(status: str, max_score: float) -> float:
+    """Convierte estado de criterio a puntaje numerico."""
+    mapping = {'pass': max_score, 'partial': max_score * 0.5, 'fail': 0.0, 'na': 0.0}
+    return mapping.get(status, 0.0)
+
+
+def _calculate_scores(criteria_results: list[CriteriaResult]) -> dict:
+    """
+    Calcula puntajes por dimension y puntaje total a partir de CriteriaResult.
+
+    Normaliza alias de dimensiones (ej: 'semantica' -> 'semantica_tecnica').
+
+    Returns:
+        dict con puntaje por dimension (0-100) y total ponderado.
+    """
+    dim_totals: dict[str, dict] = {
+        dim: {'score': 0.0, 'max': 0.0, 'passed': 0, 'failed': 0, 'partial': 0, 'na': 0}
+        for dim in _DIMENSION_WEIGHTS
+    }
+
+    for cr in criteria_results:
+        # Normalizar alias de dimensiones
+        dim = _DIMENSION_ALIASES.get(cr.dimension, cr.dimension)
+        if dim not in dim_totals:
+            continue
+        bucket = dim_totals[dim]
+        bucket['max'] += cr.max_score
+        bucket['score'] += cr.score
+        if cr.status == 'pass':
+            bucket['passed'] += 1
+        elif cr.status == 'fail':
+            bucket['failed'] += 1
+        elif cr.status == 'partial':
+            bucket['partial'] += 1
+        else:
+            bucket['na'] += 1
+
+    scores: dict = {}
+    total_weighted = 0.0
+    for dim, weight in _DIMENSION_WEIGHTS.items():
+        bucket = dim_totals[dim]
+        pct = (bucket['score'] / bucket['max'] * 100) if bucket['max'] > 0 else 0.0
+        pct = round(pct, 2)
+        scores[dim] = {
+            'percentage': pct,
+            'passed': bucket['passed'],
+            'failed': bucket['failed'],
+            'partial': bucket['partial'],
+            'not_applicable': bucket['na'],
+        }
+        total_weighted += pct * weight
+
+    scores['total'] = round(total_weighted, 2)
+    return scores
+
+
+# ============================================================================
+# ENDPOINT: Guardar evaluación manual
+# ============================================================================
+
+@router.post(
+    "/save",
+    response_model=SaveEvaluationResponse,
+    summary="Guardar evaluación manual",
+    description="""
+Guarda los resultados de una evaluación manual realizada por un evaluador.
+
+**Proceso:**
+1. Busca la institución y su sitio web asociado
+2. Crea un registro de evaluación completada
+3. Guarda los resultados de cada criterio
+4. Calcula puntajes por dimensión y total
+5. Retorna evaluation_id y scores
+""",
+    responses={
+        200: {"description": "Evaluación guardada exitosamente"},
+        404: {"description": "Institución no encontrada"},
+        422: {"description": "Datos inválidos"},
+        500: {"description": "Error interno"},
+    }
+)
+async def save_evaluation(
+    request: SaveEvaluationRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Guarda una evaluación manual con sus resultados de criterios.
+
+    - **institution_id**: ID de la institución evaluada
+    - **criteria_results**: Array de {criterion_id, status, observations}
+    """
+    # 1. Buscar institución
+    institution = db.query(Institution).filter(Institution.id == request.institution_id).first()
+    if not institution:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Institución con id={request.institution_id} no encontrada"
+        )
+
+    # 2. Buscar o crear Website vinculado a la institución
+    website = db.query(Website).filter(Website.domain == institution.domain).first()
+    if not website:
+        website = Website(
+            url=f"https://{institution.domain}",
+            domain=institution.domain,
+            institution_name=institution.name,
+        )
+        db.add(website)
+        db.flush()  # Obtener ID sin hacer commit aún
+
+    # 3. Crear registro de evaluación
+    now = datetime.utcnow()
+    evaluation = Evaluation(
+        website_id=website.id,
+        status=EvaluationStatus.IN_PROGRESS,
+        started_at=now,
+    )
+    db.add(evaluation)
+    db.flush()  # Obtener evaluation.id
+
+    # 4. Crear CriteriaResult para cada criterio recibido
+    criteria_records: list[CriteriaResult] = []
+    for item in request.criteria_results:
+        meta = _CRITERIA_META.get(item.criterion_id, {
+            'name': item.criterion_id,
+            'dimension': 'accesibilidad',
+            'max_score': 10.0,
+        })
+        # Usar max_score del frontend si viene, si no del meta
+        effective_max_score = item.max_score if item.max_score is not None else meta['max_score']
+        # Usar score real del frontend si viene, si no calcular desde status
+        effective_score = item.score if item.score is not None else _status_to_score(item.status, effective_max_score)
+        cr = CriteriaResult(
+            evaluation_id=evaluation.id,
+            criteria_id=item.criterion_id,
+            criteria_name=meta['name'],
+            dimension=meta['dimension'],
+            lineamiento=item.criterion_id,
+            status=item.status,
+            score=effective_score,
+            max_score=effective_max_score,
+            details={'observations': item.observations} if item.observations else {},
+            evidence=[],
+        )
+        db.add(cr)
+        criteria_records.append(cr)
+
+    # 5. Calcular puntajes
+    # Si el frontend envía scores_override (calculados por el engine), usarlos directamente
+    if request.scores_override:
+        scores = request.scores_override
+        # Asegurar que el campo 'total' existe
+        if 'total' not in scores:
+            scores = _calculate_scores(criteria_records)
+    else:
+        scores = _calculate_scores(criteria_records)
+
+    # Helper: extrae 'percentage' de un valor que puede ser dict, número o None
+    def _pct(val):
+        if val is None:
+            return 0.0
+        if isinstance(val, dict):
+            return float(val.get('percentage', 0) or 0)
+        return float(val)
+
+    # 6. Actualizar evaluación con puntajes y marcar como completada
+    evaluation.score_accessibility = _pct(scores.get('accesibilidad'))
+    evaluation.score_usability = _pct(scores.get('usabilidad'))
+    # score_semantic_web combina semántica técnica y NLP (promedio), igual que el engine
+    sem_tecnica = _pct(scores.get('semantica_tecnica') or scores.get('semantica'))
+    sem_nlp = _pct(scores.get('semantica_nlp'))
+    if sem_nlp > 0:
+        evaluation.score_semantic_web = (sem_tecnica + sem_nlp) / 2
+    else:
+        evaluation.score_semantic_web = sem_tecnica
+    evaluation.score_digital_sovereignty = _pct(scores.get('soberania'))
+    evaluation.score_total = float(scores.get('total', 0) or 0)
+    evaluation.status = EvaluationStatus.COMPLETED
+    evaluation.completed_at = datetime.utcnow()
+
+    try:
+        db.commit()
+        db.refresh(evaluation)
+        logger.info(
+            f"Evaluación manual guardada: id={evaluation.id}, "
+            f"institution={institution.name}, total={evaluation.score_total:.1f}%"
+        )
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error guardando evaluación: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error al guardar la evaluación: {str(e)}")
+
+    return SaveEvaluationResponse(
+        evaluation_id=evaluation.id,
+        institution_id=institution.id,
+        scores=scores,
+        total_score=evaluation.score_total,
+        created_at=evaluation.completed_at.isoformat(),
+    )
 
 
 # ============================================================================
