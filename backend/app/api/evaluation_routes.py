@@ -23,7 +23,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.evaluator.evaluation_engine import evaluar_url as ejecutar_evaluacion
 from app.models.database_models import (
-    Evaluation, EvaluationStatus, CriteriaResult, Website, NLPAnalysis, Institution, User
+    Evaluation, EvaluationStatus, CriteriaResult, Website, NLPAnalysis, Institution, User, Followup
 )
 from app.auth.dependencies import get_current_active_user
 from app.schemas.evaluation_schemas import (
@@ -335,6 +335,7 @@ Guarda los resultados de una evaluación manual realizada por un evaluador.
 )
 async def save_evaluation(
     request: SaveEvaluationRequest,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
@@ -383,6 +384,7 @@ async def save_evaluation(
     now = datetime.utcnow()
     evaluation = Evaluation(
         website_id=website.id,
+        evaluator_id=current_user.id,
         status=EvaluationStatus.IN_PROGRESS,
         started_at=now,
     )
@@ -600,6 +602,62 @@ async def list_evaluations(
     except Exception as e:
         logger.error(f"Error listando evaluaciones: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# Mis evaluaciones (para evaluador)
+# ============================================================================
+
+@router.get(
+    "/my-evaluations",
+    summary="Mis evaluaciones como evaluador",
+    description="Retorna todas las evaluaciones que el evaluador autenticado ha realizado, "
+                "incluyendo el estado de sus seguimientos."
+)
+async def get_my_evaluations(
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db)
+):
+    """Obtener evaluaciones que YO hice como evaluador, con sus seguimientos."""
+    evaluations = (
+        db.query(Evaluation)
+        .filter(Evaluation.evaluator_id == current_user.id)
+        .order_by(Evaluation.completed_at.desc())
+        .all()
+    )
+
+    result = []
+    for evaluation in evaluations:
+        website = db.query(Website).filter(Website.id == evaluation.website_id).first()
+        institution = (
+            db.query(Institution).filter(Institution.domain == website.domain).first()
+            if website else None
+        )
+
+        followups = (
+            db.query(Followup)
+            .filter(Followup.evaluation_id == evaluation.id)
+            .all()
+        )
+
+        result.append({
+            "id": evaluation.id,
+            "institution_name": institution.name if institution else (website.domain if website else ""),
+            "website_url": website.domain if website else "",
+            "overall_score": evaluation.score_total,
+            "created_at": (evaluation.completed_at or evaluation.started_at).isoformat()
+                if (evaluation.completed_at or evaluation.started_at) else None,
+            "followups": [
+                {
+                    "id": f.id,
+                    "status": f.status,
+                    "due_date": f.due_date.isoformat() if f.due_date else None,
+                }
+                for f in followups
+            ],
+        })
+
+    return result
 
 
 # ============================================================================

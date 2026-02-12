@@ -650,5 +650,113 @@ class EmailService:
             return False
 
 
+    @staticmethod
+    def _get_notification_reminder_html(title: str, message: str, link: Optional[str]) -> str:
+        """Template HTML para recordatorio de notificación no leída."""
+        button_block = (
+            f'<div style="text-align:center;margin:20px 0;">'
+            f'<a href="{link}" style="display:inline-block;background:#800000;color:white;'
+            f'padding:12px 30px;text-decoration:none;border-radius:5px;font-size:15px;font-weight:600;">'
+            f'Ver en el Sistema</a></div>'
+            if link else ""
+        )
+        return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+           style="max-width:600px;margin:0 auto;padding:20px;">
+        <tr>
+            <td style="background-color:#f59e0b;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
+                <h1 style="color:white;margin:0;font-size:24px;">&#9200; Recordatorio</h1>
+                <p style="color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:14px;">
+                    Evaluador GOB.BO
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td style="background-color:white;padding:40px 30px;border-radius:0 0 12px 12px;
+                       box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+                    Tiene una notificación pendiente en el sistema:
+                </p>
+                <div style="background:#f9f9f9;padding:20px;border-left:4px solid #f59e0b;
+                            border-radius:0 8px 8px 0;margin:0 0 20px;">
+                    <h3 style="color:#333;margin:0 0 10px;font-size:16px;">{title}</h3>
+                    <p style="color:#555;margin:0;font-size:14px;line-height:1.6;">{message}</p>
+                </div>
+                {button_block}
+                <p style="color:#6b7280;font-size:13px;margin:20px 0 0;line-height:1.6;">
+                    Este es un recordatorio automático porque la notificación lleva
+                    más de 24 horas sin revisar.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:20px;text-align:center;">
+                <p style="color:#999;font-size:11px;margin:0;line-height:1.6;">
+                    Este es un mensaje automático del Sistema de Evaluación GOB.BO<br>
+                    Por favor no respondas a este correo.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
+
+    async def send_notification_reminder(
+        self,
+        to_email: str,
+        title: str,
+        message: str,
+        link: Optional[str] = None,
+    ) -> bool:
+        """
+        Envía un email de recordatorio para una notificación in-app no leída.
+
+        Args:
+            to_email: Email del evaluador destinatario
+            title: Título de la notificación original
+            message: Mensaje de la notificación original
+            link: URL completa al recurso relacionado (opcional)
+
+        Returns:
+            True si el email se envió correctamente, False en caso contrario
+        """
+        self._initialize()
+
+        subject = f"Recordatorio: {title}"
+        html_content = self._get_notification_reminder_html(title, message, link)
+
+        if not self._fastmail:
+            logger.info("=" * 50)
+            logger.info("[MODO DESARROLLO] Email de recordatorio simulado:")
+            logger.info(f"  Para: {to_email}")
+            logger.info(f"  Asunto: {subject}")
+            logger.info("=" * 50)
+            return True
+
+        try:
+            logger.info(f"Enviando recordatorio de notificación a {to_email}...")
+            message_schema = MessageSchema(
+                subject=subject,
+                recipients=[to_email],
+                body=html_content,
+                subtype=MessageType.html,
+            )
+            await self._fastmail.send_message(message_schema)
+            logger.info(f"Recordatorio enviado exitosamente a {to_email}")
+            return True
+        except Exception as e:
+            logger.error(
+                f"Error al enviar recordatorio a {to_email}: "
+                f"{type(e).__name__}: {str(e)}"
+            )
+            return False
+
+
 # Instancia global del servicio
 email_service = EmailService()

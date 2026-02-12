@@ -28,6 +28,7 @@ from app.auth.dependencies import (
     allow_admin_secretary,
     allow_admin_evaluator,
     allow_superadmin,
+    allow_all_staff,
 )
 from app.schemas.auth_schemas import (
     AdminStatsResponse,
@@ -276,7 +277,7 @@ async def create_institution(
 @router.get(
     "/institutions",
     response_model=InstitutionListResponse,
-    summary="Listar instituciones (Superadmin o Secretary)",
+    summary="Listar instituciones (Superadmin, Secretary o Evaluator)",
 )
 def list_institutions(
     skip: int = Query(0, ge=0),
@@ -285,7 +286,7 @@ def list_institutions(
     letter: str = Query(None, description="Filtrar por letra inicial"),
     domain: str = Query(None, description="Filtrar por dominio exacto"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_admin_secretary),
+    current_user: User = Depends(allow_all_staff),
 ):
     """Lista paginada de instituciones registradas."""
     query = db.query(Institution)
@@ -319,7 +320,7 @@ def list_institutions(
 def get_institution_detail(
     institution_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_admin_secretary),
+    current_user: User = Depends(allow_all_staff),
 ):
     """Obtiene el detalle completo de una institución con responsable y evaluaciones."""
     institution = db.query(Institution).filter(Institution.id == institution_id).first()

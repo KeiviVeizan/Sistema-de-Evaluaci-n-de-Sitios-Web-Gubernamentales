@@ -102,3 +102,5 @@ allow_superadmin = RoleChecker(["superadmin"])
 allow_admin_secretary = RoleChecker(["superadmin", "secretary"])
 allow_admin_evaluator = RoleChecker(["superadmin", "evaluator"])
 allow_all_staff = RoleChecker(["superadmin", "secretary", "evaluator"])
+# Permitir admin, secretary Y evaluator para gestión de seguimientos
+allow_staff_followups = RoleChecker(["superadmin", "secretary", "evaluator"])

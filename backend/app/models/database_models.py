@@ -108,6 +108,7 @@ class User(Base):
 
     # Relaciones
     institution: Mapped[Optional["Institution"]] = relationship(back_populates="users")
+    notifications: Mapped[List["Notification"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, role={self.role})>"
@@ -168,6 +169,11 @@ class Evaluation(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     website_id: Mapped[int] = mapped_column(ForeignKey("websites.id", ondelete="CASCADE"), nullable=False)
+    evaluator_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
 
     # Timestamps
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
@@ -190,6 +196,7 @@ class Evaluation(Base):
 
     # Relaciones
     website: Mapped["Website"] = relationship(back_populates="evaluations")
+    evaluator: Mapped[Optional["User"]] = relationship(foreign_keys=[evaluator_id])
     criteria_results: Mapped[List["CriteriaResult"]] = relationship(
         back_populates="evaluation",
         cascade="all, delete-orphan"
@@ -382,6 +389,37 @@ class NLPAnalysis(Base):
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }
+
+
+class Notification(Base):
+    """
+    Modelo para notificaciones in-app.
+
+    Notifica a los evaluadores cuando una institución marca un seguimiento
+    como corregido. Soporta email de recordatorio si no se lee en 24 horas.
+    """
+
+    __tablename__ = "notifications"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    type: Mapped[str] = mapped_column(String(50), nullable=False)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    message: Mapped[str] = mapped_column(Text, nullable=False)
+    link: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    read: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    email_sent: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False, index=True)
+
+    # Relaciones
+    user: Mapped["User"] = relationship(back_populates="notifications")
+
+    def __repr__(self) -> str:
+        return f"<Notification(id={self.id}, user_id={self.user_id}, type={self.type}, read={self.read})>"
 
 
 class ExtractedContent(Base):

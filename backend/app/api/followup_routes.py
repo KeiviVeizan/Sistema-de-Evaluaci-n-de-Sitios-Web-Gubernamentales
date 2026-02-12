@@ -22,8 +22,13 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models.database_models import CriteriaResult, Evaluation, Followup, Institution, User, Website
-from app.auth.dependencies import get_current_active_user, allow_admin_secretary
+from app.auth.dependencies import (
+    get_current_active_user,
+    allow_admin_secretary,
+    allow_staff_followups,  # Permite admin, secretary Y evaluator
+)
 from app.services.email_service import email_service
+from app.services.notification_service import create_notification
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +118,10 @@ def _load_followup(followup_id: int, db: Session) -> Followup:
 @router.post("", summary="Crear seguimiento")
 async def create_followup(
     data: FollowupCreate,
-    current_user=Depends(allow_admin_secretary),
+    current_user=Depends(allow_staff_followups),
     db: Session = Depends(get_db),
 ):
-    """Crea un seguimiento para un criterio no cumplido. Solo admin/secretaría."""
+    """Crea un seguimiento para un criterio no cumplido. Admin, secretaría o evaluador."""
     # Validar que existe la evaluación
     evaluation = db.query(Evaluation).filter(Evaluation.id == data.evaluation_id).first()
     if not evaluation:
@@ -259,21 +264,75 @@ async def mark_corrected(
 
     db.commit()
     db.refresh(followup)
+
+    # Notificar al evaluador que realizó la evaluación (no bloqueante)
+    try:
+        evaluation = db.query(Evaluation).filter(
+            Evaluation.id == followup.evaluation_id
+        ).first()
+
+        logger.info(f"DEBUG Notificación: evaluation_id={evaluation.id if evaluation else None}, evaluator_id={evaluation.evaluator_id if evaluation else None}")
+        if evaluation and evaluation.evaluator_id:
+            criteria_result = followup.criteria_result
+            website = db.query(Website).filter(
+                Website.id == evaluation.website_id
+            ).first()
+            institution = None
+            if website:
+                institution = db.query(Institution).filter(
+                    Institution.domain == website.domain
+                ).first()
+
+            institution_name = (
+                institution.name if institution
+                else (website.domain if website else "la institución")
+            )
+            criterion_code = criteria_result.criteria_id if criteria_result else "criterio"
+
+            create_notification(
+                db=db,
+                user_id=evaluation.evaluator_id,
+                type="followup_corrected",
+                title=f"Corrección reportada: {criterion_code}",
+                message=(
+                    f"{institution_name} reportó que corrigió el criterio "
+                    f"{criterion_code}. Revise y valide la corrección."
+                ),
+                link=f"/admin/evaluations/{evaluation.id}",
+            )
+            logger.info(f"✓ Notificación creada para evaluador {evaluation.evaluator_id}")
+        else:
+            logger.warning(f"✗ No se creó notificación - evaluator_id faltante")
+    except Exception:
+        logger.exception("Error al crear notificación para evaluador (ignorado)")
+
     return _followup_to_dict(_load_followup(followup_id, db))
 
 
-@router.patch("/{followup_id}/validate", summary="Admin valida o rechaza corrección")
+@router.patch("/{followup_id}/validate", summary="Validar o rechazar corrección")
 async def validate_correction(
     followup_id: int,
     data: ValidateCorrectionRequest,
-    current_user=Depends(allow_admin_secretary),
+    current_user=Depends(allow_staff_followups),
     db: Session = Depends(get_db),
 ):
     """
-    Permite al admin/secretaría validar o rechazar una corrección reportada.
+    Permite al admin/secretaría/evaluador validar o rechazar una corrección reportada.
     El seguimiento debe estar en estado 'corrected'.
+    Los evaluadores solo pueden validar correcciones de sus propias evaluaciones.
     """
     followup = _load_followup(followup_id, db)
+
+    # Si es evaluador, verificar que sea su propia evaluación
+    if current_user.role.value == "evaluator":
+        evaluation = db.query(Evaluation).filter(
+            Evaluation.id == followup.evaluation_id
+        ).first()
+        if not evaluation or evaluation.evaluator_id != current_user.id:
+            raise HTTPException(
+                status_code=403,
+                detail="Solo puedes validar correcciones de tus propias evaluaciones"
+            )
 
     if followup.status != "corrected":
         raise HTTPException(

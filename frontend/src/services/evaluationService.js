@@ -69,6 +69,16 @@ const evaluationService = {
   },
 
   /**
+   * Obtiene las evaluaciones realizadas por el evaluador autenticado.
+   *
+   * @returns {Promise<Array>}
+   */
+  async getMyEvaluations() {
+    const response = await api.get('/evaluation/my-evaluations');
+    return response.data;
+  },
+
+  /**
    * Descarga el informe PDF de una evaluación.
    * Crea un enlace temporal y dispara la descarga en el navegador.
    *

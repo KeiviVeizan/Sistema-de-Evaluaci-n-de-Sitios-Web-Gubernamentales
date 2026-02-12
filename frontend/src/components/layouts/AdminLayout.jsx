@@ -16,6 +16,7 @@ import {
   Shield,
 } from 'lucide-react';
 import styles from './AdminLayout.module.css';
+import NotificationBell from '../ui/NotificationBell';
 
 // Configuración de navegación por rol
 const getNavItems = (role) => {
@@ -32,6 +33,12 @@ const getNavItems = (role) => {
       icon: ClipboardCheck,
       label: 'Evaluaciones',
       roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR],
+    },
+    {
+      path: '/admin/evaluator/my-evaluations',
+      icon: ClipboardCheck,
+      label: 'Mis Evaluaciones',
+      roles: [ROLES.EVALUATOR],
     },
     {
       path: '/admin/my-evaluations',
@@ -55,7 +62,7 @@ const getNavItems = (role) => {
       path: '/admin/institutions',
       icon: Building2,
       label: 'Instituciones',
-      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY],
+      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR],
     },
     {
       path: '/admin/users',
@@ -180,6 +187,8 @@ export default function AdminLayout() {
           </div>
 
           <div className={styles.headerActions}>
+            {/* Campana de notificaciones: solo para evaluadores */}
+            {user?.role === ROLES.EVALUATOR && <NotificationBell />}
             <div className={styles.userMenu}>
               <button
                 className={styles.userMenuButton}

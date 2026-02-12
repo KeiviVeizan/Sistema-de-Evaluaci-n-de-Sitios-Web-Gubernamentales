@@ -20,6 +20,9 @@ import PublicEvaluator from '../pages/public/PublicEvaluator';
 import MyFollowups from '../pages/institution/MyFollowups';
 import InstitutionEvaluations from '../pages/institution/InstitutionEvaluations';
 
+// Páginas del evaluador
+import MyEvaluations from '../pages/evaluator/MyEvaluations';
+
 // Páginas placeholder para rutas que se implementarán después
 function PlaceholderPage({ title }) {
   return (
@@ -121,12 +124,12 @@ export default function AppRouter() {
             element={<PlaceholderPage title="Reportes" />}
           />
 
-          {/* Instituciones - Solo Secretary y Superadmin */}
+          {/* Instituciones - Secretary, Superadmin y Evaluator (solo lectura) */}
           <Route
             path="institutions"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR]}
                 showAccessDenied
               >
                 <Institutions />
@@ -137,7 +140,7 @@ export default function AppRouter() {
             path="institutions/:id"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR]}
                 showAccessDenied
               >
                 <InstitutionDetail />
@@ -204,6 +207,19 @@ export default function AppRouter() {
                 showAccessDenied
               >
                 <MyFollowups />
+              </RoleBasedRoute>
+            }
+          />
+
+          {/* Mis evaluaciones - Solo evaluador */}
+          <Route
+            path="evaluator/my-evaluations"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.EVALUATOR]}
+                showAccessDenied
+              >
+                <MyEvaluations />
               </RoleBasedRoute>
             }
           />
