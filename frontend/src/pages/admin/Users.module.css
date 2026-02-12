@@ -631,6 +631,27 @@
   flex-shrink: 0;
 }
 
+.loadingInline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+}
+
+.fieldWarning {
+  margin: 6px 0 0;
+  font-size: 0.8125rem;
+  color: #d97706;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 /* Responsive modal */
 @media (max-width: 640px) {
   .modal {

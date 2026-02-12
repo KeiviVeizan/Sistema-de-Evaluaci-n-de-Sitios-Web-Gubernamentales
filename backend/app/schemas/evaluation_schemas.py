@@ -96,6 +96,7 @@ class NLPScores(BaseModel):
 
 class CriteriaResultItem(BaseModel):
     """Resultado individual de un criterio evaluado."""
+    id: Optional[int] = Field(default=None, description="ID del registro en criteria_results (necesario para seguimientos)")
     criteria_id: str = Field(..., example="ACC-01")
     criteria_name: str = Field(..., example="Texto alternativo en imagenes")
     dimension: str = Field(..., example="accesibilidad")

@@ -63,7 +63,10 @@ async def login(
     Valida credenciales y genera código de verificación de 6 dígitos.
     El código se envía al correo electrónico del usuario.
     """
-    user = db.query(User).filter(User.username == credentials.username).first()
+    # Aceptar username o email en el campo "username"
+    user = db.query(User).filter(
+        (User.username == credentials.username) | (User.email == credentials.username)
+    ).first()
 
     if not user or not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(

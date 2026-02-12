@@ -13,6 +13,7 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.services.email_service import email_service
 from app.models.database_models import (
     Evaluation,
     EvaluationStatus,
@@ -63,13 +64,14 @@ def _generate_password(length: int = 12) -> str:
     status_code=status.HTTP_201_CREATED,
     summary="Crear usuario (solo Superadmin)",
 )
-def create_user(
+async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(allow_superadmin),
 ):
     """
     Crea un nuevo usuario interno (superadmin, secretary o evaluator).
+    Genera una contraseña aleatoria y envía las credenciales por email.
     Solo accesible por superadmin.
     """
     # Verificar unicidad de username y email
@@ -83,10 +85,13 @@ def create_user(
             detail=f"Ya existe un usuario con ese {field}",
         )
 
+    # Usar la contraseña provista o generar una automáticamente
+    plain_password = user_data.password if user_data.password else _generate_password()
+
     db_user = User(
         username=user_data.username,
         email=user_data.email,
-        hashed_password=hash_password(user_data.password),
+        hashed_password=hash_password(plain_password),
         full_name=user_data.full_name,
         role=user_data.role,
         is_active=True,
@@ -95,7 +100,17 @@ def create_user(
     db.commit()
     db.refresh(db_user)
 
-    logger.info(f"Usuario creado: {db_user.username} ({db_user.role.value}) por {current_user.username}")
+    logger.info(
+        f"Usuario creado: {db_user.username} ({db_user.role.value}) por {current_user.username}"
+    )
+
+    # Enviar email de bienvenida con credenciales
+    await email_service.send_welcome_email(
+        email=db_user.email,
+        password=plain_password,
+        role=db_user.role.value,
+    )
+
     return UserResponse.from_user(db_user)
 
 
@@ -183,7 +198,7 @@ def update_user(
     status_code=status.HTTP_201_CREATED,
     summary="Registrar institución (Superadmin o Secretary)",
 )
-def create_institution(
+async def create_institution(
     data: InstitutionCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(allow_admin_secretary),
@@ -232,7 +247,7 @@ def create_institution(
         hashed_password=hash_password(generated_password),
         full_name=data.contact_name,
         position=data.contact_position,
-        role=UserRole.EVALUATOR,
+        role=UserRole.ENTITY_USER,
         is_active=True,
         institution_id=institution.id,
     )
@@ -242,6 +257,14 @@ def create_institution(
     db.refresh(user)
 
     logger.info(f"Institución creada: {institution.name} ({institution.domain}) por {current_user.username}")
+
+    # Enviar email de bienvenida con credenciales al responsable
+    await email_service.send_welcome_email(
+        email=user.email,
+        password=generated_password,
+        role=user.role.value,
+        institution_name=institution.name,
+    )
 
     return InstitutionWithUser(
         institution=InstitutionResponse.model_validate(institution),
@@ -306,29 +329,35 @@ def get_institution_detail(
             detail="Institución no encontrada",
         )
     
-    # Buscar el usuario responsable (EVALUATOR de esta institución)
+    # Buscar el usuario responsable (ENTITY_USER de esta institución)
     responsible = db.query(User).filter(
         User.institution_id == institution_id,
-        User.role == UserRole.EVALUATOR,
+        User.role == UserRole.ENTITY_USER,
     ).first()
     
-    # Buscar evaluaciones relacionadas (a través de websites)
-    websites = db.query(Website).filter(Website.institution_name == institution.name).all()
+    # Buscar evaluaciones relacionadas (a través del dominio de la institución)
+    # Se usa domain en lugar de institution_name para evitar desincronizaciones
+    # cuando el nombre de la institución cambia o el website fue creado por otra ruta.
+    evals_qs = (
+        db.query(Evaluation)
+        .join(Website, Evaluation.website_id == Website.id)
+        .filter(Website.domain == institution.domain)
+        .order_by(Evaluation.started_at.desc())
+        .all()
+    )
     evaluations = []
-    for website in websites:
-        evals = db.query(Evaluation).filter(Evaluation.website_id == website.id).all()
-        for ev in evals:
-            evaluations.append({
-                "id": ev.id,
-                "started_at": ev.started_at.isoformat() if ev.started_at else None,
-                "completed_at": ev.completed_at.isoformat() if ev.completed_at else None,
-                "status": ev.status.value,
-                "score_total": ev.score_total,
-                "score_digital_sovereignty": ev.score_digital_sovereignty,
-                "score_accessibility": ev.score_accessibility,
-                "score_usability": ev.score_usability,
-                "score_semantic_web": ev.score_semantic_web,
-            })
+    for ev in evals_qs:
+        evaluations.append({
+            "id": ev.id,
+            "started_at": ev.started_at.isoformat() if ev.started_at else None,
+            "completed_at": ev.completed_at.isoformat() if ev.completed_at else None,
+            "status": ev.status.value,
+            "score_total": ev.score_total,
+            "score_digital_sovereignty": ev.score_digital_sovereignty,
+            "score_accessibility": ev.score_accessibility,
+            "score_usability": ev.score_usability,
+            "score_semantic_web": ev.score_semantic_web,
+        })
     
     return {
         "institution": InstitutionResponse.model_validate(institution),
@@ -366,7 +395,7 @@ def update_institution(
     if contact_fields:
         responsible = db.query(User).filter(
             User.institution_id == institution_id,
-            User.role == UserRole.EVALUATOR,
+            User.role == UserRole.ENTITY_USER,
         ).first()
         if responsible:
             if "contact_name" in contact_fields:

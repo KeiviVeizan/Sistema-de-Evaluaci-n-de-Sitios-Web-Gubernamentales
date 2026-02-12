@@ -19,6 +19,7 @@ from app.api.crawler_routes import router as crawler_router
 from app.api.evaluation_routes import router as evaluation_router
 from app.api.auth_routes import router as auth_router
 from app.api.admin_routes import router as admin_router
+from app.api.followup_routes import router as followup_router
 from app.auth.seed import seed_users
 from app import __version__, __description__
 
@@ -97,6 +98,7 @@ app.include_router(crawler_router, prefix=settings.api_v1_prefix)
 app.include_router(evaluation_router, prefix=settings.api_v1_prefix)
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
 app.include_router(admin_router, prefix=settings.api_v1_prefix)
+app.include_router(followup_router, prefix=settings.api_v1_prefix)
 
 
 # Health check endpoint (fuera del prefijo API)

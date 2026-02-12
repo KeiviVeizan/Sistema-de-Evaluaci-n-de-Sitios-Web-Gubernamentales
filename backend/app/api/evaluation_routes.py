@@ -18,12 +18,14 @@ from typing import Optional, List
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.evaluator.evaluation_engine import evaluar_url as ejecutar_evaluacion
 from app.models.database_models import (
-    Evaluation, EvaluationStatus, CriteriaResult, Website, NLPAnalysis, Institution
+    Evaluation, EvaluationStatus, CriteriaResult, Website, NLPAnalysis, Institution, User
 )
+from app.auth.dependencies import get_current_active_user
 from app.schemas.evaluation_schemas import (
     EvaluateURLRequest,
     EvaluateURLResponse,
@@ -36,6 +38,7 @@ from app.schemas.evaluation_schemas import (
     SaveEvaluationResponse,
 )
 import logging
+from app.services.report_generator import generate_evaluation_report, get_report_filename
 
 logger = logging.getLogger(__name__)
 
@@ -185,9 +188,23 @@ _DIMENSION_WEIGHTS = {
     'soberania':         0.10,
 }
 
-# Alias: evaluadores usan semantica, el sistema usa semantica_tecnica
+# Alias: normaliza variantes de nombre de dimensión al nombre canónico interno
 _DIMENSION_ALIASES = {
+    # Semántica técnica
     'semantica': 'semantica_tecnica',
+    'Semántica Técnica': 'semantica_tecnica',
+    'semantica tecnica': 'semantica_tecnica',
+    # Semántica NLP
+    'Semántica NLP': 'semantica_nlp',
+    'semantica nlp': 'semantica_nlp',
+    'Análisis Semántico (IA)': 'semantica_nlp',
+    'Análisis Semántico IA': 'semantica_nlp',
+    'análisis semántico (ia)': 'semantica_nlp',
+    'nlp': 'semantica_nlp',
+    'NLP': 'semantica_nlp',
+    # Soberanía digital
+    'soberania_digital': 'soberania',
+    'Soberanía Digital': 'soberania',
 }
 
 # Mapa criterion_id -> metadatos (IDs reales de los evaluadores)
@@ -326,6 +343,23 @@ async def save_evaluation(
     - **institution_id**: ID de la institución evaluada
     - **criteria_results**: Array de {criterion_id, status, observations}
     """
+    # ── DEBUG ────────────────────────────────────────────────────────────────
+    logger.info("=" * 60)
+    logger.info("DEBUG save_evaluation: datos recibidos del frontend")
+    logger.info(f"  institution_id : {request.institution_id}")
+    logger.info(f"  criteria_results count: {len(request.criteria_results)}")
+    logger.info(f"  scores_override recibido: {request.scores_override}")
+    for item in request.criteria_results:
+        meta = _CRITERIA_META.get(item.criterion_id, {})
+        logger.info(
+            f"  criterio: id={item.criterion_id!r:20s}  "
+            f"status={item.status!r:10s}  "
+            f"score={item.score}  max_score={item.max_score}  "
+            f"meta_dimension={meta.get('dimension', 'NO_EN_META')!r}"
+        )
+    logger.info("=" * 60)
+    # ── FIN DEBUG ────────────────────────────────────────────────────────────
+
     # 1. Buscar institución
     institution = db.query(Institution).filter(Institution.id == request.institution_id).first()
     if not institution:
@@ -382,6 +416,16 @@ async def save_evaluation(
         db.add(cr)
         criteria_records.append(cr)
 
+    # ── DEBUG: dimensiones asignadas a cada criterio guardado ────────────────
+    logger.info("DEBUG save_evaluation: criteria_records a guardar en BD")
+    from collections import defaultdict
+    dim_summary: dict = defaultdict(list)
+    for cr in criteria_records:
+        dim_summary[cr.dimension].append(f"{cr.criteria_id}(score={cr.score}/{cr.max_score})")
+    for dim, items in sorted(dim_summary.items()):
+        logger.info(f"  dimension={dim!r}: {items}")
+    # ── FIN DEBUG ────────────────────────────────────────────────────────────
+
     # 5. Calcular puntajes
     # Si el frontend envía scores_override (calculados por el engine), usarlos directamente
     if request.scores_override:
@@ -389,8 +433,29 @@ async def save_evaluation(
         # Asegurar que el campo 'total' existe
         if 'total' not in scores:
             scores = _calculate_scores(criteria_records)
+        # Si semantica_nlp viene null en el override pero hay criterios NLP guardados,
+        # calcular el score NLP desde esos criterios para no perder el 0% por null
+        if scores.get('semantica_nlp') is None:
+            recalc = _calculate_scores(criteria_records)
+            if recalc.get('semantica_nlp', {}).get('percentage', 0) > 0:
+                scores = dict(scores)  # copia para no mutar el original
+                scores['semantica_nlp'] = recalc['semantica_nlp']
+                logger.info(
+                    f"semantica_nlp era null en scores_override; "
+                    f"recalculado desde criterios: {scores['semantica_nlp']}"
+                )
     else:
         scores = _calculate_scores(criteria_records)
+
+    # ── DEBUG: scores finales usados para guardar ────────────────────────────
+    logger.info("DEBUG save_evaluation: scores finales a persistir")
+    logger.info(f"  fuente: {'scores_override' if request.scores_override else '_calculate_scores'}")
+    for key, val in scores.items():
+        if isinstance(val, dict):
+            logger.info(f"  {key}: percentage={val.get('percentage')}  (dict completo: {val})")
+        else:
+            logger.info(f"  {key}: {val}")
+    # ── FIN DEBUG ────────────────────────────────────────────────────────────
 
     # Helper: extrae 'percentage' de un valor que puede ser dict, número o None
     def _pct(val):
@@ -414,6 +479,43 @@ async def save_evaluation(
     evaluation.score_total = float(scores.get('total', 0) or 0)
     evaluation.status = EvaluationStatus.COMPLETED
     evaluation.completed_at = datetime.utcnow()
+
+    # ── DEBUG: valores finales en el objeto Evaluation antes del commit ───────
+    logger.info("DEBUG save_evaluation: campos evaluation antes de commit")
+    logger.info(f"  score_accessibility       = {evaluation.score_accessibility}")
+    logger.info(f"  score_usability           = {evaluation.score_usability}")
+    logger.info(f"  score_semantic_web        = {evaluation.score_semantic_web}  "
+                f"(sem_tecnica={sem_tecnica}, sem_nlp={sem_nlp})")
+    logger.info(f"  score_digital_sovereignty = {evaluation.score_digital_sovereignty}")
+    logger.info(f"  score_total               = {evaluation.score_total}")
+    # ── FIN DEBUG ────────────────────────────────────────────────────────────
+
+    # 7. Guardar NLPAnalysis si scores_override contiene semantica_nlp
+    nlp_override = scores.get('semantica_nlp') if isinstance(scores, dict) else None
+    if isinstance(nlp_override, dict) and nlp_override.get('percentage', 0) > 0:
+        wcag_raw = nlp_override.get('wcag_compliance', {})
+        nlp_record = NLPAnalysis(
+            evaluation_id=evaluation.id,
+            nlp_global_score=float(nlp_override.get('percentage', 0)),
+            coherence_score=float(nlp_override.get('coherence', 0)),
+            ambiguity_score=float(nlp_override.get('ambiguity', 0)),
+            clarity_score=float(nlp_override.get('clarity', 0)),
+            wcag_compliance=wcag_raw if isinstance(wcag_raw, dict) else {},
+            coherence_details={},
+            ambiguity_details={},
+            clarity_details={},
+            recommendations=[],
+        )
+        db.add(nlp_record)
+        logger.info(
+            f"✓ NLPAnalysis creado desde scores_override: "
+            f"global={nlp_record.nlp_global_score}, "
+            f"coherence={nlp_record.coherence_score}, "
+            f"ambiguity={nlp_record.ambiguity_score}, "
+            f"clarity={nlp_record.clarity_score}"
+        )
+    else:
+        logger.info("✗ semantica_nlp no presente o percentage=0 en scores_override; NLPAnalysis no creado")
 
     try:
         db.commit()
@@ -501,6 +603,115 @@ async def list_evaluations(
 
 
 # ============================================================================
+# Evaluaciones por institución (para entity_user)
+# ============================================================================
+
+@router.get(
+    "/by-institution/{institution_id}",
+    summary="Listar evaluaciones de una institución",
+    description="Retorna las evaluaciones del sitio web de la institución indicada. "
+                "Un entity_user solo puede consultar su propia institución.",
+)
+async def get_evaluations_by_institution(
+    institution_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Lista todas las evaluaciones asociadas al dominio de la institución.
+
+    - **institution_id**: ID de la institución
+    """
+    # Verificar que la institución existe
+    institution = db.query(Institution).filter(Institution.id == institution_id).first()
+    if not institution:
+        raise HTTPException(status_code=404, detail="Institución no encontrada")
+
+    # Control de acceso: entity_user solo puede ver su propia institución
+    if current_user.role.value == "entity_user":
+        if current_user.institution_id != institution_id:
+            raise HTTPException(
+                status_code=403,
+                detail="No tiene permisos para ver las evaluaciones de esta institución",
+            )
+
+    # Obtener evaluaciones a través del dominio compartido entre Institution y Website
+    evaluations = (
+        db.query(Evaluation)
+        .join(Website, Evaluation.website_id == Website.id)
+        .filter(Website.domain == institution.domain)
+        .order_by(Evaluation.started_at.desc())
+        .all()
+    )
+
+    result = []
+    for ev in evaluations:
+        result.append({
+            "id": ev.id,
+            "website_id": ev.website_id,
+            "website_url": ev.website.url if ev.website else "",
+            "institution_name": institution.name,
+            "score_total": ev.score_total,
+            "score_accessibility": ev.score_accessibility,
+            "score_usability": ev.score_usability,
+            "score_semantic_web": ev.score_semantic_web,
+            "score_digital_sovereignty": ev.score_digital_sovereignty,
+            "status": ev.status,
+            "started_at": ev.started_at.isoformat() if ev.started_at else None,
+            "completed_at": ev.completed_at.isoformat() if ev.completed_at else None,
+        })
+
+    return result
+
+
+# ============================================================================
+# Generar informe PDF de una evaluación
+# ============================================================================
+
+@router.get(
+    "/{evaluation_id}/report",
+    summary="Descargar informe PDF",
+    description="Genera y descarga un informe PDF con los resultados de la evaluación.",
+    responses={
+        200: {"description": "PDF generado exitosamente", "content": {"application/pdf": {}}},
+        404: {"description": "Evaluación no encontrada"},
+        500: {"description": "Error generando el informe"},
+    }
+)
+async def download_evaluation_report(
+    evaluation_id: int,
+    db: Session = Depends(get_db)
+):
+    """
+    Genera un informe PDF para la evaluación indicada.
+
+    - **evaluation_id**: ID de la evaluación
+    """
+    # Validar que la evaluación existe
+    evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
+    if not evaluation:
+        raise HTTPException(status_code=404, detail="Evaluación no encontrada")
+
+    try:
+        pdf_bytes = generate_evaluation_report(evaluation_id, db)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error generando PDF para evaluación {evaluation_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Error generando el informe: {str(e)}")
+
+    filename = get_report_filename(evaluation_id, db)
+    headers = {
+        "Content-Disposition": f'attachment; filename="{filename}"',
+    }
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers=headers,
+    )
+
+
+# ============================================================================
 # Obtener evaluación por ID
 # ============================================================================
 
@@ -512,15 +723,28 @@ async def list_evaluations(
 )
 async def get_evaluation_by_id(
     evaluation_id: int,
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """
     Obtiene una evaluación completa por su ID.
+
+    - Admin/Secretary/Evaluator: pueden ver cualquier evaluación.
+    - entity_user: solo puede ver evaluaciones de su propia institución.
     """
     evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
 
     if not evaluation:
         raise HTTPException(status_code=404, detail="Evaluación no encontrada")
+
+    # Control de acceso para entity_user: solo puede ver evaluaciones de su institución
+    if current_user.role.value == "entity_user":
+        website = db.query(Website).filter(Website.id == evaluation.website_id).first()
+        if not website:
+            raise HTTPException(status_code=403, detail="No autorizado para ver esta evaluación")
+        institution = db.query(Institution).filter(Institution.domain == website.domain).first()
+        if not institution or current_user.institution_id != institution.id:
+            raise HTTPException(status_code=403, detail="No autorizado para ver esta evaluación")
 
     # Obtener website
     website = db.query(Website).filter(Website.id == evaluation.website_id).first()
@@ -532,6 +756,7 @@ async def get_evaluation_by_id(
 
     criteria_results = [
         CriteriaResultItem(
+            id=cr.id,
             criteria_id=cr.criteria_id,
             criteria_name=cr.criteria_name,
             dimension=cr.dimension,

@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import anime from 'animejs';
 import userService from '../../services/userService';
+import institutionService from '../../services/institutionService';
 import styles from './Users.module.css';
 
 // Componente Toast para notificaciones
@@ -66,10 +67,13 @@ function UserModal({ isOpen, onClose, user, onSave }) {
     full_name: '',
     email: '',
     role: 'evaluator',
+    institution_id: null,
     is_active: true,
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [institutions, setInstitutions] = useState([]);
+  const [loadingInstitutions, setLoadingInstitutions] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -81,18 +85,37 @@ function UserModal({ isOpen, onClose, user, onSave }) {
           full_name: user.full_name || '',
           email: user.email || '',
           role: user.role || 'evaluator',
+          institution_id: user.institution_id || null,
           is_active: user.is_active ?? true,
         });
       }
     }
   }, [isOpen, user]);
 
+  // Cargar instituciones cuando el rol es entity_user
+  useEffect(() => {
+    if (formData.role === 'entity_user' && institutions.length === 0) {
+      setLoadingInstitutions(true);
+      institutionService.getAll({ limit: 500 })
+        .then((data) => setInstitutions(data.items || []))
+        .catch((err) => console.error('Error cargando instituciones:', err))
+        .finally(() => setLoadingInstitutions(false));
+    }
+  }, [formData.role, institutions.length]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+    setFormData((prev) => {
+      const updated = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value,
+      };
+      // Si cambia el rol y NO es entity_user, limpiar institution_id
+      if (name === 'role' && value !== 'entity_user') {
+        updated.institution_id = null;
+      }
+      return updated;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -100,13 +123,18 @@ function UserModal({ isOpen, onClose, user, onSave }) {
     setSaving(true);
     setError('');
 
+    // Validar que entity_user tenga institución seleccionada
+    if (formData.role === 'entity_user' && !formData.institution_id) {
+      setError('Debe seleccionar una institución para usuarios de entidad');
+      setSaving(false);
+      return;
+    }
+
     try {
       await onSave(formData);
     } catch (err) {
       console.error(err);
       setError(err.response?.data?.detail || 'Error al actualizar el usuario');
-      // Only keep saving=true if we are NOT closing (which implies error)
-      // But if onSave fails, we must reset saving
       setSaving(false);
     }
   };
@@ -180,9 +208,45 @@ function UserModal({ isOpen, onClose, user, onSave }) {
                   <option value="superadmin">Superadmin</option>
                   <option value="secretary">Secretario</option>
                   <option value="evaluator">Evaluador</option>
-                  {/* Entity user cannot be changed from here typically, but kept for admin */}
+                  <option value="entity_user">Usuario de Entidad</option>
                 </select>
               </div>
+
+              {formData.role === 'entity_user' && (
+                <div className={styles.formGroup}>
+                  <label htmlFor="institution_id">
+                    Institución *
+                  </label>
+                  {loadingInstitutions ? (
+                    <div className={styles.loadingInline}>
+                      <Loader size={16} className={styles.spinner} />
+                      <span>Cargando instituciones...</span>
+                    </div>
+                  ) : (
+                    <select
+                      id="institution_id"
+                      name="institution_id"
+                      value={formData.institution_id || ''}
+                      onChange={handleChange}
+                      required
+                      className={styles.input}
+                      disabled={saving}
+                    >
+                      <option value="">-- Seleccionar institución --</option>
+                      {institutions.map((inst) => (
+                        <option key={inst.id} value={inst.id}>
+                          {inst.name}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                  {!formData.institution_id && !loadingInstitutions && (
+                    <p className={styles.fieldWarning}>
+                      Debe seleccionar una institución para usuarios de entidad
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className={styles.formGroup}>
                 <label className={styles.checkboxLabel}>

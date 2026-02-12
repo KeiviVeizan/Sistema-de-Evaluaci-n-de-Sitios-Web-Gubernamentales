@@ -255,6 +255,33 @@ export default function NewEvaluation() {
       // para que el backend use exactamente los mismos valores mostrados
       const scoresOverride = buildScoresOverride(results.scores);
 
+      // ── DEBUG ──────────────────────────────────────────────────────────────
+      console.log('='.repeat(60));
+      console.log('DEBUG handleSaveEvaluation: payload a enviar al backend');
+      console.log('institution_id:', institutionId);
+      console.log('criteria_results.length:', criteriaResults.length);
+      console.log('scores_override:', JSON.stringify(scoresOverride, null, 2));
+
+      // Mostrar criterios NLP específicamente
+      const nlpCriteria = criteriaResults.filter(c =>
+        c.criterion_id && c.criterion_id.includes('NLP')
+      );
+      console.log('Criterios NLP a enviar:', nlpCriteria);
+
+      // Mostrar todos los criterios con dimension visible
+      console.log('Todos los criterios (criterion_id, status, score, max_score):');
+      criteriaResults.forEach(c => {
+        console.log(
+          `  ${String(c.criterion_id).padEnd(20)} status=${c.status}  score=${c.score}  max_score=${c.max_score}`
+        );
+      });
+
+      // Mostrar scores del engine antes de normalizar
+      console.log('scores del engine (results.scores):', results.scores);
+      console.log('scores_override normalizado:', scoresOverride);
+      console.log('='.repeat(60));
+      // ── FIN DEBUG ──────────────────────────────────────────────────────────
+
       const saved = await evaluationService.saveEvaluation({
         institution_id: institutionId,
         criteria_results: criteriaResults,

@@ -31,13 +31,25 @@ const getNavItems = (role) => {
       path: '/admin/evaluations',
       icon: ClipboardCheck,
       label: 'Evaluaciones',
-      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR, ROLES.ENTITY_USER],
+      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR],
+    },
+    {
+      path: '/admin/my-evaluations',
+      icon: ClipboardCheck,
+      label: 'Mis Evaluaciones',
+      roles: [ROLES.ENTITY_USER],
+    },
+    {
+      path: '/admin/my-followups',
+      icon: BarChart3,
+      label: 'Mis Seguimientos',
+      roles: [ROLES.ENTITY_USER],
     },
     {
       path: '/admin/reports',
       icon: BarChart3,
       label: 'Reportes',
-      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR, ROLES.ENTITY_USER],
+      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR],
     },
     {
       path: '/admin/institutions',

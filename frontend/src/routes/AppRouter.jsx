@@ -11,10 +11,14 @@ import { AdminLayout } from '../components/layouts';
 import { Login, TwoFactorAuth } from '../pages/auth';
 
 // Páginas del panel administrativo
-import { Dashboard, Institutions, InstitutionDetail, Users, NewEvaluation } from '../pages/admin';
+import { Dashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail } from '../pages/admin';
 
 // Página pública (evaluador público)
 import PublicEvaluator from '../pages/public/PublicEvaluator';
+
+// Páginas del panel de institución
+import MyFollowups from '../pages/institution/MyFollowups';
+import InstitutionEvaluations from '../pages/institution/InstitutionEvaluations';
 
 // Páginas placeholder para rutas que se implementarán después
 function PlaceholderPage({ title }) {
@@ -101,7 +105,14 @@ export default function AppRouter() {
           />
           <Route
             path="evaluations/:id"
-            element={<PlaceholderPage title="Detalle de Evaluación" />}
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR, ROLES.ENTITY_USER]}
+                showAccessDenied
+              >
+                <EvaluationDetail />
+              </RoleBasedRoute>
+            }
           />
 
           {/* Reportes - Todos los roles */}
@@ -167,6 +178,32 @@ export default function AppRouter() {
                 showAccessDenied
               >
                 <PlaceholderPage title="Configuración del Sistema" />
+              </RoleBasedRoute>
+            }
+          />
+
+          {/* Evaluaciones de institución - Solo entity_user */}
+          <Route
+            path="my-evaluations"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.ENTITY_USER]}
+                showAccessDenied
+              >
+                <InstitutionEvaluations />
+              </RoleBasedRoute>
+            }
+          />
+
+          {/* Seguimientos de institución - Solo entity_user */}
+          <Route
+            path="my-followups"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.ENTITY_USER]}
+                showAccessDenied
+              >
+                <MyFollowups />
               </RoleBasedRoute>
             }
           />

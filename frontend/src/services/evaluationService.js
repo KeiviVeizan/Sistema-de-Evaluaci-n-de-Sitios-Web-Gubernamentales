@@ -55,6 +55,47 @@ const evaluationService = {
     const response = await api.delete(`/evaluation/${id}`);
     return response.data;
   },
+
+  /**
+   * Obtiene las evaluaciones de una institución específica.
+   * Solo accesible para el entity_user de esa institución (y admins).
+   *
+   * @param {number} institutionId - ID de la institución
+   * @returns {Promise<Array>}
+   */
+  async getByInstitution(institutionId) {
+    const response = await api.get(`/evaluation/by-institution/${institutionId}`);
+    return response.data;
+  },
+
+  /**
+   * Descarga el informe PDF de una evaluación.
+   * Crea un enlace temporal y dispara la descarga en el navegador.
+   *
+   * @param {number} evaluationId - ID de la evaluación
+   * @returns {Promise<void>}
+   */
+  async downloadReport(evaluationId) {
+    const response = await api.get(`/evaluation/${evaluationId}/report`, {
+      responseType: 'blob',
+    });
+
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+    const url = URL.createObjectURL(blob);
+
+    const fecha = new Date().toISOString().split('T')[0];
+    const filename = `informe_evaluacion_${evaluationId}_${fecha}.pdf`;
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    // Limpiar el objeto URL y el enlace temporal
+    link.remove();
+    URL.revokeObjectURL(url);
+  },
 };
 
 export default evaluationService;

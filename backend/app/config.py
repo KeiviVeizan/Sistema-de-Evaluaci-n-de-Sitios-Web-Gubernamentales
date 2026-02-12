@@ -153,6 +153,12 @@ class Settings(BaseSettings):
         description="Usar SSL"
     )
 
+    # Frontend URL (para enlaces en emails)
+    frontend_url: str = Field(
+        default="http://localhost:5173",
+        description="URL base del frontend (usada en emails)"
+    )
+
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def parse_allowed_origins(cls, v):

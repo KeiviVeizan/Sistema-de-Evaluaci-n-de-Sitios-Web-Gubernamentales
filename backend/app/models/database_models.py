@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy import (
     String, Float, Boolean, DateTime,
-    ForeignKey, Text, JSON, Enum as SQLEnum
+    ForeignKey, Text, JSON, Enum as SQLEnum, ARRAY
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 import enum
@@ -100,6 +100,11 @@ class User(Base):
     )
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    # Campos 2FA
+    two_factor_enabled: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, server_default="false")
+    two_factor_secret: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    two_factor_backup_codes: Mapped[Optional[list]] = mapped_column(ARRAY(String), nullable=True)
 
     # Relaciones
     institution: Mapped[Optional["Institution"]] = relationship(back_populates="users")
@@ -195,6 +200,10 @@ class Evaluation(Base):
         cascade="all, delete-orphan",
         uselist=False
     )
+    followups: Mapped[List["Followup"]] = relationship(
+        back_populates="evaluation",
+        cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Evaluation(id={self.id}, website_id={self.website_id}, status={self.status})>"
@@ -234,9 +243,73 @@ class CriteriaResult(Base):
 
     # Relaciones
     evaluation: Mapped["Evaluation"] = relationship(back_populates="criteria_results")
+    followups: Mapped[List["Followup"]] = relationship(back_populates="criteria_result")
 
     def __repr__(self) -> str:
         return f"<CriteriaResult(id={self.id}, criteria_id={self.criteria_id}, status={self.status})>"
+
+
+class Followup(Base):
+    """
+    Modelo para seguimientos de criterios no cumplidos.
+
+    Permite agendar y gestionar el seguimiento de correcciones
+    para criterios con estado fail o partial.
+
+    Flujo de estados:
+      pending   → La institución aún no ha reportado corrección
+      corrected → La institución marcó como corregido (pendiente de validación)
+      validated → El admin/secretaría validó la corrección
+      rejected  → El admin/secretaría rechazó la corrección
+      cancelled → Seguimiento cancelado
+    """
+
+    __tablename__ = "followups"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    evaluation_id: Mapped[int] = mapped_column(
+        ForeignKey("evaluations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    criteria_result_id: Mapped[int] = mapped_column(
+        ForeignKey("criteria_results.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    due_date: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    # pending, corrected, validated, rejected, cancelled
+    status: Mapped[str] = mapped_column(String(20), default="pending", nullable=False)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Campos de corrección (institución)
+    corrected_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    corrected_by_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True
+    )
+
+    # Campos de validación (admin/secretaría)
+    validated_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    validated_by_user_id: Mapped[Optional[int]] = mapped_column(
+        ForeignKey("users.id"),
+        nullable=True
+    )
+    validation_notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Relaciones
+    evaluation: Mapped["Evaluation"] = relationship(back_populates="followups")
+    criteria_result: Mapped["CriteriaResult"] = relationship(back_populates="followups")
+    corrected_by: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[corrected_by_user_id]
+    )
+    validated_by: Mapped[Optional["User"]] = relationship(
+        foreign_keys=[validated_by_user_id]
+    )
+
+    def __repr__(self) -> str:
+        return f"<Followup(id={self.id}, evaluation_id={self.evaluation_id}, status={self.status})>"
 
 
 class NLPAnalysis(Base):
@@ -270,7 +343,7 @@ class NLPAnalysis(Base):
     clarity_details: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
     # Recomendaciones priorizadas
-    recommendations: Mapped[list] = mapped_column(JSON, nullable=False, default=list)
+    recommendations: Mapped[Optional[list]] = mapped_column(ARRAY(String), nullable=True, default=list)
 
     # Cumplimiento WCAG
     wcag_compliance: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
