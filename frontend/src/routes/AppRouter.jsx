@@ -85,6 +85,7 @@ export default function AppRouter() {
         >
           {/* Dashboard - Todos los roles */}
           <Route index element={<Dashboard />} />
+          <Route path="dashboard" element={<Dashboard />} />
 
           {/* Evaluaciones */}
           <Route

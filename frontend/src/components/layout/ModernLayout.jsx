@@ -24,6 +24,7 @@ function ModernLayout() {
   const { user, logout } = useAuth();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
 
   // Páginas que deben ocupar todo el espacio sin padding
@@ -32,14 +33,37 @@ function ModernLayout() {
 
   return (
     <div className={`${styles.layout} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
-      {/* Sidebar moderno */}
-      <ModernSidebar onCollapse={setSidebarCollapsed} />
+      {/* Logo flotante — solo visible en desktop */}
+      <div className={styles.floatingLogo}>
+        <img src="/LOGO-AGETIC.png" alt="AGETIC" />
+      </div>
+
+      {/* Sidebar moderno — recibe control de apertura móvil */}
+      <ModernSidebar
+        onCollapse={setSidebarCollapsed}
+        mobileOpen={mobileSidebarOpen}
+        onMobileClose={() => setMobileSidebarOpen(false)}
+      />
 
       {/* Área principal */}
       <div className={styles.main}>
         {/* Topbar */}
         <header className={styles.topbar}>
           <div className={styles.topbarLeft}>
+            {/* Botón hamburger — solo visible en móvil */}
+            <button
+              className={styles.hamburger}
+              onClick={() => setMobileSidebarOpen(true)}
+              aria-label="Abrir menú"
+            >
+              <Menu size={22} />
+            </button>
+
+            {/* Logo — solo visible en móvil dentro del topbar */}
+            <div className={styles.topbarLogo}>
+              <img src="/LOGO-AGETIC.png" alt="AGETIC" />
+            </div>
+
             <span className={styles.pageTitle}>
               Panel Administrativo
             </span>

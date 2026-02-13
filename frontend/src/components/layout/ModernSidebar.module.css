@@ -1,21 +1,51 @@
 /* ================================================
-   ModernSidebar - Sidebar colapsable estilo dark
-   Paleta: Vino (#800000) → Negro (#1a1a1a) | Ámbar (#f59e0b)
+   ModernSidebar - Sidebar flotante con degradado vino→blanco
+   Paleta: Vino (#800000) → Blanco (#ffffff) | Ámbar (#f59e0b)
    ================================================ */
+
+/* ===== OVERLAY (solo móvil) ===== */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+}
+
+/* ===== BOTÓN CERRAR (solo móvil, dentro del sidebar) ===== */
+.closeBtn {
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+  background: rgba(245, 158, 11, 0.25);
+  border-color: rgba(245, 158, 11, 0.5);
+  color: #f59e0b;
+}
 
 .sidebar {
   position: fixed;
-  left: 0;
-  top: 0;
-  height: 100vh;
+  left: 1rem;
+  top: 5rem;
+  height: calc(100vh - 6rem);
   width: 240px;
-  background: linear-gradient(175deg, #800000 0%, #5a0000 30%, #2d1010 65%, #1a1a1a 100%);
+  background: linear-gradient(180deg, #800000 0%, #ffffff 100%);
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1000;
-  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   overflow: hidden;
+  border-radius: 20px;
 }
 
 .sidebar.collapsed {
@@ -24,55 +54,47 @@
 
 /* ===== HEADER ===== */
 .header {
-  padding: 1.25rem 1rem;
+  padding: 0.75rem 1rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   flex-shrink: 0;
-  min-height: 80px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  min-height: 52px;
 }
 
 .sidebar.collapsed .header {
-  flex-direction: column;
-  gap: 0.75rem;
   justify-content: center;
-  padding: 1rem 0.5rem;
+  padding: 0.75rem 0.5rem;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.625rem;
-  color: white;
+  justify-content: center;
   overflow: hidden;
   flex: 1;
 }
 
-.logoIcon {
-  flex-shrink: 0;
-  filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.5));
+.logoLarge {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
-.logoText {
-  font-size: 1.375rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: white;
-  white-space: nowrap;
-  opacity: 1;
-  transition: opacity 0.2s ease;
-}
-
-.sidebar.collapsed .logoText {
-  opacity: 0;
-  width: 0;
+.logoSmall {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+  filter: brightness(0) invert(1);
 }
 
 .toggleBtn {
   flex-shrink: 0;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -96,8 +118,8 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.12) 30%,
-    rgba(255, 255, 255, 0.12) 70%,
+    rgba(128, 0, 0, 0.2) 30%,
+    rgba(128, 0, 0, 0.2) 70%,
     transparent 100%
   );
   margin: 0 0.75rem;
@@ -121,7 +143,7 @@
 }
 
 .nav::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(128, 0, 0, 0.2);
   border-radius: 2px;
 }
 
@@ -131,7 +153,7 @@
   align-items: center;
   gap: 0.875rem;
   padding: 0.75rem 1.25rem;
-  color: #d1d5db;
+  color: #1f2937;
   text-decoration: none;
   transition: all 0.2s ease;
   position: relative;
@@ -175,8 +197,8 @@
 
 /* Estado hover */
 .navItem:hover {
-  background: rgba(245, 158, 11, 0.1);
-  color: #fbbf24;
+  background: rgba(245, 158, 11, 0.15);
+  color: #800000;
   border-left-color: rgba(245, 158, 11, 0.4);
 }
 
@@ -187,8 +209,8 @@
 
 /* Estado activo */
 .navItem.active {
-  background: rgba(245, 158, 11, 0.15);
-  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.2);
+  color: #800000;
   border-left-color: #f59e0b;
 }
 
@@ -260,7 +282,7 @@
 .userName {
   font-size: 0.85rem;
   font-weight: 600;
-  color: #e5e7eb;
+  color: #1f2937;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -268,8 +290,33 @@
 
 .userRole {
   font-size: 0.72rem;
-  color: rgba(245, 158, 11, 0.8);
+  color: #800000;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 500;
+}
+
+/* ===== RESPONSIVE MÓVIL ===== */
+@media (max-width: 767px) {
+  /* Sidebar como panel deslizable desde la izquierda */
+  .sidebar {
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    border-radius: 0 20px 20px 0;
+    transform: translateX(-100%);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+  }
+
+  /* Sidebar abierto en móvil */
+  .sidebar.mobileOpen {
+    transform: translateX(0);
+  }
+
+  /* Sidebar cerrado en móvil (refuerzo) */
+  .sidebar.mobileHidden {
+    transform: translateX(-100%);
+  }
 }

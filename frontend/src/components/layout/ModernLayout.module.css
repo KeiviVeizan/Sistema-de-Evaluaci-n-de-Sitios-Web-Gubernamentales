@@ -8,26 +8,44 @@
   background: #f4f5f7;
 }
 
-/* Área principal desplazada por el sidebar (240px expandido) */
+/* ===== LOGO FLOTANTE ===== */
+.floatingLogo {
+  position: fixed;
+  left: 1.5rem;
+  top: 1.25rem;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.floatingLogo img {
+  height: 36px;
+  width: auto;
+  display: block;
+  object-fit: contain;
+}
+
+/* Área principal desplazada por el sidebar flotante (240px + 1rem margen + 1rem separación) */
 .main {
   flex: 1;
-  margin-left: 240px;
+  margin-left: calc(240px + 2rem);
   transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-/* Cuando el sidebar está colapsado (80px) */
+/* Cuando el sidebar está colapsado (80px + márgenes) */
 .layout.sidebarCollapsed .main {
-  margin-left: 80px;
+  margin-left: calc(80px + 2rem);
 }
 
 /* ===== TOPBAR ===== */
 .topbar {
   height: 64px;
-  background: white;
-  border-bottom: 1px solid #e5e7eb;
+  background: transparent;
+  border-bottom: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -35,14 +53,13 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   flex-shrink: 0;
 }
 
 .topbarLeft {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
 }
 
 .pageTitle {
@@ -50,6 +67,38 @@
   font-weight: 600;
   color: #374151;
   letter-spacing: 0.01em;
+}
+
+/* ===== HAMBURGER en topbar (solo móvil) ===== */
+.hamburger {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  border: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  cursor: pointer;
+  color: #800000;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.hamburger:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== LOGO en topbar (solo móvil) ===== */
+.topbarLogo {
+  display: none;
+}
+
+.topbarLogo img {
+  height: 30px;
+  width: auto;
+  display: block;
+  object-fit: contain;
 }
 
 .topbarRight {
@@ -226,17 +275,48 @@
   overflow-y: auto;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
+/* ===== RESPONSIVE MÓVIL ===== */
+@media (max-width: 767px) {
+  /* El sidebar es overlay, el main ocupa todo el ancho */
   .main {
     margin-left: 0 !important;
   }
 
+  /* Topbar visible con fondo blanco en móvil para anclarse */
+  .topbar {
+    background: white;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    padding: 0 1rem;
+    height: 56px;
+  }
+
+  /* Mostrar hamburger en topbar */
+  .hamburger {
+    display: flex;
+  }
+
+  /* Mostrar logo en topbar (oculto en desktop donde está el floating logo) */
+  .topbarLogo {
+    display: block;
+  }
+
+  /* Título más pequeño en móvil */
+  .pageTitle {
+    font-size: 0.875rem;
+  }
+
+  /* Ocultar nombre de usuario (queda solo el avatar) */
   .userMenuName {
     display: none;
   }
 
+  /* Contenido sin padding-top extra (el topbar sticky ya ocupa su espacio) */
   .content {
     padding: 1rem;
+  }
+
+  /* Logo flotante de desktop oculto en móvil */
+  .floatingLogo {
+    display: none;
   }
 }
