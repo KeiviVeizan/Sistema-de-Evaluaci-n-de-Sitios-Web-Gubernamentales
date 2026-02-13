@@ -68,35 +68,54 @@ async def login(
         (User.username == credentials.username) | (User.email == credentials.username)
     ).first()
 
-    if not user or not verify_password(credentials.password, user.hashed_password):
+    if not user:
+        logger.warning(f"Login fallido: usuario '{credentials.username}' no encontrado")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Credenciales incorrectas",
         )
 
+    # Forzar recarga desde BD para obtener el hash más reciente (evita cache de sesión)
+    db.refresh(user)
+
+    if not verify_password(credentials.password, user.hashed_password):
+        logger.warning(f"Login fallido para '{user.username or user.email}': contraseña incorrecta")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Credenciales incorrectas",
+        )
+
+    logger.info(f"✓ Contraseña correcta para '{user.username or user.email}'")
+
     if not user.is_active:
+        logger.warning(f"Login rechazado: usuario '{user.username or user.email}' desactivado")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Usuario desactivado",
         )
 
+    # Usar username si existe, sino email como clave del código 2FA
+    user_key = user.username or user.email
+
     # Generar código de 6 dígitos
     code = str(random.randint(100000, 999999))
-    _2fa_codes[user.username] = code
+    _2fa_codes[user_key] = code
+
+    logger.info(f"✓ Código 2FA generado para '{user_key}' (email: {user.email})")
 
     # Enviar código por correo electrónico (en segundo plano)
     background_tasks.add_task(
         email_service.send_2fa_code,
         email=user.email,
         code=code,
-        username=user.username,
+        username=user_key,
     )
 
-    logger.info(f"Código 2FA generado para {user.username}")
+    logger.info(f"✓ Tarea de envío 2FA encolada para {user.email}")
 
     return {
         "message": "Código de verificación enviado a tu correo electrónico.",
-        "username": user.username,
+        "username": user_key,
     }
 
 
@@ -114,6 +133,7 @@ async def verify_2fa(
     """
     # Validar que existe un código pendiente
     if verification.username not in _2fa_codes:
+        logger.warning(f"verify-2fa: no hay código pendiente para '{verification.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No hay código pendiente para este usuario",
@@ -121,14 +141,18 @@ async def verify_2fa(
 
     # Validar que el código coincida
     if _2fa_codes[verification.username] != verification.code:
+        logger.warning(f"verify-2fa: código incorrecto para '{verification.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Código de verificación inválido",
         )
 
-    # Obtener usuario
-    user = db.query(User).filter(User.username == verification.username).first()
+    # Obtener usuario por username o email (la clave puede ser cualquiera de los dos)
+    user = db.query(User).filter(
+        (User.username == verification.username) | (User.email == verification.username)
+    ).first()
     if not user:
+        logger.error(f"verify-2fa: usuario '{verification.username}' no encontrado en BD")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Usuario no encontrado",
@@ -136,6 +160,7 @@ async def verify_2fa(
 
     # Limpiar código usado (un código solo se puede usar una vez)
     del _2fa_codes[verification.username]
+    logger.info(f"✓ Código 2FA verificado correctamente para '{verification.username}'")
 
     # Generar JWT
     access_token = create_access_token(

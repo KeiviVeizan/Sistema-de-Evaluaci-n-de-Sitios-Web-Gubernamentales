@@ -76,6 +76,12 @@ const getNavItems = (role) => {
       label: 'Configuración',
       roles: [ROLES.SUPERADMIN],
     },
+    {
+      path: '/admin/profile',
+      icon: User,
+      label: 'Mi Perfil',
+      roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR, ROLES.ENTITY_USER],
+    },
   ];
 
   return items.filter(item => item.roles.includes(role));

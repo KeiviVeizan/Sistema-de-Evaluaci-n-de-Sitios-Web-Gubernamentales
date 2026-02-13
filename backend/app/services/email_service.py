@@ -757,6 +757,55 @@ class EmailService:
             )
             return False
 
+    def _get_password_changed_html(self, username: str) -> str:
+        """Template HTML para confirmacion de cambio de contrasena."""
+        from datetime import datetime as dt
+        change_date = dt.now().strftime("%d/%m/%Y %H:%M")
+        return (
+            "<!DOCTYPE html>"
+            "<html lang=es><head><meta charset=UTF-8></head>"
+            "<body style=margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;>"
+            "<table role=presentation width=100% cellspacing=0 cellpadding=0 style=max-width:600px;margin:0 auto;padding:20px;>"
+            "<tr><td style=background-color:#10b981;padding:30px;text-align:center;border-radius:12px 12px 0 0;>"
+            "<h1 style=color:white;margin:0;font-size:24px;>Evaluador GOB.BO</h1>"
+            "<p style=color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:16px;font-weight:600;>Contrasena Actualizada</p>"
+            "</td></tr>"
+            "<tr><td style=background-color:white;padding:40px 30px;border-radius:0 0 12px 12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);>"
+            f"<p style=color:#555;font-size:15px;>Hola <strong>{username}</strong>,</p>"
+            "<p style=color:#555;font-size:15px;>Tu contrasena ha sido actualizada exitosamente.</p>"
+            f"<div style=background:#f9f9f9;padding:16px;border-radius:8px;margin:0 0 24px;><p style=margin:0;><strong>Fecha:</strong> {change_date}</p></div>"
+            "<div style=background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;border-radius:0 8px 8px 0;>"
+            "<p style=margin:0;font-size:14px;color:#92400e;><strong>No fuiste tu?</strong><br>Si no realizaste este cambio, contacta al administrador.</p>"
+            "</div></td></tr>"
+            "<tr><td style=padding:20px;text-align:center;><p style=color:#999;font-size:11px;>Mensaje automatico del Sistema GOB.BO</p></td></tr>"
+            "</table></body></html>"
+        )
+
+    async def send_password_changed_email(self, to_email: str, username: str) -> bool:
+        """Envia email de confirmacion de cambio de contrasena."""
+        self._initialize()
+        subject = "Contrasena actualizada - GOB.BO"
+        html_content = self._get_password_changed_html(username)
+        if not self._fastmail:
+            logger.info("=" * 50)
+            logger.info("[MODO DESARROLLO] Email cambio de contrasena simulado:")
+            logger.info(f"  Para: {to_email} / Usuario: {username}")
+            logger.info("=" * 50)
+            return True
+        try:
+            message = MessageSchema(
+                subject=subject,
+                recipients=[to_email],
+                body=html_content,
+                subtype=MessageType.html,
+            )
+            await self._fastmail.send_message(message)
+            logger.info(f"Email cambio contrasena enviado a {to_email}")
+            return True
+        except Exception as e:
+            logger.error(f"Error al enviar email cambio contrasena: {type(e).__name__}: {str(e)}")
+            return False
+
 
 # Instancia global del servicio
 email_service = EmailService()

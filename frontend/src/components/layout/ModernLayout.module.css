@@ -1,0 +1,242 @@
+/* ================================================
+   ModernLayout - Layout principal con sidebar moderno
+   ================================================ */
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f5f7;
+}
+
+/* Área principal desplazada por el sidebar (240px expandido) */
+.main {
+  flex: 1;
+  margin-left: 240px;
+  transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Cuando el sidebar está colapsado (80px) */
+.layout.sidebarCollapsed .main {
+  margin-left: 80px;
+}
+
+/* ===== TOPBAR ===== */
+.topbar {
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+.topbarLeft {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pageTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  letter-spacing: 0.01em;
+}
+
+.topbarRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ===== MENÚ DE USUARIO ===== */
+.userMenu {
+  position: relative;
+}
+
+.userMenuBtn {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.875rem 0.5rem 0.5rem;
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #374151;
+}
+
+.userMenuBtn:hover {
+  background: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.userAvatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #800000, #5a0000);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.userMenuName {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  transition: transform 0.2s ease;
+  color: #9ca3af;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+/* ===== DROPDOWN ===== */
+.menuOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+}
+
+.dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  min-width: 220px;
+  z-index: 201;
+  overflow: hidden;
+  animation: dropdownIn 0.15s ease;
+}
+
+@keyframes dropdownIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.dropdownHeader {
+  padding: 1rem 1.125rem 0.875rem;
+  background: linear-gradient(135deg, #fdf2f2, #fff);
+}
+
+.dropdownName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 2px;
+}
+
+.dropdownEmail {
+  font-size: 0.78rem;
+  color: #6b7280;
+  margin-bottom: 0.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0.6rem;
+  background: rgba(128, 0, 0, 0.1);
+  color: #800000;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.dropdownDivider {
+  height: 1px;
+  background: #f3f4f6;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.75rem 1.125rem;
+  color: #374151;
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: background 0.15s ease;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+
+.dropdownItem:hover {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.dropdownLogout:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+}
+
+/* ===== CONTENIDO ===== */
+.content {
+  flex: 1;
+  padding: 1.75rem 2rem;
+  overflow-y: auto;
+}
+
+.contentFull {
+  flex: 1;
+  padding: 0;
+  overflow-y: auto;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 768px) {
+  .main {
+    margin-left: 0 !important;
+  }
+
+  .userMenuName {
+    display: none;
+  }
+
+  .content {
+    padding: 1rem;
+  }
+}

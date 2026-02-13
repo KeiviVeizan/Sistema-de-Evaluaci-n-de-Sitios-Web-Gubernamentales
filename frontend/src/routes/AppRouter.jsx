@@ -5,7 +5,7 @@ import { ROLES } from '../contexts/AuthContext';
 import { ProtectedRoute, RoleBasedRoute, PublicRoute } from '../components/routing';
 
 // Layouts
-import { AdminLayout } from '../components/layouts';
+import ModernLayout from '../components/layout/ModernLayout';
 
 // Páginas de autenticación
 import { Login, TwoFactorAuth } from '../pages/auth';
@@ -22,6 +22,9 @@ import InstitutionEvaluations from '../pages/institution/InstitutionEvaluations'
 
 // Páginas del evaluador
 import MyEvaluations from '../pages/evaluator/MyEvaluations';
+
+// Página de perfil
+import Profile from '../pages/profile/Profile';
 
 // Páginas placeholder para rutas que se implementarán después
 function PlaceholderPage({ title }) {
@@ -76,7 +79,7 @@ export default function AppRouter() {
           path="/admin"
           element={
             <ProtectedRoute>
-              <AdminLayout />
+              <ModernLayout />
             </ProtectedRoute>
           }
         >
@@ -227,7 +230,7 @@ export default function AppRouter() {
           {/* Perfil - Todos los roles autenticados */}
           <Route
             path="profile"
-            element={<PlaceholderPage title="Mi Perfil" />}
+            element={<Profile />}
           />
         </Route>
 

@@ -1,0 +1,331 @@
+/* =====================================================
+   Profile Page Styles
+   ===================================================== */
+
+.container {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Page header */
+.pageHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.pageHeaderIcon {
+  width: 52px;
+  height: 52px;
+  background: #800000;
+  color: white;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.pageSubtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin: 4px 0 0;
+}
+
+/* Card */
+.card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.cardTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Alerts */
+.alert {
+  margin: 0 24px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  margin-top: 16px;
+}
+
+.alertSuccess {
+  background: #d1fae5;
+  color: #065f46;
+  border: 1px solid #a7f3d0;
+}
+
+.alertError {
+  background: #fee2e2;
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+/* Info grid (view mode) */
+.infoGrid {
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+@media (max-width: 600px) {
+  .infoGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.infoItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.infoIcon {
+  color: #800000;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.infoContent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.infoLabel {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.infoValue {
+  font-size: 0.9375rem;
+  color: #111827;
+  font-weight: 500;
+}
+
+.empty {
+  color: #9ca3af;
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Form (edit mode) */
+.form {
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.input {
+  padding: 10px 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  color: #111827;
+  background: #ffffff;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #800000;
+  box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.08);
+}
+
+.inputError {
+  border-color: #ef4444;
+}
+
+.inputError:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.fieldError {
+  font-size: 0.8125rem;
+  color: #dc2626;
+}
+
+.formActions {
+  display: flex;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+/* Buttons */
+.btnPrimary {
+  padding: 10px 20px;
+  background: #800000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btnPrimary:hover:not(:disabled) {
+  background: #6b0000;
+}
+
+.btnPrimary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btnSecondary {
+  padding: 8px 16px;
+  background: transparent;
+  color: #800000;
+  border: 1px solid #800000;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnSecondary:hover {
+  background: rgba(128, 0, 0, 0.06);
+}
+
+.btnGhost {
+  padding: 10px 20px;
+  background: transparent;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btnGhost:hover {
+  background: #f9fafb;
+  color: #374151;
+}
+
+/* Password requirements */
+.requirements {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 14px 18px;
+}
+
+.requirementsTitle {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 10px;
+}
+
+.requirementsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reqMet {
+  font-size: 0.8125rem;
+  color: #059669;
+  font-weight: 500;
+}
+
+.reqUnmet {
+  font-size: 0.8125rem;
+  color: #dc2626;
+}
+
+/* Security note */
+.securityNote {
+  padding: 20px 24px;
+  font-size: 0.9375rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.infoBox {
+  background-color: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 0.875rem;
+  color: #1d4ed8;
+  margin-bottom: 16px;
+}
+
+/* Loading */
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  gap: 16px;
+  color: #6b7280;
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #800000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
