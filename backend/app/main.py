@@ -22,6 +22,7 @@ from app.api.admin_routes import router as admin_router
 from app.api.followup_routes import router as followup_router
 from app.api.notification_routes import router as notification_router
 from app.api.profile_routes import router as profile_router
+from app.api.stats_routes import router as stats_router
 from app.auth.seed import seed_users
 from app import __version__, __description__
 
@@ -103,6 +104,7 @@ app.include_router(admin_router, prefix=settings.api_v1_prefix)
 app.include_router(followup_router, prefix=settings.api_v1_prefix)
 app.include_router(notification_router, prefix=settings.api_v1_prefix)
 app.include_router(profile_router, prefix=settings.api_v1_prefix)
+app.include_router(stats_router, prefix=settings.api_v1_prefix)
 
 
 # Health check endpoint (fuera del prefijo API)

@@ -7,11 +7,14 @@ import styles from './ProtectedRoute.module.css';
  * Componente que protege rutas basadas en roles
  * @param {Array|string} allowedRoles - Roles permitidos para acceder
  * @param {React.ReactNode} children - Contenido a renderizar si tiene permiso
+ * @param {React.ReactNode} fallback - Contenido alternativo si no tiene permiso (en lugar de redirigir)
  * @param {string} redirectTo - Ruta de redirección si no tiene permiso (default: /admin)
+ * @param {boolean} showAccessDenied - Mostrar mensaje de acceso denegado en lugar de redirigir
  */
 export default function RoleBasedRoute({
   allowedRoles,
   children,
+  fallback = null,
   redirectTo = '/admin',
   showAccessDenied = false,
 }) {
@@ -26,6 +29,11 @@ export default function RoleBasedRoute({
   const hasAccess = hasRole(allowedRoles);
 
   if (!hasAccess) {
+    // Si hay un fallback, renderizarlo en lugar de redirigir
+    if (fallback !== null) {
+      return fallback;
+    }
+
     // Opcionalmente mostrar mensaje de acceso denegado en lugar de redirigir
     if (showAccessDenied) {
       return (

@@ -11,7 +11,7 @@ import ModernLayout from '../components/layout/ModernLayout';
 import { Login, TwoFactorAuth } from '../pages/auth';
 
 // Páginas del panel administrativo
-import { Dashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail } from '../pages/admin';
+import { Dashboard, AdminDashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail } from '../pages/admin';
 
 // Página pública (evaluador público)
 import PublicEvaluator from '../pages/public/PublicEvaluator';
@@ -83,9 +83,29 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         >
-          {/* Dashboard - Todos los roles */}
-          <Route index element={<Dashboard />} />
-          <Route path="dashboard" element={<Dashboard />} />
+          {/* Dashboard — AdminDashboard para admin/secretary, Dashboard legacy para otros roles */}
+          <Route
+            index
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                fallback={<Dashboard />}
+              >
+                <AdminDashboard />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="dashboard"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                fallback={<Dashboard />}
+              >
+                <AdminDashboard />
+              </RoleBasedRoute>
+            }
+          />
 
           {/* Evaluaciones */}
           <Route

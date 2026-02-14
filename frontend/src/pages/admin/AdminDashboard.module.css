@@ -1,0 +1,639 @@
+/* ===================================
+   ADMIN DASHBOARD - Paleta vino/ámbar
+   =================================== */
+
+.dashboard {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Encabezado */
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+}
+
+.subtitle {
+  font-size: 0.9rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* ===================================
+   MÉTRICAS RÁPIDAS
+   =================================== */
+
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.metricCard {
+  background: white;
+  padding: 1.25rem 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.metricCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.metricIcon {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  flex-shrink: 0;
+}
+
+.metricContent {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.metricLabel {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.metricValue {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.1;
+}
+
+/* ===================================
+   SELECTOR DE DÍAS (CALENDARIO)
+   =================================== */
+
+.calendarSection {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.calendarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.sectionTitle {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.monthNav {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.monthLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #374151;
+  min-width: 150px;
+  text-align: center;
+}
+
+.navBtn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6b7280;
+  transition: all 0.15s ease;
+}
+
+.navBtn:hover:not(.navBtnDisabled) {
+  background: #800000;
+  border-color: #800000;
+  color: white;
+}
+
+.navBtnDisabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Scroll de días */
+.daysScroll {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  scrollbar-width: thin;
+  scrollbar-color: #e5e7eb transparent;
+}
+
+.daysScroll::-webkit-scrollbar {
+  height: 4px;
+}
+.daysScroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.daysScroll::-webkit-scrollbar-thumb {
+  background: #e5e7eb;
+  border-radius: 4px;
+}
+
+/* Botón de día */
+.dayButton {
+  min-width: 62px;
+  padding: 0.625rem 0.5rem;
+  background: #f9fafb;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  transition: all 0.15s ease;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dayButton:hover:not(.futureBtn) {
+  background: #fdf2f2;
+  border-color: #c0847e;
+}
+
+.dayButton.active {
+  background: #800000;
+  border-color: #800000;
+  color: white;
+  box-shadow: 0 2px 8px rgba(128, 0, 0, 0.35);
+}
+
+.dayButton.todayBtn:not(.active) {
+  border-color: #f59e0b;
+  background: #fffbeb;
+}
+
+.dayButton.futureBtn {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.dayName {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  opacity: 0.7;
+}
+
+.dayNumber {
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.dayBadge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  background: #f59e0b;
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 0.1rem 0.35rem;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  line-height: 1.4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.dayButton.active .dayBadge {
+  background: #f59e0b;
+}
+
+/* ===================================
+   GRÁFICO DE ACTIVIDAD
+   =================================== */
+
+.chartCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+  margin-bottom: 1.5rem;
+}
+
+.chartTitle {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #374151;
+  margin: 0 0 1.25rem 0;
+}
+
+.chartDateHighlight {
+  color: #800000;
+  font-style: italic;
+}
+
+.chartLoading,
+.chartEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  gap: 0.75rem;
+  color: #9ca3af;
+}
+
+.chartEmpty p {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* Tooltip personalizado */
+.customTooltip {
+  background: #1f2937;
+  border-radius: 8px;
+  padding: 0.6rem 0.875rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.tooltipLabel {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  margin: 0 0 0.2rem 0;
+}
+
+.tooltipValue {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+/* ===================================
+   SECCIÓN DE EVALUACIONES
+   =================================== */
+
+.evaluationsSection {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 14px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.evalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.evalCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #800000;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  min-width: 24px;
+  line-height: 1.5;
+}
+
+.evaluatorsList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+
+/* Tarjeta de evaluador */
+.evaluatorCard {
+  background: #fafafa;
+  border: 1px solid #f0e6e6;
+  border-radius: 12px;
+  padding: 1.125rem;
+  transition: box-shadow 0.15s ease;
+}
+
+.evaluatorCard:hover {
+  box-shadow: 0 2px 8px rgba(128, 0, 0, 0.1);
+  border-color: #d4aaa8;
+}
+
+.evaluatorHeader {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.evaluatorAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #800000, #a33030);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(128, 0, 0, 0.3);
+}
+
+.evaluatorInfo {
+  min-width: 0;
+}
+
+.evaluatorName {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 0.15rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evaluatorEmail {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  margin: 0 0 0.3rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evalCountBadge {
+  font-size: 0.75rem;
+  color: #800000;
+  font-weight: 600;
+  background: #fdf2f2;
+  padding: 0.1rem 0.5rem;
+  border-radius: 8px;
+}
+
+/* Lista de instituciones */
+.institutionsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.875rem;
+}
+
+.institutionItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.625rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #f3f4f6;
+  gap: 0.5rem;
+}
+
+.instInfo {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+.instName {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: #374151;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.instDomain {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.instScore {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.score {
+  font-weight: 700;
+  font-size: 0.9375rem;
+  line-height: 1;
+}
+
+.scoreNA {
+  font-size: 0.8125rem;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.statusBadge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statusBadge[data-status="completed"] {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.statusBadge[data-status="in_progress"] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.statusBadge[data-status="pending"] {
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.statusBadge[data-status="failed"] {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+/* Mini barra de puntos de progreso */
+.evaluatorProgress {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.progressDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  transition: transform 0.15s ease;
+  cursor: default;
+}
+
+.progressDot:hover {
+  transform: scale(1.4);
+}
+
+/* ===================================
+   ESTADOS VACÍO / CARGANDO / ERROR
+   =================================== */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #9ca3af;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.emptyState span {
+  font-size: 0.8125rem;
+}
+
+.loadingRow {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 1rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f4f6;
+  border-top-color: #800000;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorState {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 1rem;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+/* ===================================
+   RESPONSIVE
+   =================================== */
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 1rem;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .metricsGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.875rem;
+  }
+
+  .metricValue {
+    font-size: 1.375rem;
+  }
+
+  .evaluatorsList {
+    grid-template-columns: 1fr;
+  }
+
+  .dayButton {
+    min-width: 54px;
+  }
+
+  .monthLabel {
+    min-width: 120px;
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+}
