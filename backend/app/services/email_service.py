@@ -6,6 +6,8 @@ Incluye templates HTML para códigos 2FA y notificaciones.
 """
 
 import logging
+import smtplib
+import socket
 from typing import Optional
 
 from fastapi_mail import FastMail, MessageSchema, ConnectionConfig, MessageType
@@ -52,6 +54,15 @@ class EmailService:
             self._initialized = True
             return
 
+        # Verificar conectividad SMTP antes de configurar fastmail
+        if not self._test_smtp_connection(settings.mail_server, settings.mail_port):
+            logger.error(
+                f"No se puede conectar al servidor SMTP {settings.mail_server}:{settings.mail_port}. "
+                "Los correos no serán enviados."
+            )
+            self._initialized = True
+            return
+
         try:
             self._config = ConnectionConfig(
                 MAIL_USERNAME=settings.mail_username,
@@ -72,6 +83,33 @@ class EmailService:
             self._fastmail = None
 
         self._initialized = True
+
+    @staticmethod
+    def _test_smtp_connection(server: str, port: int, timeout: int = 5) -> bool:
+        """
+        Prueba la conectividad TCP al servidor SMTP antes de intentar autenticar.
+        Ayuda a detectar problemas de red/firewall de forma temprana.
+        """
+        try:
+            with smtplib.SMTP(server, port, timeout=timeout) as smtp:
+                smtp.ehlo()
+            logger.info(f"Conectividad SMTP OK: {server}:{port}")
+            return True
+        except socket.timeout:
+            logger.error(f"Timeout al conectar con {server}:{port} (>{timeout}s). Verifique firewall o red.")
+            return False
+        except socket.gaierror as e:
+            logger.error(f"No se puede resolver el host '{server}': {e}. Verifique MAIL_SERVER en .env")
+            return False
+        except ConnectionRefusedError:
+            logger.error(f"Conexión rechazada en {server}:{port}. Puerto bloqueado o incorrecto.")
+            return False
+        except smtplib.SMTPException as e:
+            logger.error(f"Error SMTP al probar conexión con {server}:{port}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Error inesperado al probar conexión SMTP: {type(e).__name__}: {e}")
+            return False
 
     def _get_2fa_html_template(self, code: str, username: str) -> str:
         """Genera el HTML del correo de código 2FA."""
@@ -319,21 +357,34 @@ class EmailService:
         # Inicializar de forma lazy
         self._initialize()
 
+        from app.config import settings
+
         subject = f"Código de Verificación: {code} - Evaluador GOB.BO"
         html_content = self._get_2fa_html_template(code, username)
 
-        # Si no hay configuración de correo, usar modo desarrollo (log en consola)
+        # Si el servicio de correo no está disponible (credenciales inválidas,
+        # sin conexión SMTP, etc.) mostramos el código en consola SOLO para
+        # entornos de desarrollo. En producción esto indica un error de config.
         if not self._fastmail:
-            logger.info("=" * 50)
-            logger.info("[MODO DESARROLLO] Correo 2FA simulado:")
-            logger.info(f"  Para: {email}")
-            logger.info(f"  Usuario: {username}")
-            logger.info(f"  Código: {code}")
-            logger.info("=" * 50)
-            return True
+            if settings.environment == "development":
+                logger.warning("=" * 50)
+                logger.warning("[MODO DESARROLLO] Servicio de correo NO configurado correctamente.")
+                logger.warning("  El correo NO fue enviado al destinatario.")
+                logger.warning(f"  Para: {email}")
+                logger.warning(f"  Usuario: {username}")
+                logger.warning(f"  Código: {code}")
+                logger.warning("  Revise MAIL_USERNAME, MAIL_PASSWORD y conectividad SMTP en .env")
+                logger.warning("=" * 50)
+                return True  # En desarrollo, permitir continuar con el código visible
+            else:
+                logger.error(
+                    f"Servicio de correo no disponible. No se pudo enviar el código 2FA a {email}. "
+                    "Verifique la configuración SMTP en .env"
+                )
+                return False
 
         try:
-            logger.info(f"Intentando enviar correo 2FA a {email}...")
+            logger.info(f"Enviando correo 2FA a {email}...")
 
             message = MessageSchema(
                 subject=subject,
@@ -346,12 +397,22 @@ class EmailService:
             logger.info(f"Correo 2FA enviado exitosamente a {email}")
             return True
 
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(
+                f"Error de autenticación SMTP para {settings.mail_username}: {e}. "
+                "Verifique que MAIL_PASSWORD sea una Contraseña de Aplicación válida de Gmail "
+                "(https://myaccount.google.com/apppasswords). "
+                "La contraseña de la cuenta normal NO funciona con SMTP."
+            )
+            logger.warning(f"[FALLBACK] Código 2FA para {username}: {code}")
+            return False
+        except smtplib.SMTPException as e:
+            logger.error(f"Error SMTP al enviar correo 2FA a {email}: {e}")
+            logger.warning(f"[FALLBACK] Código 2FA para {username}: {code}")
+            return False
         except Exception as e:
-            logger.error(f"Error al enviar correo 2FA a {email}: {type(e).__name__}: {str(e)}")
-            # En caso de error, logeamos el código para no bloquear al usuario
-            logger.info("=" * 50)
-            logger.info(f"[FALLBACK] Código 2FA para {username}: {code}")
-            logger.info("=" * 50)
+            logger.error(f"Error inesperado al enviar correo 2FA a {email}: {type(e).__name__}: {str(e)}")
+            logger.warning(f"[FALLBACK] Código 2FA para {username}: {code}")
             return False
 
     @staticmethod

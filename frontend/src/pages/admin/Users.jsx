@@ -3,19 +3,23 @@ import {
   User,
   Mail,
   Shield,
+  ShieldAlert,
   Eye,
   EyeOff,
   Search,
   Plus,
   Edit2,
+  Trash2,
   X,
   Loader,
   AlertCircle,
   CheckCircle,
   Building2,
   Save,
+  Filter,
 } from 'lucide-react';
 import anime from 'animejs';
+import { useAuth } from '../../contexts/AuthContext';
 import userService from '../../services/userService';
 import institutionService from '../../services/institutionService';
 import styles from './Users.module.css';
@@ -59,6 +63,56 @@ function getRoleLabel(role) {
     entity_user: 'Entidad',
   };
   return roleLabels[role] || role;
+}
+
+// ── Modal Confirmar Eliminar ──────────────────────────────────────────────────
+function ConfirmDeleteModal({ isOpen, onClose, onConfirm, userName, deleting }) {
+  if (!isOpen) return null;
+
+  return (
+    <div className={styles.modalOverlay} onClick={!deleting ? onClose : undefined}>
+      <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+        <div className={styles.confirmModalIcon}>
+          <ShieldAlert size={32} />
+        </div>
+        <div className={styles.confirmModalContent}>
+          <h2 className={styles.confirmModalTitle}>Eliminar Usuario</h2>
+          <p className={styles.confirmModalMessage}>
+            ¿Está seguro de eliminar al usuario{' '}
+            <strong>"{userName}"</strong>?
+          </p>
+          <div className={styles.confirmModalWarning}>
+            <p>Esta acción es <strong>irreversible</strong> y eliminará:</p>
+            <ul>
+              <li>Todos los datos del usuario</li>
+              <li>Sus accesos al sistema</li>
+              <li>Sus evaluaciones asociadas</li>
+            </ul>
+          </div>
+        </div>
+        <div className={styles.confirmModalFooter}>
+          <button
+            className={styles.btnSecondary}
+            onClick={onClose}
+            disabled={deleting}
+          >
+            Cancelar
+          </button>
+          <button
+            className={styles.btnDanger}
+            onClick={onConfirm}
+            disabled={deleting}
+          >
+            {deleting ? (
+              <><Loader size={16} className={styles.spinner} /> Eliminando...</>
+            ) : (
+              <><Trash2 size={16} /> Eliminar</>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // Modal de Edición de Usuario
@@ -288,15 +342,27 @@ function UserModal({ isOpen, onClose, user, onSave }) {
   );
 }
 
+const ROLE_FILTER_OPTIONS = [
+  { value: 'all', label: 'Todos los roles' },
+  { value: 'superadmin', label: 'Superadmin' },
+  { value: 'secretary', label: 'Secretario' },
+  { value: 'evaluator', label: 'Evaluador' },
+  { value: 'entity_user', label: 'Usuario Entidad' },
+];
+
 // Componente principal
 export default function Users() {
+  const { user: currentUser } = useAuth();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const [toast, setToast] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, username }
+  const [deleting, setDeleting] = useState(false);
   const tableRef = useRef(null);
 
   const fetchUsers = useCallback(async () => {
@@ -313,6 +379,46 @@ export default function Users() {
     }
   }, [searchQuery]);
 
+  // Filtrado por rol en el cliente (búsqueda ya se delega al backend)
+  const filteredUsers = roleFilter === 'all'
+    ? users
+    : users.filter((u) => u.role === roleFilter);
+
+  /**
+   * Determina si el usuario actual puede eliminar al usuario objetivo.
+   * - superadmin: puede eliminar a cualquiera (excepto a sí mismo)
+   * - secretary: solo puede eliminar entity_user
+   */
+  const canDeleteUser = (targetUser) => {
+    if (!currentUser) return false;
+    if (targetUser.id === currentUser.id) return false;
+    if (currentUser.role === 'superadmin') return true;
+    if (currentUser.role === 'secretary' && targetUser.role === 'entity_user') return true;
+    return false;
+  };
+
+  const handleDeleteUser = (userId, username) => {
+    setDeleteTarget({ id: userId, username });
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      await userService.remove(deleteTarget.id);
+      setToast({ message: `Usuario "${deleteTarget.username}" eliminado exitosamente`, type: 'success' });
+      setDeleteTarget(null);
+      fetchUsers();
+    } catch (err) {
+      setToast({
+        message: err.response?.data?.detail || 'Error al eliminar usuario',
+        type: 'error',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
   }, [fetchUsers]);
@@ -326,8 +432,9 @@ export default function Users() {
   }, [searchQuery]);
 
   // Animación stagger para las filas de la tabla
+  // Depende de filteredUsers (no solo de users) para re-animarse al cambiar el filtro de rol
   useEffect(() => {
-    if (!loading && users.length > 0 && tableRef.current) {
+    if (!loading && filteredUsers.length > 0 && tableRef.current) {
       const rows = tableRef.current.querySelectorAll('tr');
       anime({
         targets: rows,
@@ -338,7 +445,7 @@ export default function Users() {
         easing: 'easeOutCubic',
       });
     }
-  }, [users, loading]);
+  }, [filteredUsers, loading]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -394,24 +501,39 @@ export default function Users() {
         </button>
       </div>
 
-      {/* Barra de búsqueda */}
-      <div className={styles.searchBox}>
-        <Search size={20} className={styles.searchIcon} />
-        <input
-          type="text"
-          placeholder="Buscar por nombre o email..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className={styles.searchInput}
-        />
-        {searchQuery && (
-          <button
-            onClick={() => setSearchQuery('')}
-            className={styles.searchClear}
+      {/* Barra de búsqueda y filtros */}
+      <div className={styles.toolbar}>
+        <div className={styles.searchBox}>
+          <Search size={20} className={styles.searchIcon} />
+          <input
+            type="text"
+            placeholder="Buscar por nombre o email..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            className={styles.searchInput}
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className={styles.searchClear}
+            >
+              <X size={16} />
+            </button>
+          )}
+        </div>
+        <div className={styles.filterGroup}>
+          <Filter size={16} className={styles.filterIcon} />
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className={styles.filterSelect}
+            aria-label="Filtrar por rol"
           >
-            <X size={16} />
-          </button>
-        )}
+            {ROLE_FILTER_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Contenido */}
@@ -429,17 +551,17 @@ export default function Users() {
               Reintentar
             </button>
           </div>
-        ) : users.length === 0 ? (
+        ) : filteredUsers.length === 0 ? (
           <div className={styles.empty}>
             <User size={48} />
             <h3>
-              {searchQuery
+              {searchQuery || roleFilter !== 'all'
                 ? 'No se encontraron usuarios'
                 : 'No hay usuarios registrados'}
             </h3>
             <p>
-              {searchQuery
-                ? 'Intenta con otros criterios de búsqueda'
+              {searchQuery || roleFilter !== 'all'
+                ? 'Intenta con otros criterios de búsqueda o filtro'
                 : 'Crea el primer usuario para comenzar'}
             </p>
           </div>
@@ -448,8 +570,9 @@ export default function Users() {
             {/* Contador de resultados */}
             <div className={styles.resultsInfo}>
               <span>
-                {users.length} {users.length === 1 ? 'usuario' : 'usuarios'}
+                {filteredUsers.length} {filteredUsers.length === 1 ? 'usuario' : 'usuarios'}
                 {searchQuery && ` que coinciden con "${searchQuery}"`}
+                {roleFilter !== 'all' && ` · filtrado por rol`}
               </span>
             </div>
 
@@ -467,7 +590,7 @@ export default function Users() {
                   </tr>
                 </thead>
                 <tbody ref={tableRef}>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <tr key={user.id}>
                       <td data-label="Usuario">
                         <div className={styles.userCell}>
@@ -518,13 +641,24 @@ export default function Users() {
                         </span>
                       </td>
                       <td data-label="Acciones">
-                        <button
-                          onClick={() => handleEditUser(user)}
-                          className={styles.actionBtn}
-                          title="Editar usuario"
-                        >
-                          <Edit2 size={16} />
-                        </button>
+                        <div className={styles.actionsCell}>
+                          <button
+                            onClick={() => handleEditUser(user)}
+                            className={styles.actionBtn}
+                            title="Editar usuario"
+                          >
+                            <Edit2 size={16} />
+                          </button>
+                          {canDeleteUser(user) && (
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.username)}
+                              className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
+                              title="Eliminar usuario"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -545,6 +679,15 @@ export default function Users() {
           onSave={handleSaveUser}
         />
       )}
+
+      {/* Modal confirmar eliminación */}
+      <ConfirmDeleteModal
+        isOpen={!!deleteTarget}
+        onClose={() => !deleting && setDeleteTarget(null)}
+        onConfirm={handleConfirmDelete}
+        userName={deleteTarget?.username || ''}
+        deleting={deleting}
+      />
     </div>
   );
 }

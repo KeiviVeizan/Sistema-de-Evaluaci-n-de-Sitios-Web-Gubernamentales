@@ -147,6 +147,61 @@ def list_users(
     )
 
 
+@router.delete(
+    "/users/{user_id}",
+    summary="Eliminar usuario (Superadmin o Secretary)",
+)
+def delete_user(
+    user_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_admin_secretary),
+):
+    """
+    Elimina un usuario del sistema.
+
+    Permisos:
+    - superadmin: puede eliminar cualquier usuario
+    - secretary: solo puede eliminar usuarios con rol entity_user
+
+    No se permite la auto-eliminación.
+    """
+    if current_user.role not in [UserRole.SUPERADMIN, UserRole.SECRETARY]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para eliminar usuarios",
+        )
+
+    user_to_delete = db.query(User).filter(User.id == user_id).first()
+    if not user_to_delete:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado",
+        )
+
+    # Secretary solo puede eliminar entity_user
+    if current_user.role == UserRole.SECRETARY and user_to_delete.role != UserRole.ENTITY_USER:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Solo puedes eliminar usuarios de tipo Entidad",
+        )
+
+    # No permitir auto-eliminación
+    if user_to_delete.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No puedes eliminarte a ti mismo",
+        )
+
+    username = user_to_delete.username
+    db.delete(user_to_delete)
+    db.commit()
+
+    logger.warning(
+        f"Usuario ELIMINADO: {username} (ID: {user_id}) por {current_user.username}"
+    )
+    return {"message": f"Usuario {username} eliminado exitosamente"}
+
+
 @router.patch("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (solo Superadmin)")
 @router.put("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (solo Superadmin)", include_in_schema=False)
 def update_user(

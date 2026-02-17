@@ -38,7 +38,7 @@
   top: 5rem;
   height: calc(100vh - 6rem);
   width: 240px;
-  background: linear-gradient(180deg, #800000 0%, #ffffff 100%);
+  background: linear-gradient(180deg, #ffffff 30%, #800000 100%);
   display: flex;
   flex-direction: column;
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -94,7 +94,7 @@
   flex-shrink: 0;
   background: rgba(255, 255, 255, 0.15);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
+  color: black;
   width: 30px;
   height: 30px;
   border-radius: 50%;
@@ -115,13 +115,11 @@
 /* ===== DIVIDER ===== */
 .divider {
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(128, 0, 0, 0.2) 30%,
-    rgba(128, 0, 0, 0.2) 70%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(128, 0, 0, 0.2) 30%,
+      rgba(128, 0, 0, 0.2) 70%,
+      transparent 100%);
   margin: 0 0.75rem;
   flex-shrink: 0;
 }
@@ -298,6 +296,7 @@
 
 /* ===== RESPONSIVE MÓVIL ===== */
 @media (max-width: 767px) {
+
   /* Sidebar como panel deslizable desde la izquierda */
   .sidebar {
     top: 0;

@@ -37,6 +37,16 @@ const userService = {
     const response = await api.put(`/admin/users/${id}`, data);
     return response.data;
   },
+
+  /**
+   * Eliminar un usuario
+   * @param {number} id - ID del usuario a eliminar
+   * @returns {Promise} Mensaje de confirmación
+   */
+  async remove(id) {
+    const response = await api.delete(`/admin/users/${id}`);
+    return response.data;
+  },
 };
 
 export default userService;

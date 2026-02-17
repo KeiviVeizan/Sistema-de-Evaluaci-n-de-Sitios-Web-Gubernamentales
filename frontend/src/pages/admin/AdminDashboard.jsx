@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid,
-  Tooltip, ResponsiveContainer, BarChart, Bar, Cell
+  Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Calendar, TrendingUp, Globe, FileText, AlertCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import styles from './AdminDashboard.module.css';
@@ -45,12 +45,20 @@ function MetricCard({ icon: Icon, label, value, color, suffix = '' }) {
   );
 }
 
+// Retorna la fecha actual en zona horaria Bolivia (UTC-4) como 'YYYY-MM-DD'
+function getBoliviaDate() {
+  const now = new Date();
+  // Bolivia = UTC-4: restar 4 horas al UTC para obtener la hora local boliviana
+  const boliviaTime = new Date(now.getTime() - 4 * 60 * 60 * 1000);
+  return boliviaTime.toISOString().split('T')[0];
+}
+
 export default function AdminDashboard() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getBoliviaDate();
 
   const [selectedDate, setSelectedDate] = useState(today);
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth() + 1);
+  const [currentYear, setCurrentYear] = useState(() => new Date(today + 'T12:00:00').getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(() => new Date(today + 'T12:00:00').getMonth() + 1);
   const [calendarDays, setCalendarDays] = useState([]);
   const [dailyEvaluations, setDailyEvaluations] = useState(null);
   const [hourlyActivity, setHourlyActivity] = useState([]);
@@ -98,10 +106,18 @@ export default function AdminDashboard() {
 
       setDailyEvaluations(evalResponse.data);
 
-      // Solo mostrar horas con actividad ± contexto (7am - 10pm mínimo)
+      // Calcular rango de horas a mostrar: desde la primera hasta la última con actividad,
+      // con margen de ±1 hora. Si no hay actividad, mostrar rango laboral 7-18.
       const hourlyRaw = hourlyResponse.data.hourly_activity;
-      const filtered = hourlyRaw.filter(h => h.hour >= 7 && h.hour <= 22);
-      setHourlyActivity(filtered.map(h => ({
+      const activeHours = hourlyRaw.filter(h => h.count > 0).map(h => h.hour);
+      let minHour = 7;
+      let maxHour = 18;
+      if (activeHours.length > 0) {
+        minHour = Math.max(0, Math.min(...activeHours) - 1);
+        maxHour = Math.min(23, Math.max(...activeHours) + 1);
+      }
+      const visibleHours = hourlyRaw.filter(h => h.hour >= minHour && h.hour <= maxHour);
+      setHourlyActivity(visibleHours.map(h => ({
         hour: `${String(h.hour).padStart(2, '0')}:00`,
         evaluaciones: h.count
       })));
@@ -146,8 +162,10 @@ export default function AdminDashboard() {
   };
 
   const goToNextMonth = () => {
-    const now = new Date();
-    if (currentYear > now.getFullYear() || (currentYear === now.getFullYear() && currentMonth >= now.getMonth() + 1)) {
+    const todayBolivia = new Date(getBoliviaDate() + 'T12:00:00');
+    const nowYear = todayBolivia.getFullYear();
+    const nowMonth = todayBolivia.getMonth() + 1;
+    if (currentYear > nowYear || (currentYear === nowYear && currentMonth >= nowMonth)) {
       return; // No navegar al futuro
     }
     if (currentMonth === 12) {
@@ -164,8 +182,10 @@ export default function AdminDashboard() {
   };
 
   const hasNextMonth = () => {
-    const now = new Date();
-    return !(currentYear === now.getFullYear() && currentMonth >= now.getMonth() + 1);
+    const todayBolivia = new Date(getBoliviaDate() + 'T12:00:00');
+    const nowYear = todayBolivia.getFullYear();
+    const nowMonth = todayBolivia.getMonth() + 1;
+    return !(currentYear === nowYear && currentMonth >= nowMonth);
   };
 
   return (
@@ -177,43 +197,6 @@ export default function AdminDashboard() {
           <p className={styles.subtitle}>Monitoreo de evaluaciones y actividad del sistema</p>
         </div>
       </div>
-
-      {/* Métricas rápidas */}
-      {overview && (
-        <div className={styles.metricsGrid}>
-          <MetricCard
-            icon={FileText}
-            label="Evaluaciones Totales"
-            value={overview.total_evaluations}
-            color="#800000"
-          />
-          <MetricCard
-            icon={Calendar}
-            label="Este Mes"
-            value={overview.evaluations_this_month}
-            color="#f59e0b"
-          />
-          <MetricCard
-            icon={TrendingUp}
-            label="Promedio Cumplimiento"
-            value={overview.average_score}
-            color="#10b981"
-            suffix="%"
-          />
-          <MetricCard
-            icon={Globe}
-            label="Sitios Web"
-            value={overview.total_websites}
-            color="#6366f1"
-          />
-          <MetricCard
-            icon={AlertCircle}
-            label="Seguimientos Pendientes"
-            value={overview.pending_followups}
-            color="#ef4444"
-          />
-        </div>
-      )}
 
       {/* Selector de días del mes */}
       <div className={styles.calendarSection}>
@@ -331,6 +314,43 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Métricas rápidas */}
+      {overview && (
+        <div className={styles.metricsGrid}>
+          <MetricCard
+            icon={FileText}
+            label="Evaluaciones Totales"
+            value={overview.total_evaluations}
+            color="#800000"
+          />
+          <MetricCard
+            icon={Calendar}
+            label="Este Mes"
+            value={overview.evaluations_this_month}
+            color="#f59e0b"
+          />
+          <MetricCard
+            icon={TrendingUp}
+            label="Promedio Cumplimiento"
+            value={overview.average_score}
+            color="#10b981"
+            suffix="%"
+          />
+          <MetricCard
+            icon={Globe}
+            label="Sitios Web"
+            value={overview.total_websites}
+            color="#6366f1"
+          />
+          <MetricCard
+            icon={AlertCircle}
+            label="Seguimientos Pendientes"
+            value={overview.pending_followups}
+            color="#ef4444"
+          />
+        </div>
+      )}
+
       {/* Evaluaciones del día */}
       <div className={styles.evaluationsSection}>
         <div className={styles.evalHeader}>
@@ -355,71 +375,80 @@ export default function AdminDashboard() {
             <span>Cargando evaluaciones...</span>
           </div>
         ) : dailyEvaluations && dailyEvaluations.total_evaluations > 0 ? (
-          <div className={styles.evaluatorsList}>
+          <div className={styles.evaluatorRows}>
             {dailyEvaluations.evaluations_by_evaluator.map((evaluator, idx) => (
-              <div key={idx} className={styles.evaluatorCard}>
-                <div className={styles.evaluatorHeader}>
+              <div key={idx} className={styles.evaluatorRow}>
+                {/* Columna izquierda: identidad del evaluador */}
+                <div className={styles.evaluatorSidebar}>
                   <div className={styles.evaluatorAvatar}>
                     {evaluator.evaluator_name.charAt(0).toUpperCase()}
                   </div>
-                  <div className={styles.evaluatorInfo}>
-                    <h4 className={styles.evaluatorName}>{evaluator.evaluator_name}</h4>
+                  <div className={styles.evaluatorMeta}>
+                    <span className={styles.evaluatorName}>{evaluator.evaluator_name}</span>
                     {evaluator.evaluator_email && (
-                      <p className={styles.evaluatorEmail}>{evaluator.evaluator_email}</p>
+                      <span className={styles.evaluatorEmail}>{evaluator.evaluator_email}</span>
                     )}
                     <span className={styles.evalCountBadge}>
-                      {evaluator.evaluations.length} evaluación{evaluator.evaluations.length !== 1 ? 'es' : ''}
+                      {evaluator.evaluations.length} eval{evaluator.evaluations.length !== 1 ? 's' : '.'}
                     </span>
                   </div>
                 </div>
 
-                <div className={styles.institutionsList}>
-                  {evaluator.evaluations.map(ev => (
-                    <div key={ev.id} className={styles.institutionItem}>
-                      <div className={styles.instInfo}>
-                        <span className={styles.instName}>{ev.institution_name}</span>
-                        <span className={styles.instDomain}>{ev.domain}</span>
-                      </div>
-                      <div className={styles.instScore}>
-                        {ev.score !== null && ev.score !== undefined ? (
-                          <span
-                            className={styles.score}
-                            style={{
-                              color: ev.score >= 70 ? '#10b981' : ev.score >= 40 ? '#f59e0b' : '#ef4444'
-                            }}
-                          >
-                            {ev.score}%
-                          </span>
-                        ) : (
-                          <span className={styles.scoreNA}>N/A</span>
-                        )}
-                        <span
-                          className={styles.statusBadge}
-                          data-status={ev.status}
-                        >
-                          {ev.status === 'completed' ? 'Completada' :
-                           ev.status === 'in_progress' ? 'En progreso' :
-                           ev.status === 'pending' ? 'Pendiente' : 'Fallida'}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                {/* Tarjetas horizontales de evaluaciones */}
+                <div className={styles.evalCardsScroll}>
+                  {evaluator.evaluations.map(ev => {
+                    const scoreColor = ev.score === null ? '#9ca3af'
+                      : ev.score >= 70 ? '#10b981'
+                      : ev.score >= 40 ? '#f59e0b'
+                      : '#ef4444';
+                    const scoreGrad = ev.score === null ? 'rgba(156,163,175,0.08)'
+                      : ev.score >= 70 ? 'rgba(16,185,129,0.07)'
+                      : ev.score >= 40 ? 'rgba(245,158,11,0.07)'
+                      : 'rgba(239,68,68,0.07)';
+                    return (
+                      <div
+                        key={ev.id}
+                        className={styles.evalCard}
+                        style={{ '--score-color': scoreColor, '--score-grad': scoreGrad }}
+                      >
+                        {/* Franja de color superior */}
+                        <div className={styles.evalCardAccent} style={{ background: scoreColor }} />
 
-                {/* Mini barra de progreso del evaluador */}
-                <div className={styles.evaluatorProgress}>
-                  {evaluator.evaluations.map((ev, i) => (
-                    <div
-                      key={i}
-                      className={styles.progressDot}
-                      style={{
-                        background: ev.score !== null
-                          ? (ev.score >= 70 ? '#10b981' : ev.score >= 40 ? '#f59e0b' : '#ef4444')
-                          : '#d1d5db'
-                      }}
-                      title={`${ev.institution_name}: ${ev.score !== null ? ev.score + '%' : 'N/A'}`}
-                    />
-                  ))}
+                        <div className={styles.evalCardBody}>
+                          {/* Institución */}
+                          <div className={styles.evalCardInst}>
+                            <span className={styles.evalCardInstName}>{ev.institution_name}</span>
+                            <span className={styles.evalCardDomain}>{ev.domain}</span>
+                            {ev.website_url && ev.website_url !== 'N/A' && (
+                              <span className={styles.evalCardUrl}>{ev.website_url}</span>
+                            )}
+                          </div>
+
+                          {/* Score grande */}
+                          <div className={styles.evalCardScore} style={{ color: scoreColor }}>
+                            {ev.score !== null && ev.score !== undefined
+                              ? `${ev.score}%`
+                              : 'N/A'}
+                          </div>
+                        </div>
+
+                        {/* Footer: estado + hora */}
+                        <div className={styles.evalCardFooter}>
+                          <span className={styles.statusBadge} data-status={ev.status}>
+                            {ev.status === 'completed' ? 'Completada'
+                             : ev.status === 'in_progress' ? 'En progreso'
+                             : ev.status === 'pending' ? 'Pendiente'
+                             : 'Fallida'}
+                          </span>
+                          {ev.hour !== undefined && (
+                            <span className={styles.evalCardHour}>
+                              {String(ev.hour).padStart(2, '0')}:00
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             ))}
