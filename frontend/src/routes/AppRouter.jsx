@@ -22,6 +22,7 @@ import InstitutionEvaluations from '../pages/institution/InstitutionEvaluations'
 
 // Páginas del evaluador
 import MyEvaluations from '../pages/evaluator/MyEvaluations';
+import EvaluatorDashboard from '../pages/evaluator/EvaluatorDashboard';
 
 // Página de perfil
 import Profile from '../pages/profile/Profile';
@@ -83,13 +84,20 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         >
-          {/* Dashboard — AdminDashboard para admin/secretary, Dashboard legacy para otros roles */}
+          {/* Dashboard — AdminDashboard para admin/secretary, EvaluatorDashboard para evaluador, Dashboard legacy para otros */}
           <Route
             index
             element={
               <RoleBasedRoute
                 allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
-                fallback={<Dashboard />}
+                fallback={
+                  <RoleBasedRoute
+                    allowedRoles={[ROLES.EVALUATOR]}
+                    fallback={<Dashboard />}
+                  >
+                    <EvaluatorDashboard />
+                  </RoleBasedRoute>
+                }
               >
                 <AdminDashboard />
               </RoleBasedRoute>
@@ -100,7 +108,14 @@ export default function AppRouter() {
             element={
               <RoleBasedRoute
                 allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
-                fallback={<Dashboard />}
+                fallback={
+                  <RoleBasedRoute
+                    allowedRoles={[ROLES.EVALUATOR]}
+                    fallback={<Dashboard />}
+                  >
+                    <EvaluatorDashboard />
+                  </RoleBasedRoute>
+                }
               >
                 <AdminDashboard />
               </RoleBasedRoute>

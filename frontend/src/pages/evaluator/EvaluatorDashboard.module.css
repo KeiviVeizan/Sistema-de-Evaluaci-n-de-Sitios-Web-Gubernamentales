@@ -1,0 +1,390 @@
+/* ============================
+   Dashboard del Evaluador
+   Paleta: vino (#800000) + ámbar (#f59e0b)
+   ============================ */
+
+.dashboard {
+  padding: 0;
+  max-width: 100%;
+}
+
+/* ---------- Encabezado ---------- */
+.header {
+  padding: 2rem 2rem 1.5rem 2rem;
+  background: white;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.header h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.375rem 0;
+}
+
+.header p {
+  color: #6b7280;
+  margin: 0;
+  font-size: 0.9375rem;
+}
+
+/* ---------- Grid de métricas ---------- */
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  padding: 0 2rem 2rem 2rem;
+}
+
+.metricCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s;
+}
+
+.metricCard:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.metricIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.metricContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.metricContent h3 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+  line-height: 1;
+}
+
+.metricContent p {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0.375rem 0 0 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 20px;
+}
+
+.trendUp {
+  color: #059669;
+  background: #d1fae5;
+}
+
+.trendDown {
+  color: #dc2626;
+  background: #fee2e2;
+}
+
+/* ---------- Grid de contenido (gráfico + rankings) ---------- */
+.contentGrid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.25rem;
+  padding: 0 2rem 2rem 2rem;
+}
+
+.chartCard,
+.rankingsCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.chartCard h3,
+.rankingsCard h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1.25rem 0;
+}
+
+.secondTitle {
+  margin-top: 2rem !important;
+}
+
+/* ---------- Rankings ---------- */
+.rankingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.rankingItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.rankingItem:hover {
+  background: #f3f4f6;
+}
+
+.rankingBadge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #800000;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+.improvementIcon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #d1fae5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.rankingInfo {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+.rankingName {
+  font-size: 0.8125rem;
+  color: #1f2937;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 65%;
+}
+
+.rankingScore {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.improvement {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: #059669;
+  flex-shrink: 0;
+}
+
+/* ---------- Evaluaciones recientes ---------- */
+.recentCard {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 16px;
+  margin: 0 2rem 2rem 2rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.recentCard h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 1.25rem 0;
+}
+
+.evaluationsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.evaluationItem {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 10px;
+  transition: background 0.15s;
+}
+
+.evaluationItem:hover {
+  background: #f3f4f6;
+}
+
+.evaluationIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #d1fae5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.evaluationInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.evaluationInfo h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.evaluationInfo p {
+  font-size: 0.8125rem;
+  color: #6b7280;
+  margin: 0;
+}
+
+.evaluationScore {
+  font-size: 1rem;
+  font-weight: 700;
+  padding: 0.4rem 0.875rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.scoreGood {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.scoreWarning {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.scoreBad {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ---------- Estados vacíos / carga / error ---------- */
+.emptyState {
+  text-align: center;
+  padding: 1.5rem 1rem;
+  color: #9ca3af;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.loadingWrapper,
+.errorWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
+  color: #6b7280;
+}
+
+.loadingSpinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #800000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.retryBtn {
+  padding: 0.625rem 1.5rem;
+  background: #800000;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.retryBtn:hover {
+  background: #6b0000;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1024px) {
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 1.25rem 1rem 1rem 1rem;
+  }
+
+  .metricsGrid,
+  .contentGrid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .recentCard {
+    margin-left: 1rem;
+    margin-right: 1rem;
+  }
+
+  .metricsGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .metricsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+}
