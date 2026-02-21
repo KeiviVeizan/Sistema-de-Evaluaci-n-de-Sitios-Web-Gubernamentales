@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
-import { useAuth, ROLES } from '../../contexts/AuthContext';
+import { useAuth, ROLES, ROLE_LABELS } from '../../contexts/AuthContext';
 import {
   User,
   ChevronDown,
@@ -12,13 +12,6 @@ import ModernSidebar from './ModernSidebar';
 import NotificationBell from '../ui/NotificationBell';
 import styles from './ModernLayout.module.css';
 
-// Mapeo de nombres de rol para mostrar
-const ROLE_LABELS = {
-  [ROLES.SUPERADMIN]: 'Super Administrador',
-  [ROLES.SECRETARY]: 'Secretario',
-  [ROLES.EVALUATOR]: 'Evaluador',
-  [ROLES.ENTITY_USER]: 'Usuario de Entidad',
-};
 
 function ModernLayout() {
   const { user, logout } = useAuth();
@@ -27,9 +20,9 @@ function ModernLayout() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const location = useLocation();
 
-  // Páginas que deben ocupar todo el espacio sin padding
-  const isFullPage = location.pathname.startsWith('/admin/evaluations') &&
-    !location.pathname.match(/\/admin\/evaluations\/[^/]+$/);
+  // Páginas que deben ocupar todo el viewport (evaluación nueva)
+  const isFullPage = location.pathname === '/admin/evaluations' ||
+    location.pathname === '/admin/evaluations/new';
 
   return (
     <div className={`${styles.layout} ${sidebarCollapsed ? styles.sidebarCollapsed : ''}`}>
@@ -46,9 +39,9 @@ function ModernLayout() {
       />
 
       {/* Área principal */}
-      <div className={styles.main}>
+      <div className={`${styles.main} ${isFullPage ? styles.mainFullBleed : ''}`}>
         {/* Topbar */}
-        <header className={styles.topbar}>
+        <header className={`${styles.topbar} ${isFullPage ? styles.topbarFloat : ''}`}>
           <div className={styles.topbarLeft}>
             {/* Botón hamburger — solo visible en móvil */}
             <button

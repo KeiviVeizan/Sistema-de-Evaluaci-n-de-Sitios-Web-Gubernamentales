@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import anime from 'animejs';
-import { Search, ArrowRight } from 'lucide-react';
+import { Search, ArrowRight, ChevronDown, X } from 'lucide-react';
 import './Hero.css';
 
 const API_URL = '/api/v1/evaluation/evaluate';
+const INSTITUTIONS_URL = '/api/v1/evaluation/institutions';
 
 function LetterSpan({ text, className }) {
   return (
@@ -22,9 +23,33 @@ function LetterSpan({ text, className }) {
 }
 
 export default function Hero({ loading, onEvaluationStart, onEvaluationComplete, onEvaluationError, compact = false }) {
-  const [url, setUrl] = useState('');
+  const [institutions, setInstitutions] = useState([]);
+  const [selected, setSelected] = useState(null);
+  const [search, setSearch] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
   const [error, setError] = useState('');
   const animatedRef = useRef(false);
+  const dropdownRef = useRef(null);
+  const inputRef = useRef(null);
+
+  // Cargar instituciones al montar
+  useEffect(() => {
+    fetch(INSTITUTIONS_URL)
+      .then(res => res.json())
+      .then(data => setInstitutions(data))
+      .catch(() => setError('No se pudieron cargar las instituciones'));
+  }, []);
+
+  // Cerrar dropdown al hacer clic afuera
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (animatedRef.current) return;
@@ -32,7 +57,6 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
 
     const tl = anime.timeline({ easing: 'easeOutExpo' });
 
-    // Title letters fly in one by one with 3D rotation
     tl.add({
       targets: '.hero__title .hero__letter',
       opacity: [0, 1],
@@ -43,7 +67,6 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
       delay: anime.stagger(35),
       easing: 'easeOutBack',
     }, 500)
-    // Subtitle slides up and fades in
     .add({
       targets: '.hero__subtitle',
       opacity: [0, 1],
@@ -51,7 +74,6 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
       duration: 1000,
       easing: 'easeOutQuart',
     }, '-=400')
-    // Search bar rises from below with elastic feel
     .add({
       targets: '.hero__search',
       opacity: [0, 1],
@@ -60,7 +82,6 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
       duration: 1000,
       easing: 'easeOutBack',
     }, '-=600')
-    // Hint text fades in
     .add({
       targets: '.hero__hint',
       opacity: [0, 0.7],
@@ -69,19 +90,37 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
     }, '-=500');
   }, []);
 
+  const filtered = institutions.filter(inst =>
+    inst.name.toLowerCase().includes(search.toLowerCase()) ||
+    inst.domain.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleSelect = (inst) => {
+    setSelected(inst);
+    setSearch('');
+    setIsOpen(false);
+    setError('');
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    setSelected(null);
+    setSearch('');
+    setError('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const trimmed = url.trim();
-    if (!trimmed) return;
-
-    if (!trimmed.includes('.gob.bo')) {
-      setError('Solo se permiten sitios gubernamentales bolivianos (.gob.bo)');
+    if (!selected) {
+      setError('Selecciona una institución para evaluar');
       return;
     }
 
-    const finalUrl = trimmed.startsWith('http') ? trimmed : `https://${trimmed}`;
+    const finalUrl = selected.domain.startsWith('http')
+      ? selected.domain
+      : `https://${selected.domain}`;
 
     onEvaluationStart();
     try {
@@ -117,18 +156,56 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
       </p>
 
       <form className="hero__search" onSubmit={handleSubmit} style={{ opacity: 0 }}>
-        <div className="hero__search-icon">
-          <Search size={20} />
+        <div className="hero__select-wrapper" ref={dropdownRef}>
+          <div
+            className={`hero__select-trigger ${isOpen ? 'hero__select-trigger--open' : ''}`}
+            onClick={() => { if (!loading) setIsOpen(!isOpen); }}
+          >
+            <Search size={20} className="hero__select-icon" />
+            {selected ? (
+              <div className="hero__selected-value">
+                <span className="hero__selected-name">{selected.name}</span>
+                <span className="hero__selected-domain">{selected.domain}</span>
+                <button type="button" className="hero__clear-btn" onClick={handleClear} disabled={loading}>
+                  <X size={16} />
+                </button>
+              </div>
+            ) : (
+              <input
+                ref={inputRef}
+                type="text"
+                className="hero__search-input"
+                placeholder="Buscar institución..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setIsOpen(true); }}
+                onFocus={() => setIsOpen(true)}
+                disabled={loading}
+              />
+            )}
+            <ChevronDown size={18} className={`hero__chevron ${isOpen ? 'hero__chevron--open' : ''}`} />
+          </div>
+
+          {isOpen && (
+            <ul className="hero__dropdown">
+              {filtered.length === 0 ? (
+                <li className="hero__dropdown-empty">No se encontraron instituciones</li>
+              ) : (
+                filtered.map(inst => (
+                  <li
+                    key={inst.id}
+                    className={`hero__dropdown-item ${selected?.id === inst.id ? 'hero__dropdown-item--selected' : ''}`}
+                    onClick={() => handleSelect(inst)}
+                  >
+                    <span className="hero__dropdown-name">{inst.name}</span>
+                    <span className="hero__dropdown-domain">{inst.domain}</span>
+                  </li>
+                ))
+              )}
+            </ul>
+          )}
         </div>
-        <input
-          type="text"
-          className="hero__input"
-          placeholder="Ingresa una URL .gob.bo para evaluar..."
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          disabled={loading}
-        />
-        <button type="submit" className="hero__button" disabled={loading}>
+
+        <button type="submit" className="hero__button" disabled={loading || !selected}>
           {loading ? (
             <span className="hero__spinner" />
           ) : (
@@ -143,7 +220,7 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
       {error && <div className="hero__error">{error}</div>}
 
       <p className="hero__hint" style={{ opacity: 0 }}>
-        Ejemplo: <code>www.aduana.gob.bo</code>
+        Selecciona una instituci&oacute;n de la lista para evaluar su sitio web
       </p>
     </section>
   );

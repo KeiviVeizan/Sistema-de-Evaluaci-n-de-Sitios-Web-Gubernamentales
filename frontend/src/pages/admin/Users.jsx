@@ -17,11 +17,12 @@ import {
   Building2,
   Save,
   Filter,
+  KeyRound,
 } from 'lucide-react';
 import anime from 'animejs';
 import { useAuth } from '../../contexts/AuthContext';
 import userService from '../../services/userService';
-import institutionService from '../../services/institutionService';
+import api from '../../services/api';
 import styles from './Users.module.css';
 
 // Componente Toast para notificaciones
@@ -115,47 +116,70 @@ function ConfirmDeleteModal({ isOpen, onClose, onConfirm, userName, deleting }) 
   );
 }
 
-// Modal de Edición de Usuario
-function UserModal({ isOpen, onClose, user, onSave }) {
+// Modal de Creación/Edición de Usuario
+function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
+  const isEditMode = !!user;
   const [formData, setFormData] = useState({
     full_name: '',
+    username: '',
     email: '',
+    password: '',
     role: 'evaluator',
-    institution_id: null,
+    position: '',
+    institution_id: '',
     is_active: true,
+    new_password: '',
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [institutions, setInstitutions] = useState([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
       setSaving(false);
       setError('');
+      setShowPassword(false);
       if (user) {
         setFormData({
           full_name: user.full_name || '',
+          username: user.username || '',
           email: user.email || '',
+          password: '',
           role: user.role || 'evaluator',
-          institution_id: user.institution_id || null,
+          position: user.position || '',
+          institution_id: user.institution_id || '',
           is_active: user.is_active ?? true,
+          new_password: '',
+        });
+      } else {
+        setFormData({
+          full_name: '',
+          username: '',
+          email: '',
+          password: '',
+          role: 'evaluator',
+          position: '',
+          institution_id: '',
+          is_active: true,
+          new_password: '',
         });
       }
     }
   }, [isOpen, user]);
 
-  // Cargar instituciones cuando el rol es entity_user
+  // Cargar instituciones
   useEffect(() => {
-    if (formData.role === 'entity_user' && institutions.length === 0) {
+    if (isOpen && institutions.length === 0) {
       setLoadingInstitutions(true);
-      institutionService.getAll({ limit: 500 })
-        .then((data) => setInstitutions(data.items || []))
+      api.get('/admin/institutions-list')
+        .then((res) => setInstitutions(res.data || []))
         .catch((err) => console.error('Error cargando instituciones:', err))
         .finally(() => setLoadingInstitutions(false));
     }
-  }, [formData.role, institutions.length]);
+  }, [isOpen, institutions.length]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -164,9 +188,8 @@ function UserModal({ isOpen, onClose, user, onSave }) {
         ...prev,
         [name]: type === 'checkbox' ? checked : value,
       };
-      // Si cambia el rol y NO es entity_user, limpiar institution_id
       if (name === 'role' && value !== 'entity_user') {
-        updated.institution_id = null;
+        updated.institution_id = '';
       }
       return updated;
     });
@@ -177,7 +200,6 @@ function UserModal({ isOpen, onClose, user, onSave }) {
     setSaving(true);
     setError('');
 
-    // Validar que entity_user tenga institución seleccionada
     if (formData.role === 'entity_user' && !formData.institution_id) {
       setError('Debe seleccionar una institución para usuarios de entidad');
       setSaving(false);
@@ -185,21 +207,49 @@ function UserModal({ isOpen, onClose, user, onSave }) {
     }
 
     try {
-      await onSave(formData);
+      if (isEditMode) {
+        // Editar: enviar solo campos relevantes
+        const payload = {
+          full_name: formData.full_name,
+          username: formData.username,
+          email: formData.email,
+          role: formData.role,
+          position: formData.position || null,
+          institution_id: formData.institution_id ? parseInt(formData.institution_id) : null,
+          is_active: formData.is_active,
+        };
+        if (formData.new_password) {
+          payload.new_password = formData.new_password;
+        }
+        await onSave(payload);
+      } else {
+        // Crear: sin contraseña, se genera automáticamente en backend
+        const payload = {
+          full_name: formData.full_name,
+          username: formData.username,
+          email: formData.email,
+          role: formData.role,
+          position: formData.position || null,
+          institution_id: formData.institution_id ? parseInt(formData.institution_id) : null,
+        };
+        await onSave(payload);
+      }
     } catch (err) {
       console.error(err);
-      setError(err.response?.data?.detail || 'Error al actualizar el usuario');
+      setError(err.response?.data?.detail || `Error al ${isEditMode ? 'actualizar' : 'crear'} el usuario`);
       setSaving(false);
     }
   };
 
   if (!isOpen) return null;
 
+  const canAssignHighRoles = currentUser?.role === 'superadmin';
+
   return (
     <div className={styles.modalOverlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Editar Usuario</h2>
+          <h2>{isEditMode ? 'Editar Usuario' : 'Nuevo Usuario Interno'}</h2>
           <button onClick={onClose} className={styles.closeBtn} disabled={saving}>
             <X size={20} />
           </button>
@@ -220,56 +270,117 @@ function UserModal({ isOpen, onClose, user, onSave }) {
                 Información del Usuario
               </h3>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="full_name">Nombre Completo *</label>
-                <input
-                  type="text"
-                  id="full_name"
-                  name="full_name"
-                  value={formData.full_name}
-                  onChange={handleChange}
-                  required
-                  className={styles.input}
-                  disabled={saving}
-                />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="full_name">Nombre Completo *</label>
+                  <input
+                    type="text"
+                    id="full_name"
+                    name="full_name"
+                    value={formData.full_name}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    disabled={saving}
+                    placeholder="Ej: Juan Pérez"
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="username">Nombre de Usuario *</label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    disabled={saving}
+                    placeholder="Ej: jperez"
+                  />
+                  {isEditMode && (
+                    <p className={styles.fieldHint}>Este es el @{formData.username} que ves en la lista</p>
+                  )}
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="email">Email *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className={styles.input}
-                  disabled={saving}
-                />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="email">Email *</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    disabled={saving}
+                    placeholder="Ej: jperez@gmail.com"
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="role">Rol *</label>
+                  <select
+                    id="role"
+                    name="role"
+                    value={formData.role}
+                    onChange={handleChange}
+                    required
+                    className={styles.input}
+                    disabled={saving}
+                  >
+                    {canAssignHighRoles && (
+                      <>
+                        <option value="superadmin">Superadmin</option>
+                        <option value="secretary">Secretario</option>
+                      </>
+                    )}
+                    <option value="evaluator">Evaluador</option>
+                    <option value="entity_user">Usuario de Entidad</option>
+                  </select>
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label htmlFor="role">Rol *</label>
-                <select
-                  id="role"
-                  name="role"
-                  value={formData.role}
-                  onChange={handleChange}
-                  required
-                  className={styles.input}
-                  disabled={saving}
-                >
-                  <option value="superadmin">Superadmin</option>
-                  <option value="secretary">Secretario</option>
-                  <option value="evaluator">Evaluador</option>
-                  <option value="entity_user">Usuario de Entidad</option>
-                </select>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label htmlFor="position">Cargo</label>
+                  <input
+                    type="text"
+                    id="position"
+                    name="position"
+                    value={formData.position}
+                    onChange={handleChange}
+                    className={styles.input}
+                    disabled={saving}
+                    placeholder="Ej: Jefe de Sistemas"
+                  />
+                </div>
+
+                {isEditMode && (
+                  <div className={styles.formGroup}>
+                    <label htmlFor="is_active">Estado</label>
+                    <select
+                      id="is_active"
+                      name="is_active"
+                      value={formData.is_active.toString()}
+                      onChange={(e) => setFormData((prev) => ({ ...prev, is_active: e.target.value === 'true' }))}
+                      className={styles.input}
+                      disabled={saving}
+                    >
+                      <option value="true">Activo</option>
+                      <option value="false">Inactivo</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               {formData.role === 'entity_user' && (
                 <div className={styles.formGroup}>
                   <label htmlFor="institution_id">
-                    Institución *
+                    Institución {formData.role === 'entity_user' ? '*' : ''}
                   </label>
                   {loadingInstitutions ? (
                     <div className={styles.loadingInline}>
@@ -282,7 +393,7 @@ function UserModal({ isOpen, onClose, user, onSave }) {
                       name="institution_id"
                       value={formData.institution_id || ''}
                       onChange={handleChange}
-                      required
+                      required={formData.role === 'entity_user'}
                       className={styles.input}
                       disabled={saving}
                     >
@@ -294,28 +405,52 @@ function UserModal({ isOpen, onClose, user, onSave }) {
                       ))}
                     </select>
                   )}
-                  {!formData.institution_id && !loadingInstitutions && (
-                    <p className={styles.fieldWarning}>
-                      Debe seleccionar una institución para usuarios de entidad
-                    </p>
-                  )}
                 </div>
               )}
-
-              <div className={styles.formGroup}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type="checkbox"
-                    name="is_active"
-                    checked={formData.is_active}
-                    onChange={handleChange}
-                    className={styles.checkbox}
-                    disabled={saving}
-                  />
-                  <span>Usuario Activo</span>
-                </label>
-              </div>
             </div>
+
+            {/* Sección de contraseña - solo en edición */}
+            {isEditMode && (
+              <div className={styles.formSection}>
+                <h3 className={styles.formSectionTitle}>
+                  <KeyRound size={16} />
+                  Cambiar Contraseña
+                </h3>
+
+                <div className={styles.formGroup}>
+                  <label htmlFor="new_password">Nueva Contraseña (dejar vacío para no cambiar)</label>
+                  <div className={styles.passwordInputWrapper}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="new_password"
+                      name="new_password"
+                      value={formData.new_password}
+                      onChange={handleChange}
+                      className={styles.passwordField}
+                      disabled={saving}
+                      placeholder="Dejar vacío para mantener actual"
+                      minLength={8}
+                    />
+                    <button
+                      type="button"
+                      className={styles.passwordToggle}
+                      onClick={() => setShowPassword(!showPassword)}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Info: contraseña auto-generada en creación */}
+            {!isEditMode && (
+              <div className={styles.infoAlert}>
+                <KeyRound size={16} />
+                <span>Se generará una contraseña temporal automáticamente y se enviará al email del usuario.</span>
+              </div>
+            )}
           </div>
 
           <div className={styles.modalFooter}>
@@ -326,12 +461,12 @@ function UserModal({ isOpen, onClose, user, onSave }) {
               {saving ? (
                 <>
                   <Loader size={18} className={styles.spinner} />
-                  Guardando...
+                  {isEditMode ? 'Guardando...' : 'Creando...'}
                 </>
               ) : (
                 <>
                   <Save size={18} />
-                  Guardar Cambios
+                  {isEditMode ? 'Guardar Cambios' : 'Crear Usuario'}
                 </>
               )}
             </button>
@@ -342,10 +477,16 @@ function UserModal({ isOpen, onClose, user, onSave }) {
   );
 }
 
-const ROLE_FILTER_OPTIONS = [
+const ROLE_FILTER_OPTIONS_ALL = [
   { value: 'all', label: 'Todos los roles' },
   { value: 'superadmin', label: 'Superadmin' },
   { value: 'secretary', label: 'Secretario' },
+  { value: 'evaluator', label: 'Evaluador' },
+  { value: 'entity_user', label: 'Usuario Entidad' },
+];
+
+const ROLE_FILTER_OPTIONS_SECRETARY = [
+  { value: 'all', label: 'Todos los roles' },
   { value: 'evaluator', label: 'Evaluador' },
   { value: 'entity_user', label: 'Usuario Entidad' },
 ];
@@ -361,6 +502,7 @@ export default function Users() {
   const [toast, setToast] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null); // { id, username }
   const [deleting, setDeleting] = useState(false);
   const tableRef = useRef(null);
@@ -379,10 +521,19 @@ export default function Users() {
     }
   }, [searchQuery]);
 
+  // Secretary solo ve evaluadores y entidades
+  const visibleUsers = currentUser?.role === 'secretary'
+    ? users.filter((u) => u.role === 'evaluator' || u.role === 'entity_user')
+    : users;
+
   // Filtrado por rol en el cliente (búsqueda ya se delega al backend)
   const filteredUsers = roleFilter === 'all'
-    ? users
-    : users.filter((u) => u.role === roleFilter);
+    ? visibleUsers
+    : visibleUsers.filter((u) => u.role === roleFilter);
+
+  const roleFilterOptions = currentUser?.role === 'secretary'
+    ? ROLE_FILTER_OPTIONS_SECRETARY
+    : ROLE_FILTER_OPTIONS_ALL;
 
   /**
    * Determina si el usuario actual puede eliminar al usuario objetivo.
@@ -394,6 +545,18 @@ export default function Users() {
     if (targetUser.id === currentUser.id) return false;
     if (currentUser.role === 'superadmin') return true;
     if (currentUser.role === 'secretary' && targetUser.role === 'entity_user') return true;
+    return false;
+  };
+
+  /**
+   * Determina si el usuario actual puede editar al usuario objetivo.
+   * - superadmin: puede editar a cualquiera
+   * - secretary: solo puede editar evaluator y entity_user
+   */
+  const canEditUser = (targetUser) => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'superadmin') return true;
+    if (currentUser.role === 'secretary' && (targetUser.role === 'entity_user' || targetUser.role === 'evaluator')) return true;
     return false;
   };
 
@@ -456,17 +619,19 @@ export default function Users() {
     setIsEditModalOpen(true);
   };
 
-  const handleSaveUser = async (formData) => {
-    // This throws if update fails, creating error in modal
-    await userService.update(editingUser.id, formData);
-
-    // If successful:
-    setIsEditModalOpen(false);
-
-    // Refresh list
+  const handleCreateUser = async (formData) => {
+    await userService.create(formData);
+    setIsCreateModalOpen(false);
     await fetchUsers();
+    setTimeout(() => {
+      setToast({ message: 'Usuario creado exitosamente', type: 'success' });
+    }, 100);
+  };
 
-    // Show toast
+  const handleSaveUser = async (formData) => {
+    await userService.update(editingUser.id, formData);
+    setIsEditModalOpen(false);
+    await fetchUsers();
     setTimeout(() => {
       setToast({ message: 'Usuario actualizado correctamente', type: 'success' });
     }, 100);
@@ -493,7 +658,7 @@ export default function Users() {
           <p>Gestión de usuarios internos del sistema</p>
         </div>
         <button
-          onClick={() => {/* TODO: Abrir modal de creación */ }}
+          onClick={() => setIsCreateModalOpen(true)}
           className={styles.btnPrimary}
         >
           <Plus size={18} />
@@ -529,7 +694,7 @@ export default function Users() {
             className={styles.filterSelect}
             aria-label="Filtrar por rol"
           >
-            {ROLE_FILTER_OPTIONS.map((opt) => (
+            {roleFilterOptions.map((opt) => (
               <option key={opt.value} value={opt.value}>{opt.label}</option>
             ))}
           </select>
@@ -642,13 +807,15 @@ export default function Users() {
                       </td>
                       <td data-label="Acciones">
                         <div className={styles.actionsCell}>
-                          <button
-                            onClick={() => handleEditUser(user)}
-                            className={styles.actionBtn}
-                            title="Editar usuario"
-                          >
-                            <Edit2 size={16} />
-                          </button>
+                          {canEditUser(user) && (
+                            <button
+                              onClick={() => handleEditUser(user)}
+                              className={styles.actionBtn}
+                              title="Editar usuario"
+                            >
+                              <Edit2 size={16} />
+                            </button>
+                          )}
                           {canDeleteUser(user) && (
                             <button
                               onClick={() => handleDeleteUser(user.id, user.username)}
@@ -669,6 +836,18 @@ export default function Users() {
         )}
       </div>
 
+      {/* Modal de creación */}
+      {isCreateModalOpen && (
+        <UserModal
+          key="create-modal"
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          user={null}
+          onSave={handleCreateUser}
+          currentUser={currentUser}
+        />
+      )}
+
       {/* Modal de edición */}
       {isEditModalOpen && (
         <UserModal
@@ -677,6 +856,7 @@ export default function Users() {
           onClose={() => setIsEditModalOpen(false)}
           user={editingUser}
           onSave={handleSaveUser}
+          currentUser={currentUser}
         />
       )}
 

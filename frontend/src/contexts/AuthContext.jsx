@@ -9,6 +9,14 @@ export const ROLES = {
   ENTITY_USER: 'entity_user',
 };
 
+// Etiquetas de rol en español para mostrar en la UI
+export const ROLE_LABELS = {
+  [ROLES.SUPERADMIN]: 'Super Administrador',
+  [ROLES.SECRETARY]: 'Secretario',
+  [ROLES.EVALUATOR]: 'Evaluador',
+  [ROLES.ENTITY_USER]: 'Usuario de Entidad',
+};
+
 // Permisos por rol
 export const ROLE_PERMISSIONS = {
   [ROLES.SUPERADMIN]: [
@@ -26,11 +34,6 @@ export const ROLE_PERMISSIONS = {
   [ROLES.SECRETARY]: [
     'manage_users',
     'manage_institutions',
-    'view_all_evaluations',
-    'create_evaluations',
-    'edit_evaluations',
-    'view_reports',
-    'export_reports',
   ],
   [ROLES.EVALUATOR]: [
     'view_all_evaluations',

@@ -275,6 +275,25 @@
   overflow-y: auto;
 }
 
+/* ===== MODO FULL-BLEED (evaluación) ===== */
+/* El main ocupa todo el viewport, el topbar flota encima */
+.mainFullBleed {
+  margin-left: 0 !important;
+  position: relative;
+}
+
+/* Topbar flotante sobre el contenido full-bleed */
+.topbarFloat {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: transparent;
+  /* Empujar contenido para no tapar el logo flotante ni el sidebar */
+  padding-left: calc(80px + 2.5rem);
+}
+
 /* ===== RESPONSIVE MÓVIL ===== */
 @media (max-width: 767px) {
   /* El sidebar es overlay, el main ocupa todo el ancho */

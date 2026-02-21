@@ -50,6 +50,27 @@ _executor = ThreadPoolExecutor(max_workers=3, thread_name_prefix="gob_evaluator"
 
 
 # ============================================================================
+# ENDPOINT PUBLICO: Lista de instituciones para el selector
+# ============================================================================
+
+@router.get(
+    "/institutions",
+    summary="Lista pública de instituciones activas",
+    description="Retorna nombre y dominio de instituciones activas para el selector público.",
+)
+def get_public_institutions(db: Session = Depends(get_db)):
+    """Obtener lista de instituciones activas (público, sin autenticación)."""
+    institutions = db.query(Institution).filter(
+        Institution.is_active == True
+    ).order_by(Institution.name).all()
+
+    return [
+        {"id": inst.id, "name": inst.name, "domain": inst.domain}
+        for inst in institutions
+    ]
+
+
+# ============================================================================
 # ENDPOINT PRINCIPAL: Evaluar URL directamente
 # ============================================================================
 

@@ -38,7 +38,7 @@ function EvaluatorDashboard() {
       const allFailed = [statsRes, topRes, improvedRes, activityRes, recentRes]
         .every(r => r.status === 'rejected');
       if (allFailed) {
-        setError('No se pudieron cargar los datos del dashboard.');
+        setError('No se pudieron cargar los datos del panel.');
         return;
       }
 
@@ -60,7 +60,7 @@ function EvaluatorDashboard() {
       }
     } catch (err) {
       console.error('Error loading dashboard:', err);
-      setError('No se pudieron cargar los datos del dashboard.');
+      setError('No se pudieron cargar los datos del panel.');
     } finally {
       setLoading(false);
     }
@@ -70,7 +70,7 @@ function EvaluatorDashboard() {
     return (
       <div className={styles.loadingWrapper}>
         <div className={styles.loadingSpinner} />
-        <p>Cargando dashboard...</p>
+        <p>Cargando panel...</p>
       </div>
     );
   }
@@ -92,7 +92,7 @@ function EvaluatorDashboard() {
       {/* Encabezado */}
       <div className={styles.header}>
         <div>
-          <h1>Mi Dashboard</h1>
+          <h1>Mi Panel</h1>
           <p>Resumen de tu actividad como evaluador</p>
         </div>
       </div>

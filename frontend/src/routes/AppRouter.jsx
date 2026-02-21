@@ -9,9 +9,10 @@ import ModernLayout from '../components/layout/ModernLayout';
 
 // Páginas de autenticación
 import { Login, TwoFactorAuth } from '../pages/auth';
+import ForgotPassword from '../pages/auth/ForgotPassword';
 
 // Páginas del panel administrativo
-import { Dashboard, AdminDashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail } from '../pages/admin';
+import { Dashboard, AdminDashboard, SecretaryDashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail } from '../pages/admin';
 
 // Página pública (evaluador público)
 import PublicEvaluator from '../pages/public/PublicEvaluator';
@@ -19,6 +20,7 @@ import PublicEvaluator from '../pages/public/PublicEvaluator';
 // Páginas del panel de institución
 import MyFollowups from '../pages/institution/MyFollowups';
 import InstitutionEvaluations from '../pages/institution/InstitutionEvaluations';
+import InstitutionDashboard from '../pages/institution/InstitutionDashboard';
 
 // Páginas del evaluador
 import MyEvaluations from '../pages/evaluator/MyEvaluations';
@@ -70,7 +72,7 @@ export default function AppRouter() {
           path="/auth/forgot-password"
           element={
             <PublicRoute>
-              <PlaceholderPage title="Recuperar Contraseña" />
+              <ForgotPassword />
             </PublicRoute>
           }
         />
@@ -84,18 +86,32 @@ export default function AppRouter() {
             </ProtectedRoute>
           }
         >
-          {/* Dashboard — AdminDashboard para admin/secretary, EvaluatorDashboard para evaluador, Dashboard legacy para otros */}
+          {/* Dashboard — cada rol tiene su propio dashboard */}
           <Route
             index
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                allowedRoles={[ROLES.SUPERADMIN]}
                 fallback={
                   <RoleBasedRoute
-                    allowedRoles={[ROLES.EVALUATOR]}
-                    fallback={<Dashboard />}
+                    allowedRoles={[ROLES.SECRETARY]}
+                    fallback={
+                      <RoleBasedRoute
+                        allowedRoles={[ROLES.EVALUATOR]}
+                        fallback={
+                          <RoleBasedRoute
+                            allowedRoles={[ROLES.ENTITY_USER]}
+                            fallback={<Dashboard />}
+                          >
+                            <InstitutionDashboard />
+                          </RoleBasedRoute>
+                        }
+                      >
+                        <EvaluatorDashboard />
+                      </RoleBasedRoute>
+                    }
                   >
-                    <EvaluatorDashboard />
+                    <SecretaryDashboard />
                   </RoleBasedRoute>
                 }
               >
@@ -107,13 +123,27 @@ export default function AppRouter() {
             path="dashboard"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                allowedRoles={[ROLES.SUPERADMIN]}
                 fallback={
                   <RoleBasedRoute
-                    allowedRoles={[ROLES.EVALUATOR]}
-                    fallback={<Dashboard />}
+                    allowedRoles={[ROLES.SECRETARY]}
+                    fallback={
+                      <RoleBasedRoute
+                        allowedRoles={[ROLES.EVALUATOR]}
+                        fallback={
+                          <RoleBasedRoute
+                            allowedRoles={[ROLES.ENTITY_USER]}
+                            fallback={<Dashboard />}
+                          >
+                            <InstitutionDashboard />
+                          </RoleBasedRoute>
+                        }
+                      >
+                        <EvaluatorDashboard />
+                      </RoleBasedRoute>
+                    }
                   >
-                    <EvaluatorDashboard />
+                    <SecretaryDashboard />
                   </RoleBasedRoute>
                 }
               >
@@ -127,7 +157,7 @@ export default function AppRouter() {
             path="evaluations"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR]}
                 showAccessDenied
               >
                 <NewEvaluation />
@@ -138,7 +168,7 @@ export default function AppRouter() {
             path="evaluations/new"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR]}
                 showAccessDenied
               >
                 <NewEvaluation />
@@ -149,7 +179,7 @@ export default function AppRouter() {
             path="evaluations/:id"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR, ROLES.ENTITY_USER]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR, ROLES.ENTITY_USER]}
                 showAccessDenied
               >
                 <EvaluationDetail />
@@ -157,10 +187,17 @@ export default function AppRouter() {
             }
           />
 
-          {/* Reportes - Todos los roles */}
+          {/* Reportes - Solo Superadmin y Evaluador */}
           <Route
             path="reports"
-            element={<PlaceholderPage title="Reportes" />}
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR]}
+                showAccessDenied
+              >
+                <PlaceholderPage title="Reportes" />
+              </RoleBasedRoute>
+            }
           />
 
           {/* Instituciones - Secretary, Superadmin y Evaluator (solo lectura) */}

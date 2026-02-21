@@ -63,27 +63,41 @@ def _generate_password(length: int = 12) -> str:
     "/users",
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
-    summary="Crear usuario (solo Superadmin)",
+    summary="Crear usuario interno (Superadmin o Secretary)",
 )
 async def create_user(
     user_data: UserCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_superadmin),
+    current_user: User = Depends(allow_admin_secretary),
 ):
     """
-    Crea un nuevo usuario interno (superadmin, secretary o evaluator).
-    Genera una contraseña aleatoria y envía las credenciales por email.
-    Solo accesible por superadmin.
+    Crea un nuevo usuario interno del sistema.
+    - superadmin: puede crear cualquier rol
+    - secretary: solo puede crear evaluator y entity_user
     """
-    # Verificar unicidad de username y email
-    existing = db.query(User).filter(
-        (User.username == user_data.username) | (User.email == user_data.email)
-    ).first()
-    if existing:
-        field = "username" if existing.username == user_data.username else "email"
+    # Secretary no puede crear superadmin ni secretary
+    if current_user.role == UserRole.SECRETARY and user_data.role in (
+        UserRole.SUPERADMIN, UserRole.SECRETARY
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para crear usuarios con este rol",
+        )
+
+    # Verificar unicidad de username
+    existing_username = db.query(User).filter(User.username == user_data.username).first()
+    if existing_username:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Ya existe un usuario con ese {field}",
+            detail=f"Ya existe un usuario con el nombre de usuario '{user_data.username}'",
+        )
+
+    # Verificar unicidad de email
+    existing_email = db.query(User).filter(User.email == user_data.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ya existe un usuario con el email '{user_data.email}'",
         )
 
     # Usar la contraseña provista o generar una automáticamente
@@ -95,6 +109,8 @@ async def create_user(
         hashed_password=hash_password(plain_password),
         full_name=user_data.full_name,
         role=user_data.role,
+        position=user_data.position,
+        institution_id=user_data.institution_id,
         is_active=True,
     )
     db.add(db_user)
@@ -202,17 +218,18 @@ def delete_user(
     return {"message": f"Usuario {username} eliminado exitosamente"}
 
 
-@router.patch("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (solo Superadmin)")
-@router.put("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (solo Superadmin)", include_in_schema=False)
+@router.patch("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (Superadmin o Secretary)")
+@router.put("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (Superadmin o Secretary)", include_in_schema=False)
 def update_user(
     user_id: int,
     user_data: UserUpdate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(allow_superadmin),
+    current_user: User = Depends(allow_admin_secretary),
 ):
     """
-    Actualiza los datos de un usuario existente (rol, estado, email, nombre).
-    Solo accesible por superadmin.
+    Actualiza los datos de un usuario existente.
+    - superadmin: puede editar cualquier usuario
+    - secretary: solo puede editar entity_user
     """
     db_user = db.query(User).filter(User.id == user_id).first()
     if not db_user:
@@ -221,9 +238,29 @@ def update_user(
             detail="Usuario no encontrado",
         )
 
+    # Secretary solo puede editar evaluator y entity_user
+    if current_user.role == UserRole.SECRETARY and db_user.role not in (UserRole.EVALUATOR, UserRole.ENTITY_USER):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="No tienes permisos para editar este usuario",
+        )
+
     update_data = user_data.model_dump(exclude_unset=True)
 
-    if "email" in update_data:
+    # Verificar unicidad de username si se está cambiando
+    if "username" in update_data and update_data["username"]:
+        existing_username = db.query(User).filter(
+            User.username == update_data["username"],
+            User.id != user_id,
+        ).first()
+        if existing_username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Ya existe un usuario con el nombre de usuario '{update_data['username']}'",
+            )
+
+    # Verificar unicidad de email si se está cambiando
+    if "email" in update_data and update_data["email"]:
         existing_email = db.query(User).filter(
             User.email == update_data["email"],
             User.id != user_id,
@@ -233,6 +270,21 @@ def update_user(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Ya existe un usuario con ese email",
             )
+
+    # Secretary no puede asignar roles superadmin o secretary
+    if "role" in update_data and update_data["role"]:
+        if current_user.role == UserRole.SECRETARY and update_data["role"] in (
+            UserRole.SUPERADMIN, UserRole.SECRETARY
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No puedes asignar este rol",
+            )
+
+    # Manejar cambio de contraseña
+    new_password = update_data.pop("new_password", None)
+    if new_password:
+        db_user.hashed_password = hash_password(new_password)
 
     for field, value in update_data.items():
         setattr(db_user, field, value)
@@ -460,6 +512,30 @@ def update_institution(
                 responsible.email = contact_fields["contact_email"]
             if "contact_position" in contact_fields:
                 responsible.position = contact_fields["contact_position"]
+        elif contact_fields.get("contact_email"):
+            # Crear nuevo usuario responsable si no existe y se proporcionó email
+            existing_user = db.query(User).filter(User.email == contact_fields["contact_email"]).first()
+            if existing_user:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Ya existe un usuario con el correo {contact_fields['contact_email']}",
+                )
+            generated_password = _generate_password()
+            username = contact_fields["contact_email"].split("@")[0].lower().replace(".", "_")
+            existing_username = db.query(User).filter(User.username == username).first()
+            if existing_username:
+                username = f"{username}_{institution_id}"
+            responsible = User(
+                username=username,
+                email=contact_fields["contact_email"],
+                hashed_password=hash_password(generated_password),
+                full_name=contact_fields.get("contact_name"),
+                position=contact_fields.get("contact_position"),
+                role=UserRole.ENTITY_USER,
+                is_active=True,
+                institution_id=institution_id,
+            )
+            db.add(responsible)
 
     db.commit()
     db.refresh(institution)
@@ -500,6 +576,29 @@ def delete_institution(
     
     logger.warning(f"Institución ELIMINADA: {institution_name} (ID: {institution_id}) por {current_user.username}")
     return None
+
+
+# ============================================================================
+# Institutions List (for selects/dropdowns)
+# ============================================================================
+
+@router.get(
+    "/institutions-list",
+    summary="Lista simple de instituciones para selects",
+)
+def get_institutions_list(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_admin_secretary),
+):
+    """Obtener lista simple de instituciones activas para dropdowns."""
+    institutions = db.query(Institution).filter(
+        Institution.is_active == True
+    ).order_by(Institution.name).all()
+
+    return [
+        {"id": inst.id, "name": inst.name}
+        for inst in institutions
+    ]
 
 
 # ============================================================================

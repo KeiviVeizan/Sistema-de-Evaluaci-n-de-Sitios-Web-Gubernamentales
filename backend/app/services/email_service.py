@@ -6,6 +6,7 @@ Incluye templates HTML para códigos 2FA y notificaciones.
 """
 
 import logging
+import re
 import smtplib
 import socket
 from typing import Optional
@@ -29,6 +30,45 @@ class EmailService:
         self._fastmail: Optional[FastMail] = None
         self._initialized = False
 
+    @staticmethod
+    def _html_to_plain_text(html: str) -> str:
+        """Extrae texto plano de HTML para el alternative_body."""
+        text = re.sub(r'<br\s*/?>', '\n', html)
+        text = re.sub(r'<li[^>]*>', '  - ', text)
+        text = re.sub(r'<[^>]+>', '', text)
+        text = re.sub(r'&nbsp;', ' ', text)
+        text = re.sub(r'&amp;', '&', text)
+        text = re.sub(r'&lt;', '<', text)
+        text = re.sub(r'&gt;', '>', text)
+        text = re.sub(r'&iquest;', '¿', text)
+        text = re.sub(r'&oacute;', 'ó', text)
+        text = re.sub(r'&aacute;', 'á', text)
+        text = re.sub(r'&eacute;', 'é', text)
+        text = re.sub(r'&ntilde;', 'ñ', text)
+        text = re.sub(r'&#\d+;', '', text)
+        lines = [line.strip() for line in text.splitlines()]
+        text = '\n'.join(lines)
+        text = re.sub(r'\n{3,}', '\n\n', text)
+        return text.strip()
+
+    def _build_message(self, subject: str, recipients: list[str], html_content: str) -> MessageSchema:
+        """Construye un MessageSchema con headers anti-spam y texto plano alternativo."""
+        from app.config import settings
+
+        return MessageSchema(
+            subject=subject,
+            recipients=recipients,
+            body=html_content,
+            alternative_body=self._html_to_plain_text(html_content),
+            subtype=MessageType.html,
+            reply_to=[settings.mail_from],
+            headers={
+                "X-Mailer": "Evaluador GOB.BO",
+                "Precedence": "bulk",
+                "Auto-Submitted": "auto-generated",
+            },
+        )
+
     def _initialize(self):
         """Inicializa la configuración de correo de forma lazy."""
         if self._initialized:
@@ -50,15 +90,6 @@ class EmailService:
             logger.warning(
                 "Credenciales de correo no configuradas. "
                 "Configure MAIL_USERNAME y MAIL_PASSWORD en .env"
-            )
-            self._initialized = True
-            return
-
-        # Verificar conectividad SMTP antes de configurar fastmail
-        if not self._test_smtp_connection(settings.mail_server, settings.mail_port):
-            logger.error(
-                f"No se puede conectar al servidor SMTP {settings.mail_server}:{settings.mail_port}. "
-                "Los correos no serán enviados."
             )
             self._initialized = True
             return
@@ -323,12 +354,7 @@ class EmailService:
 
         try:
             logger.info(f"Enviando correo de bienvenida a {email}...")
-            message = MessageSchema(
-                subject=subject,
-                recipients=[email],
-                body=html_content,
-                subtype=MessageType.html,
-            )
+            message = self._build_message(subject, [email], html_content)
             await self._fastmail.send_message(message)
             logger.info(f"Correo de bienvenida enviado exitosamente a {email}")
             return True
@@ -340,6 +366,99 @@ class EmailService:
             logger.info("=" * 50)
             logger.info(f"[FALLBACK] Credenciales para {email} — contraseña: {password}")
             logger.info("=" * 50)
+            return False
+
+    def _get_password_reset_html_template(self, code: str, username: str) -> str:
+        """Genera el HTML del correo de recuperación de contraseña."""
+        return f"""
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <tr>
+                    <td style="background-color: #800000; padding: 30px; text-align: center; border-radius: 12px 12px 0 0;">
+                        <h1 style="color: white; margin: 0; font-size: 24px;">
+                            Evaluador GOB.BO
+                        </h1>
+                        <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px; font-weight: 600;">
+                            Recuperaci&oacute;n de Contrase&ntilde;a
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="background-color: white; padding: 40px 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <p style="color: #666; margin: 0 0 20px; font-size: 15px; line-height: 1.6;">
+                            Hola <strong>{username}</strong>,<br><br>
+                            Recibimos una solicitud para restablecer tu contrase&ntilde;a. Usa el siguiente c&oacute;digo:
+                        </p>
+                        <div style="background: linear-gradient(135deg, #800000, #a00000); padding: 25px; border-radius: 12px; text-align: center; margin: 0 0 30px;">
+                            <span style="font-size: 36px; font-weight: bold; color: white; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                                {code}
+                            </span>
+                        </div>
+                        <p style="color: #888; font-size: 13px; margin: 0 0 20px; padding: 15px; background: #f9f9f9; border-radius: 8px; border-left: 4px solid #800000;">
+                            <strong>Importante:</strong> Este c&oacute;digo expira en 15 minutos y solo puede usarse una vez.
+                        </p>
+                        <p style="color: #92400e; background: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; font-size: 13px; margin: 0;">
+                            <strong>&#191;No solicitaste este cambio?</strong><br>
+                            Si no solicitaste restablecer tu contrase&ntilde;a, puedes ignorar este email. Tu cuenta sigue segura.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 20px; text-align: center;">
+                        <p style="color: #999; font-size: 11px; margin: 0;">
+                            Este es un mensaje autom&aacute;tico del Sistema de Evaluaci&oacute;n GOB.BO<br>
+                            Por favor no respondas a este correo.
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </body>
+        </html>
+        """
+
+    async def send_password_reset_email(self, to_email: str, username: str, code: str) -> bool:
+        """
+        Envía email con código de recuperación de contraseña.
+
+        Args:
+            to_email: Dirección de correo del destinatario
+            username: Nombre de usuario para personalizar el mensaje
+            code: Código de 6 dígitos
+
+        Returns:
+            True si el correo se envió correctamente, False en caso contrario
+        """
+        self._initialize()
+
+        subject = "Recuperación de contraseña - Evaluador GOB.BO"
+        html_content = self._get_password_reset_html_template(code, username)
+
+        if not self._fastmail:
+            logger.info("=" * 50)
+            logger.info("[MODO DESARROLLO] Email de recuperación simulado:")
+            logger.info(f"  Para: {to_email}")
+            logger.info(f"  Usuario: {username}")
+            logger.info(f"  Código: {code}")
+            logger.info("=" * 50)
+            return True
+
+        try:
+            logger.info(f"Enviando email de recuperación a {to_email}...")
+            message = self._build_message(subject, [to_email], html_content)
+            await self._fastmail.send_message(message)
+            logger.info(f"Email de recuperación enviado exitosamente a {to_email}")
+            return True
+        except Exception as e:
+            logger.error(
+                f"Error al enviar email de recuperación a {to_email}: "
+                f"{type(e).__name__}: {str(e)}"
+            )
             return False
 
     async def send_2fa_code(self, email: str, code: str, username: str) -> bool:
@@ -359,7 +478,7 @@ class EmailService:
 
         from app.config import settings
 
-        subject = f"Código de Verificación: {code} - Evaluador GOB.BO"
+        subject = "Verificación de acceso - Evaluador GOB.BO"
         html_content = self._get_2fa_html_template(code, username)
 
         # Si el servicio de correo no está disponible (credenciales inválidas,
@@ -385,14 +504,7 @@ class EmailService:
 
         try:
             logger.info(f"Enviando correo 2FA a {email}...")
-
-            message = MessageSchema(
-                subject=subject,
-                recipients=[email],
-                body=html_content,
-                subtype=MessageType.html,
-            )
-
+            message = self._build_message(subject, [email], html_content)
             await self._fastmail.send_message(message)
             logger.info(f"Correo 2FA enviado exitosamente a {email}")
             return True
@@ -553,12 +665,7 @@ class EmailService:
 
         try:
             logger.info(f"Enviando email de seguimiento creado a {to_email}...")
-            message = MessageSchema(
-                subject=subject,
-                recipients=[to_email],
-                body=html_content,
-                subtype=MessageType.html,
-            )
+            message = self._build_message(subject, [to_email], html_content)
             await self._fastmail.send_message(message)
             logger.info(f"Email de seguimiento creado enviado exitosamente a {to_email}")
             return True
@@ -694,12 +801,7 @@ class EmailService:
 
         try:
             logger.info(f"Enviando email de corrección {action} a {to_email}...")
-            message = MessageSchema(
-                subject=subject,
-                recipients=[to_email],
-                body=html_content,
-                subtype=MessageType.html,
-            )
+            message = self._build_message(subject, [to_email], html_content)
             await self._fastmail.send_message(message)
             logger.info(f"Email de corrección {action} enviado exitosamente a {to_email}")
             return True
@@ -802,12 +904,7 @@ class EmailService:
 
         try:
             logger.info(f"Enviando recordatorio de notificación a {to_email}...")
-            message_schema = MessageSchema(
-                subject=subject,
-                recipients=[to_email],
-                body=html_content,
-                subtype=MessageType.html,
-            )
+            message_schema = self._build_message(subject, [to_email], html_content)
             await self._fastmail.send_message(message_schema)
             logger.info(f"Recordatorio enviado exitosamente a {to_email}")
             return True
@@ -819,28 +916,63 @@ class EmailService:
             return False
 
     def _get_password_changed_html(self, username: str) -> str:
-        """Template HTML para confirmacion de cambio de contrasena."""
+        """Template HTML para confirmaci&oacute;n de cambio de contrase&ntilde;a."""
         from datetime import datetime as dt
         change_date = dt.now().strftime("%d/%m/%Y %H:%M")
-        return (
-            "<!DOCTYPE html>"
-            "<html lang=es><head><meta charset=UTF-8></head>"
-            "<body style=margin:0;padding:0;font-family:Arial,sans-serif;background-color:#f4f4f4;>"
-            "<table role=presentation width=100% cellspacing=0 cellpadding=0 style=max-width:600px;margin:0 auto;padding:20px;>"
-            "<tr><td style=background-color:#10b981;padding:30px;text-align:center;border-radius:12px 12px 0 0;>"
-            "<h1 style=color:white;margin:0;font-size:24px;>Evaluador GOB.BO</h1>"
-            "<p style=color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:16px;font-weight:600;>Contrasena Actualizada</p>"
-            "</td></tr>"
-            "<tr><td style=background-color:white;padding:40px 30px;border-radius:0 0 12px 12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);>"
-            f"<p style=color:#555;font-size:15px;>Hola <strong>{username}</strong>,</p>"
-            "<p style=color:#555;font-size:15px;>Tu contrasena ha sido actualizada exitosamente.</p>"
-            f"<div style=background:#f9f9f9;padding:16px;border-radius:8px;margin:0 0 24px;><p style=margin:0;><strong>Fecha:</strong> {change_date}</p></div>"
-            "<div style=background:#fef3c7;border-left:4px solid #f59e0b;padding:15px;border-radius:0 8px 8px 0;>"
-            "<p style=margin:0;font-size:14px;color:#92400e;><strong>No fuiste tu?</strong><br>Si no realizaste este cambio, contacta al administrador.</p>"
-            "</div></td></tr>"
-            "<tr><td style=padding:20px;text-align:center;><p style=color:#999;font-size:11px;>Mensaje automatico del Sistema GOB.BO</p></td></tr>"
-            "</table></body></html>"
-        )
+        return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+           style="max-width:600px;margin:0 auto;padding:20px;">
+        <tr>
+            <td style="background-color:#10b981;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
+                <h1 style="color:white;margin:0;font-size:24px;">Evaluador GOB.BO</h1>
+                <p style="color:rgba(255,255,255,0.9);margin:8px 0 0;font-size:16px;font-weight:600;">
+                    Contrase&ntilde;a Actualizada
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td style="background-color:white;padding:40px 30px;border-radius:0 0 12px 12px;
+                       box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                <h2 style="color:#333;margin:0 0 20px;font-size:20px;">
+                    Cambio de contrase&ntilde;a exitoso
+                </h2>
+                <p style="color:#555;margin:0 0 20px;font-size:15px;line-height:1.6;">
+                    Hola <strong>{username}</strong>,<br><br>
+                    Tu contrase&ntilde;a ha sido actualizada exitosamente en el sistema.
+                </p>
+
+                <div style="background:#f9f9f9;padding:20px;border-radius:8px;margin:0 0 24px;">
+                    <p style="margin:0;font-size:15px;">
+                        <strong>Fecha del cambio:</strong> {change_date}
+                    </p>
+                </div>
+
+                <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:15px 20px;
+                            border-radius:0 8px 8px 0;margin:0 0 20px;">
+                    <p style="margin:0;font-size:14px;color:#92400e;line-height:1.5;">
+                        <strong>&iquest;No fuiste t&uacute;?</strong><br>
+                        Si no realizaste este cambio, contacta inmediatamente al administrador del sistema.
+                    </p>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:20px;text-align:center;">
+                <p style="color:#999;font-size:11px;margin:0;line-height:1.6;">
+                    Este es un mensaje autom&aacute;tico del Sistema de Evaluaci&oacute;n GOB.BO<br>
+                    Por favor no respondas a este correo.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
 
     async def send_password_changed_email(self, to_email: str, username: str) -> bool:
         """Envia email de confirmacion de cambio de contrasena."""
@@ -854,12 +986,7 @@ class EmailService:
             logger.info("=" * 50)
             return True
         try:
-            message = MessageSchema(
-                subject=subject,
-                recipients=[to_email],
-                body=html_content,
-                subtype=MessageType.html,
-            )
+            message = self._build_message(subject, [to_email], html_content)
             await self._fastmail.send_message(message)
             logger.info(f"Email cambio contrasena enviado a {to_email}")
             return True

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { ROLES } from '../../contexts/AuthContext';
+import { ROLES, ROLE_LABELS } from '../../contexts/AuthContext';
 import {
   LayoutDashboard,
   Building2,
@@ -20,26 +20,24 @@ import styles from './ModernSidebar.module.css';
 
 const MENU_ITEMS = {
   [ROLES.SUPERADMIN]: [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Inicio' },
     { path: '/admin/institutions', icon: Building2, label: 'Instituciones' },
     { path: '/admin/users', icon: Users, label: 'Usuarios' },
     { path: '/admin/evaluations', icon: FileText, label: 'Evaluaciones' },
     { path: '/admin/reports', icon: BarChart3, label: 'Reportes' },
   ],
   [ROLES.SECRETARY]: [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Inicio' },
     { path: '/admin/institutions', icon: Building2, label: 'Instituciones' },
     { path: '/admin/users', icon: Users, label: 'Usuarios' },
-    { path: '/admin/evaluations', icon: FileText, label: 'Evaluaciones' },
-    { path: '/admin/reports', icon: BarChart3, label: 'Reportes' },
   ],
   [ROLES.EVALUATOR]: [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Inicio' },
     { path: '/admin/institutions', icon: Building2, label: 'Instituciones' },
     { path: '/admin/evaluator/my-evaluations', icon: ClipboardList, label: 'Mis Evaluaciones' },
   ],
   [ROLES.ENTITY_USER]: [
-    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Inicio' },
     { path: '/admin/my-evaluations', icon: FileText, label: 'Mis Evaluaciones' },
     { path: '/admin/my-followups', icon: CheckCircle2, label: 'Seguimientos' },
   ],
@@ -158,7 +156,7 @@ function ModernSidebar({ onCollapse, mobileOpen = false, onMobileClose }) {
               </div>
               <div className={styles.userDetails}>
                 <span className={styles.userName}>{user.name || 'Usuario'}</span>
-                <span className={styles.userRole}>{user.role}</span>
+                <span className={styles.userRole}>{ROLE_LABELS[user.role] || user.role}</span>
               </div>
             </div>
           )}

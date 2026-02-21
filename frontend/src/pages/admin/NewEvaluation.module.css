@@ -1,8 +1,8 @@
-/* Ocupa exactamente el área del content sin padding ni scroll */
+/* Ocupa todo el viewport — el sidebar y topbar flotan encima */
 .wrapper {
   position: relative;
   width: 100%;
-  height: calc(100vh - 64px);
+  height: 100vh;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -13,7 +13,7 @@
 .wrapperResults {
   position: relative;
   width: 100%;
-  min-height: calc(100vh - 64px);
+  min-height: 100vh;
   overflow-y: auto;
   display: flex;
   flex-direction: column;

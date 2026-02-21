@@ -13,10 +13,7 @@ import {
   Save,
   Copy,
   Lock,
-  ShieldAlert,
-  Trash2,
 } from 'lucide-react';
-import { useAuth, ROLES } from '../../contexts/AuthContext';
 import institutionService from '../../services/institutionService';
 import styles from './Institutions.module.css';
 
@@ -321,9 +318,6 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 // ── Componente Principal ─────────────────────────────────────────────────────
 export default function Institutions() {
-  const { user } = useAuth();
-  const isReadOnly = user?.role === ROLES.EVALUATOR;
-
   const [institutions, setInstitutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -392,14 +386,12 @@ export default function Institutions() {
       <div className={styles.header}>
         <div className={styles.headerInfo}>
           <h1><Building2 size={28} />Entidades</h1>
-          <p>{isReadOnly ? 'Instituciones gubernamentales registradas' : 'Gestión de instituciones gubernamentales registradas'}</p>
+          <p>Gestión de instituciones gubernamentales registradas</p>
         </div>
-        {!isReadOnly && (
-          <button onClick={() => setIsCreateModalOpen(true)} className={styles.btnPrimary}>
-            <Plus size={18} />
-            Registrar Entidad
-          </button>
-        )}
+        <button onClick={() => setIsCreateModalOpen(true)} className={styles.btnPrimary}>
+          <Plus size={18} />
+          Registrar Entidad
+        </button>
       </div>
 
       {/* Buscador */}
@@ -457,7 +449,7 @@ export default function Institutions() {
                 ? `No hay instituciones que comiencen con "${activeLetter}"`
                 : 'Registra la primera institución para comenzar'}
           </p>
-          {!searchQuery && !activeLetter && !isReadOnly && (
+          {!searchQuery && !activeLetter && (
             <button onClick={() => setIsCreateModalOpen(true)} className={styles.btnPrimary}>
               <Plus size={18} />Registrar Primera Entidad
             </button>
@@ -481,24 +473,20 @@ export default function Institutions() {
         </>
       )}
 
-      {!isReadOnly && (
-        <>
-          <CreateInstitutionModal
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            onSave={handleCreateInstitution}
-          />
+      <CreateInstitutionModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSave={handleCreateInstitution}
+      />
 
-          <CredentialsModal
-            isOpen={!!credentialsData}
-            onClose={() => {
-              setCredentialsData(null);
-              setToast({ message: 'Institución registrada correctamente', type: 'success' });
-            }}
-            data={credentialsData}
-          />
-        </>
-      )}
+      <CredentialsModal
+        isOpen={!!credentialsData}
+        onClose={() => {
+          setCredentialsData(null);
+          setToast({ message: 'Institución registrada correctamente', type: 'success' });
+        }}
+        data={credentialsData}
+      />
     </div>
   );
 }

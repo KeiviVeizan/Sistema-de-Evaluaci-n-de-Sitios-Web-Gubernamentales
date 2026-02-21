@@ -26,12 +26,14 @@ class TokenResponse(BaseModel):
 # ============================================================================
 
 class UserCreate(BaseModel):
-    """Schema para crear un usuario (solo superadmin)."""
+    """Schema para crear un usuario interno."""
     username: str = Field(..., min_length=3, max_length=50)
     email: EmailStr
-    password: str = Field(..., min_length=8)
+    password: Optional[str] = Field(None, min_length=8)
     full_name: Optional[str] = None
     role: UserRole
+    position: Optional[str] = Field(None, max_length=100)
+    institution_id: Optional[int] = None
 
     @field_validator("username")
     @classmethod
@@ -167,9 +169,22 @@ class InstitutionDetailResponse(BaseModel):
 class UserUpdate(BaseModel):
     """Schema para actualizar un usuario."""
     full_name: Optional[str] = None
+    username: Optional[str] = Field(None, min_length=3, max_length=50)
     email: Optional[EmailStr] = None
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
+    position: Optional[str] = Field(None, max_length=100)
+    institution_id: Optional[int] = None
+    new_password: Optional[str] = Field(None, min_length=8)
+
+    @field_validator("username")
+    @classmethod
+    def validate_username(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None:
+            if not v.replace("_", "").replace(".", "").isalnum():
+                raise ValueError("El username solo puede contener letras, números, puntos y guiones bajos")
+            return v.lower()
+        return v
 
 
 # ============================================================================
