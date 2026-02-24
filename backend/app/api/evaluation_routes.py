@@ -13,15 +13,18 @@ ARQUITECTURA:
 - Evaluacion sync ejecutada en ThreadPoolExecutor
 - Patron recomendado por FastAPI para operaciones I/O-bound
 """
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional, List
+
+# Bolivia timezone (UTC-4)
+_TZ_BOT = timezone(timedelta(hours=-4))
 from concurrent.futures import ThreadPoolExecutor
 import asyncio
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.evaluator.evaluation_engine import evaluar_url as ejecutar_evaluacion
+from app.evaluator.evaluation_engine import evaluar_url as ejecutar_evaluacion, _enrich_criteria_results
 from app.models.database_models import (
     Evaluation, EvaluationStatus, CriteriaResult, Website, NLPAnalysis, Institution, User, Followup
 )
@@ -170,7 +173,7 @@ async def evaluate_url(
         response = EvaluateURLResponse(
             url=str(request.url),
             status=result.get('status', 'completed'),
-            timestamp=result.get('timestamp', datetime.now().isoformat()),
+            timestamp=result.get('timestamp', datetime.now(_TZ_BOT).replace(tzinfo=None).isoformat()),
             scores=result.get('scores', {}),
             nlp_analysis=nlp_analysis,
             criteria_results=criteria_results,
@@ -402,7 +405,7 @@ async def save_evaluation(
         db.flush()  # Obtener ID sin hacer commit aún
 
     # 3. Crear registro de evaluación
-    now = datetime.utcnow()
+    now = datetime.now(_TZ_BOT).replace(tzinfo=None)
     evaluation = Evaluation(
         website_id=website.id,
         evaluator_id=current_user.id,
@@ -501,7 +504,7 @@ async def save_evaluation(
     evaluation.score_digital_sovereignty = _pct(scores.get('soberania'))
     evaluation.score_total = float(scores.get('total', 0) or 0)
     evaluation.status = EvaluationStatus.COMPLETED
-    evaluation.completed_at = datetime.utcnow()
+    evaluation.completed_at = datetime.now(_TZ_BOT).replace(tzinfo=None)
 
     # ── DEBUG: valores finales en el objeto Evaluation antes del commit ───────
     logger.info("DEBUG save_evaluation: campos evaluation antes de commit")
@@ -833,19 +836,27 @@ async def get_evaluation_by_id(
         CriteriaResult.evaluation_id == evaluation_id
     ).all()
 
+    # Enriquecer evidencia de criterios que fallan/parciales (para evaluaciones ya guardadas)
+    raw_criteria = []
+    for cr in db_criteria:
+        raw = {
+            'id': cr.id,
+            'criteria_id': cr.criteria_id,
+            'criteria_name': cr.criteria_name,
+            'dimension': cr.dimension,
+            'lineamiento': cr.lineamiento or "",
+            'status': cr.status,
+            'score': cr.score,
+            'max_score': cr.max_score,
+            'details': dict(cr.details) if cr.details else {},
+            'evidence': dict(cr.evidence) if cr.evidence else {},
+        }
+        raw_criteria.append(raw)
+
+    _enrich_criteria_results(raw_criteria)
+
     criteria_results = [
-        CriteriaResultItem(
-            id=cr.id,
-            criteria_id=cr.criteria_id,
-            criteria_name=cr.criteria_name,
-            dimension=cr.dimension,
-            lineamiento=cr.lineamiento or "",
-            status=cr.status,
-            score=cr.score,
-            max_score=cr.max_score,
-            details=cr.details,
-            evidence=cr.evidence
-        ) for cr in db_criteria
+        CriteriaResultItem(**raw) for raw in raw_criteria
     ]
 
     # Obtener análisis NLP

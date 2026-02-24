@@ -219,7 +219,7 @@ export default function Hero({ loading, onEvaluationStart, onEvaluationComplete,
 
       {error && <div className="hero__error">{error}</div>}
 
-      <p className="hero__hint" style={{ opacity: 0 }}>
+      <p className="hero__hint" style={{ opacity: 0, visibility: isOpen ? 'hidden' : 'visible' }}>
         Selecciona una instituci&oacute;n de la lista para evaluar su sitio web
       </p>
     </section>

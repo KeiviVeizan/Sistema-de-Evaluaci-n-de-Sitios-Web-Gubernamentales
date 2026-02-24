@@ -7,7 +7,7 @@ const MESSAGES = [
   'Analizando accesibilidad...',
   'Evaluando usabilidad...',
   'Verificando semántica...',
-  'Comprobando soberanía tecnológica...',
+  'Comprobando soberanía digital...',
   'Generando reporte...',
 ];
 

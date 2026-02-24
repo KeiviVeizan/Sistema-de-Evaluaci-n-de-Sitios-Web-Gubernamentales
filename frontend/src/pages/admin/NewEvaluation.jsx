@@ -206,20 +206,57 @@ export default function NewEvaluation() {
    * Callback invocado por Hero al terminar la evaluación automática.
    * Guarda los datos y busca la institución por dominio.
    */
+  const [allInstitutions, setAllInstitutions] = useState([]);
+  const [showInstitutionPicker, setShowInstitutionPicker] = useState(false);
+
   const handleEvaluationComplete = useCallback(async (data) => {
     setLoading(false);
     setResults(data);
 
     try {
       const domain = extractDomain(data.url || '');
+
+      // Intentar búsqueda por dominio exacto
       const response = await institutionService.getAll({ domain, limit: 10 });
       const items = response.items || response || [];
       const match = items.find(
         (inst) => inst.domain && inst.domain.replace(/^www\./, '') === domain
       );
-      setInstitutionId(match ? match.id : null);
+
+      if (match) {
+        setInstitutionId(match.id);
+        setShowInstitutionPicker(false);
+      } else {
+        // Si no hay coincidencia exacta, buscar por parte del dominio
+        const searchTerm = domain.split('.')[0]; // ej: "adsib" de "adsib.gob.bo"
+        const broadResponse = await institutionService.getAll({ search: searchTerm, limit: 20 });
+        const broadItems = broadResponse.items || broadResponse || [];
+        const broadMatch = broadItems.find(
+          (inst) => inst.domain && (
+            inst.domain.replace(/^www\./, '') === domain ||
+            domain.includes(inst.domain.replace(/^www\./, '')) ||
+            inst.domain.replace(/^www\./, '').includes(domain)
+          )
+        );
+
+        if (broadMatch) {
+          setInstitutionId(broadMatch.id);
+          setShowInstitutionPicker(false);
+        } else {
+          // Cargar todas las instituciones para selector manual
+          setInstitutionId(null);
+          setShowInstitutionPicker(true);
+          const allResp = await institutionService.getAll({ limit: 500 });
+          setAllInstitutions(allResp.items || allResp || []);
+        }
+      }
     } catch {
       setInstitutionId(null);
+      setShowInstitutionPicker(true);
+      try {
+        const allResp = await institutionService.getAll({ limit: 500 });
+        setAllInstitutions(allResp.items || allResp || []);
+      } catch { /* ignore */ }
     }
   }, []);
 
@@ -315,6 +352,22 @@ export default function NewEvaluation() {
       {results ? (
         <>
           <SaveBar onSave={handleSaveEvaluation} saving={saving} />
+          {showInstitutionPicker && !institutionId && (
+            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 20px', margin: '0 24px 12px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+              <span style={{ color: '#92400e', fontSize: '0.85rem', fontWeight: 600 }}>
+                No se encontró institución para este dominio. Selecciona manualmente:
+              </span>
+              <select
+                onChange={e => { const val = e.target.value; setInstitutionId(val ? Number(val) : null); }}
+                style={{ padding: '6px 10px', border: '1px solid #c0ccd8', borderRadius: '6px', fontSize: '0.85rem', minWidth: '250px' }}
+              >
+                <option value="">Seleccionar institución...</option>
+                {allInstitutions.map(inst => (
+                  <option key={inst.id} value={inst.id}>{inst.name} ({inst.domain})</option>
+                ))}
+              </select>
+            </div>
+          )}
           <ResultsDashboard
             data={results}
             onNewEvaluation={() => {

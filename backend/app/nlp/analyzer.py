@@ -80,7 +80,7 @@ class NLPAnalyzer:
         ambiguity_weight: float = 0.40,
         clarity_weight: float = 0.20,
         max_recommendations: int = 20,
-        coherence_threshold: float = 0.7,
+        coherence_threshold: Optional[float] = None,
         clarity_target_min: float = 60.0,
         clarity_target_max: float = 80.0
     ):

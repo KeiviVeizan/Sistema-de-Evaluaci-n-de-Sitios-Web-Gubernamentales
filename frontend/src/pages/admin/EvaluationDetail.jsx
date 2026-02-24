@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Download, ArrowLeft, CheckCircle, XCircle, AlertCircle, MinusCircle, Calendar } from 'lucide-react';
+import { Download, ArrowLeft, Calendar } from 'lucide-react';
 import evaluationService from '../../services/evaluationService';
 import followupService from '../../services/followupService';
 import { useAuth } from '../../contexts/AuthContext';
+import ResultsDashboard from '../../components/home/ResultsDashboard';
 
 function Toast({ message, type, onClose }) {
   if (!message) return null;
@@ -16,7 +17,6 @@ function Toast({ message, type, onClose }) {
   );
 }
 
-const DIMENSION_LABELS = { accesibilidad: 'Accesibilidad', usabilidad: 'Usabilidad', semantica_tecnica: 'Semantica Tecnica', semantica_nlp: 'Semantica NLP', soberania: 'Soberania Digital' };
 const FOLLOWUP_STATUS_LABELS = {
   pending:   { label: 'Pendiente',             color: '#e67e22' },
   corrected: { label: 'Corregido (pendiente)', color: '#2980b9' },
@@ -24,19 +24,6 @@ const FOLLOWUP_STATUS_LABELS = {
   rejected:  { label: 'Rechazado',             color: '#c0392b' },
   cancelled: { label: 'Cancelado',             color: '#95a5a6' },
 };
-
-function scoreColor(pct) { if (pct >= 80) return '#27ae60'; if (pct >= 50) return '#e67e22'; return '#c0392b'; }
-
-function StatusBadge({ status }) {
-  const config = {
-    pass:    { label: 'CUMPLE',    color: '#27ae60', Icon: CheckCircle  },
-    fail:    { label: 'NO CUMPLE', color: '#c0392b', Icon: XCircle      },
-    partial: { label: 'PARCIAL',   color: '#e67e22', Icon: AlertCircle  },
-    na:      { label: 'N/A',       color: '#95a5a6', Icon: MinusCircle  },
-  };
-  const { label, color, Icon } = config[status] || config.na;
-  return <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color, fontWeight: 600, fontSize: '0.78rem' }}><Icon size={14} />{label}</span>;
-}
 
 function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
   const [criteriaResultId, setCriteriaResultId] = useState('');
@@ -167,16 +154,10 @@ export default function EvaluationDetail() {
     </div>
   );
 
-  const scores = evaluation.scores || {};
-  const totalScore = typeof scores.total === 'number' ? scores.total : 0;
   const criteriaResults = evaluation.criteria_results || [];
   const failedCriteria  = criteriaResults.filter(c => c.status === 'fail');
   const partialCriteria = criteriaResults.filter(c => c.status === 'partial');
   const nonCompliant    = [...failedCriteria, ...partialCriteria];
-  const passed  = criteriaResults.filter(c => c.status === 'pass').length;
-  const failed  = failedCriteria.length;
-  const partial = partialCriteria.length;
-  const na      = criteriaResults.filter(c => c.status === 'na').length;
   const evalDate = evaluation.timestamp ? new Date(evaluation.timestamp).toLocaleString('es-BO') : '-';
 
   return (
@@ -192,78 +173,10 @@ export default function EvaluationDetail() {
       <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1a3a5c', marginBottom: '4px' }}>Detalle de Evaluacion #{id}</h1>
       <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '24px' }}>URL evaluada: <strong>{evaluation.url || '-'}</strong> &nbsp;&middot;&nbsp; Fecha: {evalDate}</p>
 
-      <div style={{ background: '#f0f5fa', border: `2px solid ${scoreColor(totalScore)}`, borderRadius: '10px', padding: '16px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <span style={{ fontWeight: 600, color: '#1a3a5c', fontSize: '1rem' }}>Puntaje Total de Cumplimiento</span>
-        <span style={{ fontSize: '2rem', fontWeight: 700, color: scoreColor(totalScore) }}>{totalScore.toFixed(1)}%</span>
-      </div>
+      {/* ResultsDashboard con vista completa de dimensiones y criterios expandibles */}
+      <ResultsDashboard data={evaluation} hideHeader />
 
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Puntajes por Dimension</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(170px, 1fr))', gap: '12px' }}>
-          {Object.entries(DIMENSION_LABELS).map(([key, label]) => {
-            const raw = scores[key];
-            const pct = typeof raw === 'object' ? (raw?.percentage ?? 0) : (typeof raw === 'number' ? raw : 0);
-            return (
-              <div key={key} style={{ background: '#fff', border: '1px solid #d0dce8', borderRadius: '8px', padding: '14px', textAlign: 'center' }}>
-                <div style={{ fontSize: '0.75rem', color: '#555', marginBottom: '6px' }}>{label}</div>
-                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: scoreColor(pct) }}>{pct.toFixed(1)}%</div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Resumen de Criterios</h2>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          {[
-            { label: 'Total',     value: criteriaResults.length, color: '#2c5f8a' },
-            { label: 'Cumple',    value: passed,  color: '#27ae60' },
-            { label: 'No cumple', value: failed,  color: '#c0392b' },
-            { label: 'Parcial',   value: partial, color: '#e67e22' },
-            { label: 'N/A',       value: na,      color: '#95a5a6' },
-          ].map(({ label, value, color }) => (
-            <div key={label} style={{ background: '#fff', border: `1px solid ${color}`, borderRadius: '8px', padding: '10px 18px', textAlign: 'center', minWidth: '80px' }}>
-              <div style={{ fontSize: '1.4rem', fontWeight: 700, color }}>{value}</div>
-              <div style={{ fontSize: '0.75rem', color: '#555' }}>{label}</div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section style={sectionStyle}>
-        <h2 style={sectionTitle}>Criterios No Cumplidos / Parciales</h2>
-        {nonCompliant.length === 0 ? (
-          <p style={{ color: '#27ae60', fontWeight: 600 }}>Todos los criterios han sido cumplidos satisfactoriamente.</p>
-        ) : (
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-              <thead>
-                <tr style={{ background: '#2c5f8a', color: '#fff' }}>
-                  <th style={th}>ID</th><th style={th}>Criterio</th><th style={th}>Dimension</th><th style={th}>Estado</th><th style={th}>Observaciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {nonCompliant.map((cr, i) => {
-                  const obs = cr.details?.observations || cr.details?.message || cr.details?.error || '';
-                  const obsText = Array.isArray(obs) ? obs.slice(0, 3).join('; ') : String(obs || '-');
-                  const dimLabel = DIMENSION_LABELS[cr.dimension] || cr.dimension || '';
-                  return (
-                    <tr key={cr.criteria_id || i} style={{ background: i % 2 === 0 ? '#f0f5fa' : '#fff' }}>
-                      <td style={td}><code style={{ fontSize: '0.78rem' }}>{cr.criteria_id}</code></td>
-                      <td style={td}>{cr.criteria_name}</td>
-                      <td style={td}>{dimLabel}</td>
-                      <td style={{ ...td, textAlign: 'center' }}><StatusBadge status={cr.status} /></td>
-                      <td style={{ ...td, color: '#555', fontStyle: 'italic', maxWidth: '220px' }}>{obsText.length > 150 ? obsText.slice(0, 150) + '...' : obsText}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
+      {/* Seguimientos Programados */}
       <section style={sectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <h2 style={{ ...sectionTitle, marginBottom: 0 }}>Seguimientos Programados</h2>
@@ -340,8 +253,6 @@ const btnSmallGray  = { background: 'transparent', color: '#95a5a6', border: '1p
 const spinnerStyle = { display: 'inline-block', width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' };
 const sectionStyle = { background: '#fff', border: '1px solid #d0dce8', borderRadius: '10px', padding: '20px', marginBottom: '20px' };
 const sectionTitle = { fontSize: '1rem', fontWeight: 700, color: '#1a3a5c', marginBottom: '14px', marginTop: 0 };
-const th = { padding: '10px 12px', textAlign: 'left', fontWeight: 600, fontSize: '0.82rem', whiteSpace: 'nowrap' };
-const td = { padding: '8px 12px', borderBottom: '1px solid #e8edf2', verticalAlign: 'top' };
 const modalOverlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' };
 const modalBox = { background: '#fff', borderRadius: '10px', padding: '24px', width: '100%', maxWidth: '460px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' };
 const labelStyle = { fontSize: '0.82rem', fontWeight: 600, color: '#1a3a5c', marginTop: '12px', marginBottom: '4px', display: 'block' };

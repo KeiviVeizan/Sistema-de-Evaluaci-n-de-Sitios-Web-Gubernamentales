@@ -552,7 +552,7 @@ function DimensionSection({ dim, percentage, criteria, index, nlpAnalysis }) {
 
 /* ── ResultsDashboard ────────────────────────────────── */
 
-export default function ResultsDashboard({ data, onNewEvaluation }) {
+export default function ResultsDashboard({ data, onNewEvaluation, hideHeader = false }) {
   useEffect(() => {
     anime({
       targets: '.results__header, .score-section, .dim-section',
@@ -569,6 +569,12 @@ export default function ResultsDashboard({ data, onNewEvaluation }) {
 
   // Agrupar criterios por dimensión con remapeo inteligente:
   // - IDs que terminan en "-NLP" se mueven a la dimensión 'nlp'
+  // - 'semantica_tecnica' se normaliza a 'semantica' (BD vs evaluador en vivo)
+  // - 'semantica_nlp' se normaliza a 'nlp'
+  const DIMENSION_ALIASES = {
+    'semantica_tecnica': 'semantica',
+    'semantica_nlp': 'nlp',
+  };
   const groupedCriteria = {};
   for (const cr of criteria_results) {
     let dim = cr.dimension || 'otros';
@@ -576,6 +582,9 @@ export default function ResultsDashboard({ data, onNewEvaluation }) {
     // pero deben mostrarse bajo la tarjeta 'nlp'
     if (cr.criteria_id && cr.criteria_id.endsWith('-NLP')) {
       dim = 'nlp';
+    } else {
+      // Normalizar alias de dimensión (BD usa nombres largos, frontend usa cortos)
+      dim = DIMENSION_ALIASES[dim] || dim;
     }
     if (!groupedCriteria[dim]) groupedCriteria[dim] = [];
     groupedCriteria[dim].push(cr);
@@ -600,16 +609,18 @@ export default function ResultsDashboard({ data, onNewEvaluation }) {
   return (
     <section className="results">
       {/* Encabezado */}
-      <div className="results__header" style={{ opacity: 0 }}>
-        <div className="results__header-info">
-          <h2 className="results__url">{url}</h2>
-          {formattedDate && <span className="results__date">{formattedDate}</span>}
+      {!hideHeader && (
+        <div className="results__header" style={{ opacity: 0 }}>
+          <div className="results__header-info">
+            <h2 className="results__url">{url}</h2>
+            {formattedDate && <span className="results__date">{formattedDate}</span>}
+          </div>
+          <button className="results__back-btn" onClick={onNewEvaluation}>
+            <ArrowLeft size={18} />
+            Nueva evaluación
+          </button>
         </div>
-        <button className="results__back-btn" onClick={onNewEvaluation}>
-          <ArrowLeft size={18} />
-          Nueva evaluación
-        </button>
-      </div>
+      )}
 
       {/* Puntuación + Resumen */}
       <div className="score-section" style={{ opacity: 0 }}>
