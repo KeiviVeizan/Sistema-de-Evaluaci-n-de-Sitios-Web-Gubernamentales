@@ -97,7 +97,11 @@ class NLPDataAdapter:
         # Opción 1: Usar text_corpus.sections si existe (formato preferido)
         text_corpus = extracted.get('text_corpus', {})
         if text_corpus and 'sections' in text_corpus:
-            for section in text_corpus.get('sections', []):
+            raw_sections = text_corpus.get('sections', [])
+            logger.info(
+                f"Adapter: text_corpus tiene {len(raw_sections)} secciones"
+            )
+            for section in raw_sections:
                 # Normalizar heading_level (puede ser "h1", "h2" o int)
                 heading_level = section.get('heading_level', 2)
                 if isinstance(heading_level, str):
@@ -107,15 +111,36 @@ class NLPDataAdapter:
                     except (ValueError, AttributeError):
                         heading_level = 2
 
-                sections.append({
-                    'heading': section.get('heading', ''),
-                    'heading_level': heading_level,
-                    'content': section.get('content', ''),
-                    'word_count': section.get('word_count', len(section.get('content', '').split()))
-                })
-            return sections
+                heading = section.get('heading', '')
+                content = section.get('content', '')
+
+                # Solo agregar secciones con heading y contenido
+                if heading and heading.strip() and content and content.strip():
+                    sections.append({
+                        'heading': heading,
+                        'heading_level': heading_level,
+                        'content': content,
+                        'word_count': section.get('word_count', len(content.split()))
+                    })
+                else:
+                    logger.debug(
+                        f"Adapter: Sección omitida (heading vacío o sin contenido): "
+                        f"heading='{heading[:30] if heading else '[vacío]'}'"
+                    )
+
+            if sections:
+                logger.info(
+                    f"Adapter: {len(sections)} secciones válidas de {len(raw_sections)} totales"
+                )
+                return sections
+            else:
+                logger.warning(
+                    f"Adapter: text_corpus tenía {len(raw_sections)} secciones "
+                    f"pero ninguna con heading y contenido válido. Intentando fallback..."
+                )
 
         # Opción 2: Construir desde headings.headings (lista de dicts)
+        logger.info("Adapter: Usando fallback - construir secciones desde headings")
         headings_data = extracted.get('headings', {})
         all_headings = []
 

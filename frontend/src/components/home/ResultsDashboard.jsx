@@ -607,7 +607,7 @@ export default function ResultsDashboard({ data, onNewEvaluation, hideHeader = f
     : '';
 
   return (
-    <section className="results">
+    <section className={`results${hideHeader ? ' results--embedded' : ''}`}>
       {/* Encabezado */}
       {!hideHeader && (
         <div className="results__header" style={{ opacity: 0 }}>

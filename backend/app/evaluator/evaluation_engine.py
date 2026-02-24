@@ -298,15 +298,15 @@ _CRITERIA_ENRICHMENT = {
         'referencias': ['Web Performance Best Practices', 'Google PageSpeed']
     },
     'ACC-06': {
-        'por_que_mal': 'Una estructura de encabezados incorrecta (saltos de nivel, múltiples h1, '
-                       'encabezados vacíos) dificulta la navegación con tecnologías asistivas.',
+        'por_que_mal': 'Un contraste insuficiente entre el texto y el fondo dificulta la lectura para '
+                       'personas con baja visión, daltonismo o que usan el sitio en condiciones de mucha luz.',
         'como_corregir': [
-            'Usar exactamente un <h1> por página para el título principal',
-            'Mantener la jerarquía secuencial: h1 → h2 → h3 (sin saltar niveles)',
-            'Asegurar que todos los encabezados tengan contenido de texto',
-            'No usar encabezados vacíos o solo con espacios',
+            'Asegurar una relación de contraste mínima de 4.5:1 para texto normal',
+            'Para texto grande (18px+ o 14px+ negrita), el mínimo es 3:1',
+            'Usar herramientas como WebAIM Contrast Checker para verificar',
+            'Evitar texto gris claro sobre fondo blanco o combinaciones de bajo contraste',
         ],
-        'referencias': ['WCAG 1.3.1 - Información y relaciones', 'WCAG 2.4.6 - Encabezados y etiquetas']
+        'referencias': ['WCAG 1.4.3 - Contraste mínimo', 'https://webaim.org/resources/contrastchecker/']
     },
     'SEM-01': {
         'por_que_mal': 'Sin la declaración <!DOCTYPE html>, el navegador puede renderizar la página en modo quirks, '
@@ -647,7 +647,7 @@ class EvaluationEngine:
             evaluation.score_semantic_web = (semantica_tecnica + semantica_nlp) / 2
             evaluation.score_total = score_final
             evaluation.status = 'completed'
-            evaluation.completed_at = datetime.now(_TZ_BOT)
+            evaluation.completed_at = datetime.now(_TZ_BOT).replace(tzinfo=None)
 
             self.db.commit()
 
@@ -697,17 +697,36 @@ class EvaluationEngine:
             return None
 
         try:
+            # Verificar que text_corpus tenga datos
+            text_corpus = extracted_data.get('text_corpus', {})
+            tc_sections = text_corpus.get('sections', []) if text_corpus else []
+            logger.info(
+                f"NLP: text_corpus tiene {len(tc_sections)} secciones, "
+                f"keys={list(text_corpus.keys()) if text_corpus else '(vacío)'}"
+            )
+
             # Adaptar datos al formato NLP
             nlp_data = self.nlp_adapter.adapt(extracted_data)
+
+            nlp_sections = nlp_data.get('sections', [])
+            logger.info(
+                f"NLP: Datos adaptados - {len(nlp_sections)} secciones, "
+                f"{len(nlp_data.get('links', []))} enlaces"
+            )
 
             # Ejecutar análisis
             result = self.nlp_analyzer.analyze_website(nlp_data)
 
-            logger.info(f"Análisis NLP completado: {result['global_score']:.1f}/100")
+            logger.info(
+                f"NLP completado: global={result['global_score']:.1f}, "
+                f"coherencia={result['coherence_score']:.1f}, "
+                f"ambiguedad={result['ambiguity_score']:.1f}, "
+                f"claridad={result['clarity_score']:.1f}"
+            )
             return result
 
         except Exception as e:
-            logger.error(f"Error en análisis NLP: {e}")
+            logger.error(f"Error en análisis NLP: {e}", exc_info=True)
             return None
 
     def _save_nlp_to_database(
@@ -740,7 +759,7 @@ class EvaluationEngine:
                 clarity_details=nlp_result['details'].get('clarity', {}),
                 recommendations=nlp_result.get('recommendations', []),
                 wcag_compliance=nlp_result.get('wcag_compliance', {}),
-                analyzed_at=datetime.now(_TZ_BOT)
+                analyzed_at=datetime.now(_TZ_BOT).replace(tzinfo=None)
             )
 
             self.db.add(nlp_analysis)
@@ -985,7 +1004,7 @@ class EvaluationEngine:
         return {
             "url": url,
             "status": "completed",
-            "timestamp": datetime.now(_TZ_BOT).isoformat(),
+            "timestamp": datetime.now(_TZ_BOT).replace(tzinfo=None).isoformat(),
             "scores": {
                 "accesibilidad": scores_por_dimension.get('accesibilidad', {}),
                 "usabilidad": scores_por_dimension.get('usabilidad', {}),

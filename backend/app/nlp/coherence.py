@@ -203,10 +203,18 @@ class CoherenceAnalyzer:
             )
         elif similarity < 0.7:
             return (
-                f"El contenido bajo '{heading}' está parcialmente relacionado. "
+                f"El contenido bajo '{heading}' está parcialmente relacionado "
+                f"(similitud: {similarity:.2f}). "
                 f"Recomendación: Mejorar la alineación entre título y contenido, "
                 f"asegurando que los primeros párrafos traten directamente el tema "
                 f"indicado en el encabezado."
+            )
+        elif similarity < self.coherence_threshold:
+            return (
+                f"El contenido bajo '{heading}' tiene relación moderada "
+                f"(similitud: {similarity:.2f}, umbral: {self.coherence_threshold:.2f}). "
+                f"Recomendación: Reforzar la relación entre el encabezado y el "
+                f"contenido para mejorar la coherencia semántica."
             )
         return None
 
@@ -281,6 +289,11 @@ class CoherenceAnalyzer:
             # Truncar contenido
             content_truncated = self._truncate_content(content)
 
+            logger.debug(
+                f"Analizando sección: heading='{heading[:60]}', "
+                f"content_length={len(content_truncated)}, words={word_count}"
+            )
+
             # Calcular similitud con BETO
             similarity = beto_manager.compute_similarity(
                 text1=heading,
@@ -297,8 +310,8 @@ class CoherenceAnalyzer:
             )
 
             logger.debug(
-                f"'{heading[:50]}...': similarity={similarity:.3f}, "
-                f"coherent={is_coherent}"
+                f"'{heading[:50]}': similarity={similarity:.3f}, "
+                f"threshold={self.coherence_threshold:.2f}, coherent={is_coherent}"
             )
 
             return SectionCoherence(
@@ -312,7 +325,10 @@ class CoherenceAnalyzer:
             )
 
         except Exception as e:
-            logger.error(f"Error al analizar '{heading}': {str(e)}")
+            logger.error(
+                f"ERROR BETO al analizar '{heading[:60]}': {type(e).__name__}: {str(e)}",
+                exc_info=True
+            )
             return SectionCoherence(
                 heading=heading,
                 heading_level=heading_level,
@@ -320,7 +336,7 @@ class CoherenceAnalyzer:
                 word_count=word_count,
                 similarity_score=0.0,
                 is_coherent=False,
-                recommendation=f"Error en análisis: {str(e)}"
+                recommendation=f"Error en análisis de coherencia: {str(e)}"
             )
 
     def analyze_coherence(self, text_corpus: Dict[str, Any]) -> Dict[str, Any]:
@@ -375,24 +391,48 @@ class CoherenceAnalyzer:
                 'recommendations': ["No se encontraron secciones."]
             }
 
-        logger.info(f"Analizando {len(sections)} secciones")
+        logger.info(
+            f"Analizando {len(sections)} secciones "
+            f"(threshold={self.coherence_threshold:.2f})"
+        )
 
         # Analizar cada sección
         section_results = []
-        for section in sections:
+        error_count = 0
+        for i, section in enumerate(sections):
+            heading = section.get('heading', '')
+            content = section.get('content', '')
+            logger.debug(
+                f"  Sección {i+1}/{len(sections)}: "
+                f"heading='{heading[:40]}', content_len={len(content)}"
+            )
             result = self.analyze_section(
-                heading=section['heading'],
-                content=section['content'],
+                heading=heading,
+                content=content,
                 heading_level=section.get('heading_level', 2)
             )
             section_results.append(result)
+
+            # Contar errores (similarity=0.0 con recommendation que empieza con "Error")
+            if result.similarity_score == 0.0 and result.recommendation and 'Error' in result.recommendation:
+                error_count += 1
+
+        if error_count > 0:
+            logger.warning(
+                f"BETO falló en {error_count}/{len(section_results)} secciones. "
+                f"Esto causa coherencia artificialmente baja."
+            )
 
         # Calcular estadísticas
         coherent_count = sum(1 for r in section_results if r.is_coherent)
         incoherent_count = len(section_results) - coherent_count
 
-        coherence_score = (coherent_count / len(section_results)) * 100
-        avg_similarity = np.mean([r.similarity_score for r in section_results])
+        # Score graduado: usa la similitud promedio normalizada al rango [0, 1]
+        # en vez de un conteo binario pasa/no-pasa.
+        # Similitud de 0.767 con umbral 0.80 debería dar ~76.7%, no 0%.
+        similarities = [r.similarity_score for r in section_results]
+        avg_similarity = np.mean(similarities)
+        coherence_score = round(float(avg_similarity) * 100, 2)
 
         # Recomendaciones
         recommendations = [

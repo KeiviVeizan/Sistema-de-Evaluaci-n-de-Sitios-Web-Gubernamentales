@@ -5,7 +5,14 @@ Define las tablas para usuarios, instituciones, sitios web, evaluaciones,
 resultados de criterios y análisis NLP.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
+
+# Bolivia timezone (UTC-4)
+_TZ_BOT = timezone(timedelta(hours=-4))
+
+def _now_bot():
+    """Retorna la hora actual en zona horaria de Bolivia (UTC-4) sin tzinfo."""
+    return datetime.now(_TZ_BOT).replace(tzinfo=None)
 from typing import List, Optional
 from sqlalchemy import (
     String, Float, Boolean, DateTime,
@@ -176,7 +183,7 @@ class Evaluation(Base):
     )
 
     # Timestamps
-    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=_now_bot, nullable=False)
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
 
     # Puntajes

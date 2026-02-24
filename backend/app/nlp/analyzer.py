@@ -236,7 +236,11 @@ class NLPAnalyzer:
         sections = text_corpus.get('sections', [])
 
         if not sections:
-            logger.warning("No hay secciones para analizar coherencia")
+            logger.warning(
+                "COHERENCIA: No hay secciones para analizar. "
+                "Verificar que el crawler extraiga secciones con contenido "
+                "o que el adaptador NLP las convierta correctamente."
+            )
             return {
                 'coherence_score': 0.0,
                 'sections_analyzed': 0,
@@ -244,17 +248,30 @@ class NLPAnalyzer:
                 'incoherent_sections': 0,
                 'average_similarity': 0.0,
                 'threshold_used': self.coherence_analyzer.coherence_threshold,
-                'recommendations': ['No se encontraron secciones para analizar coherencia.'],
+                'recommendations': ['No se encontraron secciones con contenido para analizar coherencia.'],
                 'details': []
             }
+
+        logger.info(
+            f"COHERENCIA: Analizando {len(sections)} secciones "
+            f"(threshold={self.coherence_analyzer.coherence_threshold:.2f})"
+        )
 
         # Analizar con CoherenceAnalyzer
         result = self.coherence_analyzer.analyze_coherence(text_corpus)
 
-        logger.debug(
-            f"Coherencia: {result['coherence_score']}/100 "
-            f"({result['coherent_sections']}/{result['sections_analyzed']} coherentes)"
+        logger.info(
+            f"COHERENCIA: Score={result['coherence_score']:.1f}/100 "
+            f"({result['coherent_sections']}/{result['sections_analyzed']} coherentes, "
+            f"avg_similarity={result['average_similarity']:.3f})"
         )
+
+        # Alertar si coherencia es 0 con secciones analizadas
+        if result['coherence_score'] == 0.0 and result['sections_analyzed'] > 0:
+            logger.warning(
+                f"COHERENCIA: Score es 0.0 con {result['sections_analyzed']} secciones. "
+                f"Posible fallo del modelo BETO o umbral demasiado estricto."
+            )
 
         return result
 

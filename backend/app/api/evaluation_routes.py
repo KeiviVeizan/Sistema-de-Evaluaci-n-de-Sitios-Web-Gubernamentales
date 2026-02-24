@@ -150,19 +150,25 @@ async def evaluate_url(
         nlp_data = result.get('nlp_analysis')
         nlp_analysis = None
         if nlp_data:
+            # Los detalles están bajo 'details' -> 'coherence'/'ambiguity'/'clarity'
+            nlp_details = nlp_data.get('details', {})
+            coherence_details = nlp_details.get('coherence', {})
+            ambiguity_details = nlp_details.get('ambiguity', {})
+            clarity_details = nlp_details.get('clarity', {})
+
             nlp_analysis = NLPAnalysisDetail(
                 global_score=nlp_data.get('global_score', 0),
                 coherence_score=nlp_data.get('coherence_score', 0),
                 ambiguity_score=nlp_data.get('ambiguity_score', 0),
                 clarity_score=nlp_data.get('clarity_score', 0),
                 wcag_compliance=nlp_data.get('wcag_compliance', {}),
-                total_sections_analyzed=nlp_data.get('coherence_details', {}).get('sections_analyzed', 0) if nlp_data.get('coherence_details') else 0,
-                total_texts_analyzed=nlp_data.get('ambiguity_details', {}).get('total_analyzed', 0) if nlp_data.get('ambiguity_details') else 0,
+                total_sections_analyzed=coherence_details.get('sections_analyzed', 0) if coherence_details else 0,
+                total_texts_analyzed=ambiguity_details.get('total_analyzed', 0) if ambiguity_details else 0,
                 recommendations=nlp_data.get('recommendations', []),
                 details={
-                    'coherence': nlp_data.get('coherence_details'),
-                    'ambiguity': nlp_data.get('ambiguity_details'),
-                    'clarity': nlp_data.get('clarity_details')
+                    'coherence': coherence_details,
+                    'ambiguity': ambiguity_details,
+                    'clarity': clarity_details
                 }
             )
 
@@ -520,6 +526,8 @@ async def save_evaluation(
     nlp_override = scores.get('semantica_nlp') if isinstance(scores, dict) else None
     if isinstance(nlp_override, dict) and nlp_override.get('percentage', 0) > 0:
         wcag_raw = nlp_override.get('wcag_compliance', {})
+        # Preservar detalles NLP si están disponibles
+        nlp_details = nlp_override.get('details', {})
         nlp_record = NLPAnalysis(
             evaluation_id=evaluation.id,
             nlp_global_score=float(nlp_override.get('percentage', 0)),
@@ -527,14 +535,14 @@ async def save_evaluation(
             ambiguity_score=float(nlp_override.get('ambiguity', 0)),
             clarity_score=float(nlp_override.get('clarity', 0)),
             wcag_compliance=wcag_raw if isinstance(wcag_raw, dict) else {},
-            coherence_details={},
-            ambiguity_details={},
-            clarity_details={},
-            recommendations=[],
+            coherence_details=nlp_details.get('coherence', {}) if isinstance(nlp_details, dict) else {},
+            ambiguity_details=nlp_details.get('ambiguity', {}) if isinstance(nlp_details, dict) else {},
+            clarity_details=nlp_details.get('clarity', {}) if isinstance(nlp_details, dict) else {},
+            recommendations=nlp_override.get('recommendations', []),
         )
         db.add(nlp_record)
         logger.info(
-            f"✓ NLPAnalysis creado desde scores_override: "
+            f"NLPAnalysis creado desde scores_override: "
             f"global={nlp_record.nlp_global_score}, "
             f"coherence={nlp_record.coherence_score}, "
             f"ambiguity={nlp_record.ambiguity_score}, "

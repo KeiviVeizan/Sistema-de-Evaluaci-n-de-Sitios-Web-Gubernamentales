@@ -17,6 +17,18 @@
   background: #f9fafb;
 }
 
+/* Modo embebido: cuando ResultsDashboard se usa dentro de otra página (ej: EvaluationDetail) */
+.results--embedded {
+  min-height: auto;
+  padding: 0;
+  background: transparent;
+  z-index: auto;
+}
+
+.results--embedded::before {
+  display: none;
+}
+
 /* ── Encabezado ──────────────────────────────────────── */
 .results__header {
   display: flex;

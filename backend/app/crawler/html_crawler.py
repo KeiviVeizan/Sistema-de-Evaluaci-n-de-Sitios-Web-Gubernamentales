@@ -1542,6 +1542,40 @@ class GobBoCrawler:
                             if chunk and len(paragraphs) < 3:
                                 paragraphs.append(' '.join(chunk))
 
+            # Estrategia 3: Buscar con find_next() (recorre el árbol completo)
+            if not found_content and not paragraphs:
+                next_elements = heading.find_all_next(['p', 'div', 'ul', 'ol', 'span'], limit=15)
+                for elem in next_elements:
+                    # Detenerse si encontramos otro heading
+                    if elem.find_parent(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+                        continue
+                    # Verificar que no sea un heading en sí
+                    prev_heading = elem.find_previous(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'])
+                    if prev_heading and prev_heading != heading:
+                        # Ya pasamos a otra sección
+                        break
+
+                    if elem.name == 'p':
+                        p_text = elem.get_text(strip=True)
+                        if len(p_text) > 15:
+                            paragraphs.append(p_text)
+                            found_content = True
+                    elif elem.name in ['ul', 'ol']:
+                        for li in elem.find_all('li', recursive=False):
+                            li_text = li.get_text(strip=True)
+                            if len(li_text) > 10:
+                                paragraphs.append(li_text)
+                                found_content = True
+                    elif elem.name in ['div', 'span']:
+                        elem_text = elem.get_text(strip=True)
+                        # Solo tomar divs con texto sustancial pero no enormes
+                        if 15 < len(elem_text) < 500 and not elem.find(['h1', 'h2', 'h3', 'h4', 'h5', 'h6']):
+                            paragraphs.append(elem_text)
+                            found_content = True
+
+                    if len(paragraphs) >= 5:
+                        break
+
             if paragraphs:
                 content = ' '.join(paragraphs)
                 sections.append({
