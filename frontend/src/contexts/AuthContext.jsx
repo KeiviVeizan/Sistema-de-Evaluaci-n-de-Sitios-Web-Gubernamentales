@@ -137,7 +137,13 @@ export function AuthProvider({ children }) {
   // Verificar si el usuario tiene un permiso específico
   const hasPermission = useCallback((permission) => {
     if (!user) return false;
-    const userPermissions = ROLE_PERMISSIONS[user.role] || [];
+
+    // Superadmin tiene todos los permisos
+    if (user.role === ROLES.SUPERADMIN) return true;
+
+    // Usar los permisos que vienen del backend (granulares)
+    // Si no hay permisos del backend, usar los hardcodeados como fallback
+    const userPermissions = user.permissions || ROLE_PERMISSIONS[user.role] || [];
     return userPermissions.includes(permission);
   }, [user]);
 

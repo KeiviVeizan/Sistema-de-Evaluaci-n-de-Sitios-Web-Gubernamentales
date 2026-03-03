@@ -53,6 +53,9 @@ async def get_profile(
     db: Session = Depends(get_db)
 ):
     """Obtener perfil del usuario actual."""
+    # Obtener permisos del usuario
+    user_permissions = [p.permission.value for p in current_user.permissions] if hasattr(current_user, 'permissions') else []
+
     profile = {
         "id": current_user.id,
         "username": current_user.username,
@@ -63,6 +66,7 @@ async def get_profile(
         "institution_id": current_user.institution_id,
         "is_active": current_user.is_active,
         "created_at": current_user.created_at,
+        "permissions": user_permissions,  # Agregar permisos
     }
 
     # Si tiene institución, incluir datos

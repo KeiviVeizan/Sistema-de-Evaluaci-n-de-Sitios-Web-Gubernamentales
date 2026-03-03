@@ -121,7 +121,7 @@ async def create_followup(
     current_user=Depends(allow_staff_followups),
     db: Session = Depends(get_db),
 ):
-    """Crea un seguimiento para un criterio no cumplido. Admin, secretaría o evaluador."""
+    """Crea un seguimiento para un criterio no cumplido. Admin o evaluador."""
     # Validar que existe la evaluación
     evaluation = db.query(Evaluation).filter(Evaluation.id == data.evaluation_id).first()
     if not evaluation:

@@ -10,7 +10,7 @@ import string
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.services.email_service import email_service
@@ -20,7 +20,10 @@ from app.models.database_models import (
     Institution,
     User,
     UserRole,
+    UserPermission,
     Website,
+    get_default_permissions,
+    get_available_permissions,
 )
 from app.auth.security import hash_password
 from app.auth.dependencies import (
@@ -38,6 +41,8 @@ from app.schemas.auth_schemas import (
     InstitutionResponse,
     InstitutionUpdate,
     InstitutionWithUser,
+    PermissionInfo,
+    RolePermissionsResponse,
     UserCreate,
     UserListResponse,
     UserResponse,
@@ -114,11 +119,35 @@ async def create_user(
         is_active=True,
     )
     db.add(db_user)
+    db.flush()  # Para obtener el ID del usuario antes del commit
+
+    # Gestionar permisos
+    # Si no se especificaron permisos, asignar todos los permisos del rol por defecto
+    permissions_to_assign = user_data.permissions if user_data.permissions else get_default_permissions(user_data.role)
+
+    # Validar que los permisos sean válidos para el rol
+    available_perms = get_available_permissions(user_data.role)
+    for perm in permissions_to_assign:
+        if perm not in available_perms:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"El permiso '{perm.value}' no está disponible para el rol '{user_data.role.value}'",
+            )
+
+    # Crear los permisos en la base de datos
+    for perm in permissions_to_assign:
+        db_permission = UserPermission(
+            user_id=db_user.id,
+            permission=perm,
+        )
+        db.add(db_permission)
+
     db.commit()
     db.refresh(db_user)
 
     logger.info(
-        f"Usuario creado: {db_user.username} ({db_user.role.value}) por {current_user.username}"
+        f"Usuario creado: {db_user.username} ({db_user.role.value}) "
+        f"con {len(permissions_to_assign)} permisos por {current_user.username}"
     )
 
     # Enviar email de bienvenida con credenciales
@@ -144,7 +173,7 @@ def list_users(
     current_user: User = Depends(allow_admin_secretary),
 ):
     """Lista paginada de todos los usuarios del sistema."""
-    query = db.query(User)
+    query = db.query(User).options(joinedload(User.permissions))
 
     if search:
         search_term = f"%{search}%"
@@ -286,6 +315,40 @@ def update_user(
     if new_password:
         db_user.hashed_password = hash_password(new_password)
 
+    # Manejar actualización de permisos
+    new_permissions = update_data.pop("permissions", None)
+    if new_permissions is not None:
+        logger.info(f"[DEBUG] new_permissions antes de validación: {new_permissions}")
+        logger.info(f"[DEBUG] new_permissions types: {[type(p) for p in new_permissions]}")
+
+        # Validar que los permisos sean válidos para el rol actual (o nuevo rol si se está cambiando)
+        target_role = update_data.get("role", db_user.role)
+        available_perms = get_available_permissions(target_role)
+
+        logger.info(f"[DEBUG] target_role: {target_role}")
+        logger.info(f"[DEBUG] available_perms: {available_perms}")
+        logger.info(f"[DEBUG] available_perms types: {[type(p) for p in available_perms]}")
+
+        for perm in new_permissions:
+            logger.info(f"[DEBUG] Validando permiso: {perm} (type: {type(perm)})")
+            if perm not in available_perms:
+                logger.error(f"[ERROR] Permiso '{perm.value}' no disponible para rol '{target_role.value}'")
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"El permiso '{perm.value}' no está disponible para el rol '{target_role.value}'",
+                )
+
+        # Eliminar permisos actuales
+        db.query(UserPermission).filter(UserPermission.user_id == user_id).delete()
+
+        # Crear nuevos permisos
+        for perm in new_permissions:
+            db_permission = UserPermission(
+                user_id=user_id,
+                permission=perm,
+            )
+            db.add(db_permission)
+
     for field, value in update_data.items():
         setattr(db_user, field, value)
 
@@ -294,6 +357,68 @@ def update_user(
 
     logger.info(f"Usuario actualizado: {db_user.username} (ID: {db_user.id}) por {current_user.username}")
     return UserResponse.from_user(db_user)
+
+
+@router.get(
+    "/roles/{role}/permissions",
+    response_model=RolePermissionsResponse,
+    summary="Obtener permisos disponibles para un rol",
+)
+def get_role_permissions(
+    role: UserRole,
+    current_user: User = Depends(allow_admin_secretary),
+):
+    """
+    Retorna la lista de permisos disponibles para un rol específico.
+    Útil para mostrar las opciones en el frontend al crear/editar usuarios.
+    """
+    available_perms = get_available_permissions(role)
+
+    # Mapeo de permisos a labels legibles
+    permission_labels = {
+        "evaluations_manage": {
+            "label": "Gestionar Evaluaciones",
+            "description": "Crear y realizar evaluaciones de sitios web"
+        },
+        "followups_manage": {
+            "label": "Gestionar Seguimientos",
+            "description": "Crear y validar seguimientos de criterios no cumplidos"
+        },
+        "users_manage": {
+            "label": "Gestionar Usuarios",
+            "description": "Crear, editar y eliminar usuarios del sistema"
+        },
+        "institutions_manage": {
+            "label": "Gestionar Instituciones",
+            "description": "Registrar y administrar instituciones gubernamentales"
+        },
+        "reports_view": {
+            "label": "Ver Reportes",
+            "description": "Acceso a reportes y estadísticas del sistema"
+        },
+        "followups_view": {
+            "label": "Ver Seguimientos",
+            "description": "Ver seguimientos de su institución"
+        },
+        "followups_respond": {
+            "label": "Responder Seguimientos",
+            "description": "Marcar seguimientos como corregidos"
+        },
+    }
+
+    permissions_info = [
+        PermissionInfo(
+            value=perm.value,
+            label=permission_labels.get(perm.value, {}).get("label", perm.value),
+            description=permission_labels.get(perm.value, {}).get("description", ""),
+        )
+        for perm in available_perms
+    ]
+
+    return RolePermissionsResponse(
+        role=role.value,
+        available_permissions=permissions_info,
+    )
 
 
 # ============================================================================

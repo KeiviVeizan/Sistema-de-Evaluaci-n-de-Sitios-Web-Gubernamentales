@@ -18,6 +18,64 @@ import {
 } from 'lucide-react';
 import styles from './ModernSidebar.module.css';
 
+// Mapeo de permisos del backend a opciones del menú
+const PERMISSION_MENU_ITEMS = [
+  {
+    path: '/admin/dashboard',
+    icon: LayoutDashboard,
+    label: 'Inicio',
+    permission: null, // Disponible para todos
+  },
+  {
+    path: '/admin/institutions',
+    icon: Building2,
+    label: 'Instituciones',
+    permission: 'institutions_manage',
+    roles: [ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR], // También por compatibilidad
+  },
+  {
+    path: '/admin/users',
+    icon: Users,
+    label: 'Usuarios',
+    permission: 'users_manage',
+  },
+  {
+    path: '/admin/evaluations',
+    icon: FileText,
+    label: 'Evaluaciones',
+    permission: 'evaluations_manage',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
+    path: '/admin/reports',
+    icon: BarChart3,
+    label: 'Reportes',
+    permission: 'reports_view',
+    roles: [ROLES.SUPERADMIN],
+  },
+  {
+    path: '/admin/evaluator/my-evaluations',
+    icon: ClipboardList,
+    label: 'Mis Evaluaciones',
+    permission: 'evaluations_manage',
+    roles: [ROLES.EVALUATOR],
+  },
+  {
+    path: '/admin/my-evaluations',
+    icon: FileText,
+    label: 'Mis Evaluaciones',
+    permission: 'followups_view',
+    roles: [ROLES.ENTITY_USER],
+  },
+  {
+    path: '/admin/my-followups',
+    icon: CheckCircle2,
+    label: 'Seguimientos',
+    permission: 'followups_respond',
+    roles: [ROLES.ENTITY_USER],
+  },
+];
+
 const MENU_ITEMS = {
   [ROLES.SUPERADMIN]: [
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Inicio' },
@@ -50,7 +108,7 @@ const MENU_ITEMS = {
  *  - onMobileClose()    — callback para cerrar desde dentro del sidebar
  */
 function ModernSidebar({ onCollapse, mobileOpen = false, onMobileClose }) {
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -71,7 +129,18 @@ function ModernSidebar({ onCollapse, mobileOpen = false, onMobileClose }) {
     if (isMobile && onMobileClose) onMobileClose();
   };
 
-  const currentMenuItems = MENU_ITEMS[user?.role] || [];
+  // Filtrar items del menú según permisos granulares
+  const currentMenuItems = PERMISSION_MENU_ITEMS.filter((item) => {
+    // Si el item no requiere permiso específico, mostrarlo (como Dashboard)
+    if (!item.permission) return true;
+
+    // Si el item requiere un rol específico, verificar el rol
+    if (item.roles && !item.roles.includes(user?.role)) return false;
+
+    // Verificar el permiso granular
+    return hasPermission(item.permission);
+  });
+
   const showLabels = !collapsed || isMobile;
 
   return (

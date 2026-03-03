@@ -124,17 +124,21 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
     username: '',
     email: '',
     password: '',
-    role: 'evaluator',
+    role: user ? user.role : 'evaluator', // Usar rol del usuario en edición, 'evaluator' por defecto en creación
     position: '',
     institution_id: '',
     is_active: true,
     new_password: '',
+    permissions: [],
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [institutions, setInstitutions] = useState([]);
   const [loadingInstitutions, setLoadingInstitutions] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [availablePermissions, setAvailablePermissions] = useState([]);
+  const [loadingPermissions, setLoadingPermissions] = useState(false);
+  const [userDataLoaded, setUserDataLoaded] = useState(false);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -142,6 +146,7 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
       setSaving(false);
       setError('');
       setShowPassword(false);
+      setUserDataLoaded(false);
       if (user) {
         setFormData({
           full_name: user.full_name || '',
@@ -153,7 +158,10 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
           institution_id: user.institution_id || '',
           is_active: user.is_active ?? true,
           new_password: '',
+          permissions: user.permissions || [],
         });
+        // Marcar que los datos del usuario ya fueron cargados
+        setUserDataLoaded(true);
       } else {
         setFormData({
           full_name: '',
@@ -165,7 +173,10 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
           institution_id: '',
           is_active: true,
           new_password: '',
+          permissions: [],
         });
+        // En modo creación, marcar inmediatamente como cargado
+        setUserDataLoaded(true);
       }
     }
   }, [isOpen, user]);
@@ -181,6 +192,43 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
     }
   }, [isOpen, institutions.length]);
 
+  // Cargar permisos disponibles según el rol
+  useEffect(() => {
+    // Solo cargar permisos si los datos del usuario ya están listos (o si es modo creación)
+    if (isOpen && userDataLoaded && formData.role && formData.role !== 'superadmin') {
+      console.log('[DEBUG] Cargando permisos para rol:', formData.role, 'isEditMode:', !!user);
+      setLoadingPermissions(true);
+      api.get(`/admin/roles/${formData.role}/permissions`)
+        .then((res) => {
+          const availablePerms = res.data.available_permissions || [];
+          console.log('[DEBUG] Permisos disponibles recibidos:', availablePerms.map(p => p.value));
+          setAvailablePermissions(availablePerms);
+          // Si es modo creación y no hay permisos seleccionados, seleccionar todos por defecto
+          // IMPORTANTE: Solo auto-seleccionar en modo creación (!user) y si aún no hay permisos
+          if (!user && formData.permissions.length === 0 && availablePerms.length > 0) {
+            console.log('[DEBUG] Auto-seleccionando todos los permisos (modo creación)');
+            setFormData(prev => ({
+              ...prev,
+              permissions: availablePerms.map(p => p.value)
+            }));
+          } else {
+            console.log('[DEBUG] NO auto-seleccionando. user:', !!user, 'formData.permissions.length:', formData.permissions.length);
+          }
+        })
+        .catch((err) => {
+          console.error('Error cargando permisos:', err);
+          setAvailablePermissions([]);
+        })
+        .finally(() => setLoadingPermissions(false));
+    } else if (userDataLoaded && formData.role === 'superadmin') {
+      setAvailablePermissions([]);
+      // Solo limpiar permisos si no es modo edición o si el usuario no tiene permisos
+      if (!user || (user && user.role === 'superadmin')) {
+        setFormData(prev => ({ ...prev, permissions: [] }));
+      }
+    }
+  }, [isOpen, formData.role, user, userDataLoaded]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData((prev) => {
@@ -191,7 +239,24 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
       if (name === 'role' && value !== 'entity_user') {
         updated.institution_id = '';
       }
+      // Limpiar permisos al cambiar de rol
+      if (name === 'role') {
+        updated.permissions = [];
+      }
       return updated;
+    });
+  };
+
+  const handlePermissionChange = (permissionName) => {
+    setFormData((prev) => {
+      const currentPermissions = prev.permissions || [];
+      const isSelected = currentPermissions.includes(permissionName);
+      return {
+        ...prev,
+        permissions: isSelected
+          ? currentPermissions.filter(p => p !== permissionName)
+          : [...currentPermissions, permissionName]
+      };
     });
   };
 
@@ -221,6 +286,10 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
         if (formData.new_password) {
           payload.new_password = formData.new_password;
         }
+        // Agregar permisos si el rol no es superadmin
+        if (formData.role !== 'superadmin') {
+          payload.permissions = formData.permissions;
+        }
         await onSave(payload);
       } else {
         // Crear: sin contraseña, se genera automáticamente en backend
@@ -232,6 +301,10 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
           position: formData.position || null,
           institution_id: formData.institution_id ? parseInt(formData.institution_id) : null,
         };
+        // Agregar permisos si el rol no es superadmin
+        if (formData.role !== 'superadmin' && formData.permissions.length > 0) {
+          payload.permissions = formData.permissions;
+        }
         await onSave(payload);
       }
     } catch (err) {
@@ -408,6 +481,44 @@ function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
                 </div>
               )}
             </div>
+
+            {/* Sección de permisos - solo para roles que no sean superadmin */}
+            {formData.role !== 'superadmin' && availablePermissions.length > 0 && (
+              <div className={styles.formSection}>
+                <h3 className={styles.formSectionTitle}>
+                  <Shield size={16} />
+                  Permisos Granulares
+                </h3>
+                <p className={styles.formSectionDescription}>
+                  Selecciona los permisos específicos que tendrá este usuario.
+                  {availablePermissions.length > 0 && ' Si no seleccionas ninguno, se asignarán todos los permisos del rol.'}
+                </p>
+
+                {loadingPermissions ? (
+                  <div className={styles.loadingInline}>
+                    <Loader size={16} className={styles.spinner} />
+                    <span>Cargando permisos...</span>
+                  </div>
+                ) : (
+                  <div className={styles.permissionsGrid}>
+                    {availablePermissions.map((perm) => (
+                      <label key={perm.value} className={styles.permissionCheckbox}>
+                        <input
+                          type="checkbox"
+                          checked={formData.permissions.includes(perm.value)}
+                          onChange={() => handlePermissionChange(perm.value)}
+                          disabled={saving}
+                        />
+                        <div className={styles.permissionLabel}>
+                          <span className={styles.permissionName}>{perm.label}</span>
+                          <span className={styles.permissionDescription}>{perm.description}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Sección de contraseña - solo en edición */}
             {isEditMode && (

@@ -7,7 +7,7 @@ from typing import Dict, List, Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
 
-from app.models.database_models import UserRole
+from app.models.database_models import UserRole, Permission
 
 
 # ============================================================================
@@ -34,6 +34,10 @@ class UserCreate(BaseModel):
     role: UserRole
     position: Optional[str] = Field(None, max_length=100)
     institution_id: Optional[int] = None
+    permissions: Optional[List[Permission]] = Field(
+        None,
+        description="Permisos específicos del usuario. Si no se especifican, se asignan todos los permisos del rol."
+    )
 
     @field_validator("username")
     @classmethod
@@ -54,6 +58,7 @@ class UserResponse(BaseModel):
     role: str
     institution_id: Optional[int] = None
     institution_name: Optional[str] = None
+    permissions: List[str] = Field(default_factory=list, description="Lista de permisos del usuario")
     created_at: datetime
 
     class Config:
@@ -61,6 +66,9 @@ class UserResponse(BaseModel):
 
     @classmethod
     def from_user(cls, user) -> "UserResponse":
+        # Obtener permisos del usuario
+        user_permissions = [p.permission.value for p in user.permissions] if hasattr(user, 'permissions') else []
+
         return cls(
             id=user.id,
             username=user.username,
@@ -71,6 +79,7 @@ class UserResponse(BaseModel):
             role=user.role.value,
             institution_id=user.institution_id,
             institution_name=user.institution.name if user.institution else None,
+            permissions=user_permissions,
             created_at=user.created_at,
         )
 
@@ -176,6 +185,10 @@ class UserUpdate(BaseModel):
     position: Optional[str] = Field(None, max_length=100)
     institution_id: Optional[int] = None
     new_password: Optional[str] = Field(None, min_length=8)
+    permissions: Optional[List[Permission]] = Field(
+        None,
+        description="Permisos específicos del usuario. Si se proporciona, reemplaza los permisos actuales."
+    )
 
     @field_validator("username")
     @classmethod
@@ -199,6 +212,19 @@ class AdminStatsResponse(BaseModel):
     total_institutions: int
     evaluations_by_status: Dict[str, int]
     avg_score: Optional[float] = None
+
+
+class PermissionInfo(BaseModel):
+    """Información de un permiso."""
+    value: str
+    label: str
+    description: str
+
+
+class RolePermissionsResponse(BaseModel):
+    """Permisos disponibles para un rol específico."""
+    role: str
+    available_permissions: List[PermissionInfo]
 
 
 # Resolver forward references

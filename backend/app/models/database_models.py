@@ -32,6 +32,22 @@ class UserRole(str, enum.Enum):
     ENTITY_USER = "entity_user"
 
 
+class Permission(str, enum.Enum):
+    """Permisos granulares disponibles en el sistema."""
+    # Permisos para Evaluador
+    EVALUATIONS_MANAGE = "evaluations_manage"  # Realizar evaluaciones
+    FOLLOWUPS_MANAGE = "followups_manage"      # Gestionar seguimientos
+
+    # Permisos para Secretaría
+    USERS_MANAGE = "users_manage"              # Gestionar usuarios
+    INSTITUTIONS_MANAGE = "institutions_manage" # Gestionar instituciones
+    REPORTS_VIEW = "reports_view"              # Ver reportes
+
+    # Permisos para Entidad
+    FOLLOWUPS_VIEW = "followups_view"          # Ver seguimientos de su institución
+    FOLLOWUPS_RESPOND = "followups_respond"    # Responder a seguimientos
+
+
 class CrawlStatus(str, enum.Enum):
     """Estado del proceso de crawling."""
     PENDING = "pending"
@@ -116,9 +132,40 @@ class User(Base):
     # Relaciones
     institution: Mapped[Optional["Institution"]] = relationship(back_populates="users")
     notifications: Mapped[List["Notification"]] = relationship(back_populates="user", cascade="all, delete-orphan")
+    permissions: Mapped[List["UserPermission"]] = relationship(back_populates="user", cascade="all, delete-orphan")
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username}, role={self.role})>"
+
+
+class UserPermission(Base):
+    """
+    Modelo para permisos granulares de usuarios.
+
+    Permite asignar permisos específicos a cada usuario dentro de su rol.
+    Por ejemplo, un evaluador puede tener solo permisos para evaluaciones
+    o solo para seguimientos, o ambos.
+    """
+
+    __tablename__ = "user_permissions"
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    permission: Mapped[Permission] = mapped_column(
+        SQLEnum(Permission, values_callable=lambda x: [e.value for e in x]),
+        nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relaciones
+    user: Mapped["User"] = relationship(back_populates="permissions")
+
+    def __repr__(self) -> str:
+        return f"<UserPermission(user_id={self.user_id}, permission={self.permission.value})>"
 
 
 class Website(Base):
@@ -491,3 +538,44 @@ class ExtractedContent(Base):
 
     def __repr__(self) -> str:
         return f"<ExtractedContent(id={self.id}, website_id={self.website_id})>"
+
+
+# ============================================================================
+# Configuración de Permisos por Rol
+# ============================================================================
+
+ROLE_PERMISSIONS = {
+    UserRole.SUPERADMIN: [
+        # Superadmin tiene acceso a todo por defecto, no necesita permisos granulares
+    ],
+    UserRole.SECRETARY: [
+        Permission.USERS_MANAGE,
+        Permission.INSTITUTIONS_MANAGE,
+        Permission.REPORTS_VIEW,
+        Permission.EVALUATIONS_MANAGE,
+        Permission.FOLLOWUPS_MANAGE,
+    ],
+    UserRole.EVALUATOR: [
+        Permission.EVALUATIONS_MANAGE,
+        Permission.FOLLOWUPS_MANAGE,
+    ],
+    UserRole.ENTITY_USER: [
+        Permission.FOLLOWUPS_VIEW,
+        Permission.FOLLOWUPS_RESPOND,
+    ],
+}
+
+
+def get_default_permissions(role: UserRole) -> list[Permission]:
+    """
+    Retorna los permisos por defecto para un rol.
+    Si no se especifican permisos al crear un usuario, se asignan todos los disponibles.
+    """
+    return ROLE_PERMISSIONS.get(role, [])
+
+
+def get_available_permissions(role: UserRole) -> list[Permission]:
+    """
+    Retorna los permisos disponibles para un rol específico.
+    """
+    return ROLE_PERMISSIONS.get(role, [])
