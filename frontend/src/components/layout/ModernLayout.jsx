@@ -58,7 +58,7 @@ function ModernLayout() {
             </div>
 
             <span className={styles.pageTitle}>
-              Panel Administrativo
+              Bienvenido de vuelta
             </span>
           </div>
 
@@ -75,10 +75,10 @@ function ModernLayout() {
                 aria-label="Menú de usuario"
               >
                 <div className={styles.userAvatar}>
-                  {user?.name?.charAt(0).toUpperCase() || 'U'}
+                  {user?.full_name?.charAt(0).toUpperCase() || user?.username?.charAt(0).toUpperCase() || 'U'}
                 </div>
                 <span className={styles.userMenuName}>
-                  {user?.name || 'Usuario'}
+                  {user?.full_name || user?.username || 'Usuario'}
                 </span>
                 <ChevronDown
                   size={16}
@@ -94,7 +94,7 @@ function ModernLayout() {
                   />
                   <div className={styles.dropdown}>
                     <div className={styles.dropdownHeader}>
-                      <div className={styles.dropdownName}>{user?.name}</div>
+                      <div className={styles.dropdownName}>{user?.full_name || user?.username}</div>
                       <div className={styles.dropdownEmail}>{user?.email}</div>
                       <div className={styles.roleBadge}>
                         <Shield size={11} />

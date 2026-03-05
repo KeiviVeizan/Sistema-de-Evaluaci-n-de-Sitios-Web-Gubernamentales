@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import {
   Building2,
   Search,
@@ -115,7 +115,9 @@ function CreateInstitutionModal({ isOpen, onClose, onSave }) {
     try {
       await onSave(formData);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Error al crear la institución');
+      console.error('Error al crear institución:', err);
+      const errorMessage = err.response?.data?.detail || err.message || 'Error al crear la institución';
+      setError(errorMessage);
       setSaving(false);
     }
   };
@@ -123,7 +125,7 @@ function CreateInstitutionModal({ isOpen, onClose, onSave }) {
   if (!isOpen) return null;
 
   return (
-    <div className={styles.modalOverlay} onClick={onClose}>
+    <div className={styles.modalOverlay} onClick={!saving ? onClose : undefined}>
       <div className={styles.modalLarge} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
           <h2>Nueva Institución</h2>
@@ -155,18 +157,18 @@ function CreateInstitutionModal({ isOpen, onClose, onSave }) {
                 />
               </div>
               <div className={styles.formGroup}>
-                <label htmlFor="domain">Dominio Web *</label>
+                <label htmlFor="domain">URL del Sitio Web *</label>
                 <input
                   type="text" id="domain" name="domain"
                   value={formData.domain} onChange={handleChange}
                   required minLength={5} maxLength={255}
                   className={styles.input} disabled={saving}
-                  placeholder="ejemplo.gob.bo"
+                  placeholder="Ej: https://www.ejemplo.gob.bo o ejemplo.gob.bo"
                 />
-                <span className={styles.inputHint}>Debe terminar en .gob.bo</span>
+                <span className={styles.inputHint}>Copie la URL completa del sitio web de la entidad</span>
               </div>
             </div>
-            <div className={styles.formSection}>
+            <div className={`${styles.formSection} ${styles.formSectionHighlight}`}>
               <h3 className={styles.formSectionTitle}>
                 <User size={16} />
                 Responsable / Encargado
@@ -194,13 +196,26 @@ function CreateInstitutionModal({ isOpen, onClose, onSave }) {
               </div>
               <div className={styles.formGroup}>
                 <label htmlFor="contact_position">Cargo</label>
-                <input
-                  type="text" id="contact_position" name="contact_position"
-                  value={formData.contact_position || ''} onChange={handleChange}
-                  maxLength={100}
-                  className={styles.input} disabled={saving}
-                  placeholder="Ej: Director de Tecnología"
-                />
+                <select
+                  id="contact_position"
+                  name="contact_position"
+                  value={formData.contact_position || ''}
+                  onChange={handleChange}
+                  className={styles.input}
+                  disabled={saving}
+                >
+                  <option value="">Seleccione un cargo (opcional)...</option>
+                  <option value="Director/a General">Director/a General</option>
+                  <option value="Director/a de Tecnologías de Información">Director/a de Tecnologías de Información</option>
+                  <option value="Jefe/a de Desarrollo">Jefe/a de Desarrollo</option>
+                  <option value="Jefe/a de Sistemas">Jefe/a de Sistemas</option>
+                  <option value="Responsable de TI">Responsable de TI</option>
+                  <option value="Coordinador/a de Tecnología">Coordinador/a de Tecnología</option>
+                  <option value="Encargado/a de Comunicación Digital">Encargado/a de Comunicación Digital</option>
+                  <option value="Webmaster">Webmaster</option>
+                  <option value="Secretario/a General">Secretario/a General</option>
+                  <option value="Otro">Otro</option>
+                </select>
               </div>
             </div>
           </div>
@@ -318,6 +333,8 @@ const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 // ── Componente Principal ─────────────────────────────────────────────────────
 export default function Institutions() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [institutions, setInstitutions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -348,6 +365,14 @@ export default function Institutions() {
     fetchInstitutions();
   }, [fetchInstitutions]);
 
+  // Abrir modal automáticamente si viene de /admin/institutions/new
+  useEffect(() => {
+    if (location.pathname === '/admin/institutions/new') {
+      setIsCreateModalOpen(true);
+      navigate('/admin/institutions', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   const handleLetterClick = (letter) => {
     setActiveLetter((prev) => (prev === letter ? '' : letter));
     setSearchQuery('');
@@ -359,10 +384,15 @@ export default function Institutions() {
   };
 
   const handleCreateInstitution = async (formData) => {
-    const result = await institutionService.create(formData);
-    setIsCreateModalOpen(false);
-    await fetchInstitutions();
-    setCredentialsData(result);
+    try {
+      const result = await institutionService.create(formData);
+      setIsCreateModalOpen(false);
+      await fetchInstitutions();
+      setCredentialsData(result);
+    } catch (error) {
+      // Re-lanzar el error para que sea capturado por el modal
+      throw error;
+    }
   };
 
   // Filtro local (inmediato, sin llamadas extra al servidor)

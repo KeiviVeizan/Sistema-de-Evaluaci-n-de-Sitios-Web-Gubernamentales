@@ -12,7 +12,8 @@ import { Login, TwoFactorAuth } from '../pages/auth';
 import ForgotPassword from '../pages/auth/ForgotPassword';
 
 // Páginas del panel administrativo
-import { Dashboard, AdminDashboard, SecretaryDashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail } from '../pages/admin';
+import { Dashboard, AdminDashboard, SecretaryDashboard, Institutions, InstitutionDetail, Users, NewEvaluation, EvaluationDetail, Reports } from '../pages/admin';
+import AdminFollowups from '../pages/admin/AdminFollowups';
 
 // Página pública (evaluador público)
 import PublicEvaluator from '../pages/public/PublicEvaluator';
@@ -25,6 +26,7 @@ import InstitutionDashboard from '../pages/institution/InstitutionDashboard';
 // Páginas del evaluador
 import MyEvaluations from '../pages/evaluator/MyEvaluations';
 import EvaluatorDashboard from '../pages/evaluator/EvaluatorDashboard';
+import EvaluatorFollowups from '../pages/evaluator/EvaluatorFollowups';
 
 // Página de perfil
 import Profile from '../pages/profile/Profile';
@@ -187,15 +189,15 @@ export default function AppRouter() {
             }
           />
 
-          {/* Reportes - Solo Superadmin y Evaluador */}
+          {/* Reportes - Solo Superadmin */}
           <Route
             path="reports"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR]}
+                allowedRoles={[ROLES.SUPERADMIN]}
                 showAccessDenied
               >
-                <PlaceholderPage title="Reportes" />
+                <Reports />
               </RoleBasedRoute>
             }
           />
@@ -206,6 +208,17 @@ export default function AppRouter() {
             element={
               <RoleBasedRoute
                 allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY, ROLES.EVALUATOR]}
+                showAccessDenied
+              >
+                <Institutions />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="institutions/new"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
                 showAccessDenied
               >
                 <Institutions />
@@ -224,9 +237,20 @@ export default function AppRouter() {
             }
           />
 
-          {/* Usuarios - Solo Superadmin */}
+          {/* Usuarios - Solo Superadmin y Secretary */}
           <Route
             path="users"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
+                showAccessDenied
+              >
+                <Users />
+              </RoleBasedRoute>
+            }
+          />
+          <Route
+            path="users/new"
             element={
               <RoleBasedRoute
                 allowedRoles={[ROLES.SUPERADMIN, ROLES.SECRETARY]}
@@ -270,6 +294,45 @@ export default function AppRouter() {
                 showAccessDenied
               >
                 <InstitutionEvaluations />
+              </RoleBasedRoute>
+            }
+          />
+
+          {/* Seguimientos - Todos los seguimientos (Solo Superadmin) */}
+          <Route
+            path="followups"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SUPERADMIN]}
+                showAccessDenied
+              >
+                <AdminFollowups />
+              </RoleBasedRoute>
+            }
+          />
+
+          {/* Seguimientos del secretary */}
+          <Route
+            path="secretary/followups"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.SECRETARY]}
+                showAccessDenied
+              >
+                <PlaceholderPage title="Mis Seguimientos" />
+              </RoleBasedRoute>
+            }
+          />
+
+          {/* Seguimientos del evaluador */}
+          <Route
+            path="evaluator/followups"
+            element={
+              <RoleBasedRoute
+                allowedRoles={[ROLES.EVALUATOR]}
+                showAccessDenied
+              >
+                <EvaluatorFollowups />
               </RoleBasedRoute>
             }
           />

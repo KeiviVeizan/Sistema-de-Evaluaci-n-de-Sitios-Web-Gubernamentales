@@ -65,15 +65,18 @@ const institutionService = {
     return response.data;
   },
 
-  /**
-   * Eliminar una institución
-   * @param {number} id - ID de la institución
-   * @returns {Promise}
-   */
-  async delete(id) {
-    const response = await api.delete(`/admin/institutions/${id}`);
-    return response.data;
-  },
+  // ============================================================================
+  // FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+  // ============================================================================
+  // /**
+  //  * Eliminar una institución
+  //  * @param {number} id - ID de la institución
+  //  * @returns {Promise}
+  //  */
+  // async delete(id) {
+  //   const response = await api.delete(`/admin/institutions/${id}`);
+  //   return response.data;
+  // },
 };
 
 export default institutionService;

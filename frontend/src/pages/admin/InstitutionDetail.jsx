@@ -21,10 +21,10 @@ import {
   BarChart3,
   Edit2,
   X,
-  Trash2,
+  // Trash2, // Comentado - usado solo en funcionalidad de eliminación deshabilitada
   Check,
   Save,
-  ShieldAlert,
+  // ShieldAlert, // Comentado - usado solo en funcionalidad de eliminación deshabilitada
 } from 'lucide-react';
 import institutionService from '../../services/institutionService';
 import styles from './InstitutionDetail.module.css';
@@ -201,55 +201,58 @@ function EvaluationsList({ evaluations }) {
   );
 }
 
+// ============================================================================
+// FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+// ============================================================================
 // ── Modal Confirmar Eliminar ──────────────────────────────────────────────────
-function ConfirmDeleteModal({ isOpen, onClose, onConfirm, institutionName, deleting }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className={styles.modalOverlay} onClick={!deleting ? onClose : undefined}>
-      <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.confirmModalIcon}>
-          <ShieldAlert size={32} />
-        </div>
-        <div className={styles.confirmModalContent}>
-          <h2 className={styles.confirmModalTitle}>Eliminar Institución</h2>
-          <p className={styles.confirmModalMessage}>
-            ¿Está seguro de eliminar la institución{' '}
-            <strong>"{institutionName}"</strong>?
-          </p>
-          <div className={styles.confirmModalWarning}>
-            <p>Esta acción es <strong>irreversible</strong> y eliminará:</p>
-            <ul>
-              <li>Todos los datos de la institución</li>
-              <li>Usuarios asociados</li>
-              <li>Evaluaciones realizadas</li>
-            </ul>
-          </div>
-        </div>
-        <div className={styles.confirmModalFooter}>
-          <button
-            className={styles.btnSecondary}
-            onClick={onClose}
-            disabled={deleting}
-          >
-            Cancelar
-          </button>
-          <button
-            className={styles.btnDanger}
-            onClick={onConfirm}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <><Loader size={16} className={styles.spinner} /> Eliminando...</>
-            ) : (
-              <><Trash2 size={16} /> Eliminar</>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// function ConfirmDeleteModal({ isOpen, onClose, onConfirm, institutionName, deleting }) {
+//   if (!isOpen) return null;
+//
+//   return (
+//     <div className={styles.modalOverlay} onClick={!deleting ? onClose : undefined}>
+//       <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+//         <div className={styles.confirmModalIcon}>
+//           <ShieldAlert size={32} />
+//         </div>
+//         <div className={styles.confirmModalContent}>
+//           <h2 className={styles.confirmModalTitle}>Eliminar Institución</h2>
+//           <p className={styles.confirmModalMessage}>
+//             ¿Está seguro de eliminar la institución{' '}
+//             <strong>"{institutionName}"</strong>?
+//           </p>
+//           <div className={styles.confirmModalWarning}>
+//             <p>Esta acción es <strong>irreversible</strong> y eliminará:</p>
+//             <ul>
+//               <li>Todos los datos de la institución</li>
+//               <li>Usuarios asociados</li>
+//               <li>Evaluaciones realizadas</li>
+//             </ul>
+//           </div>
+//         </div>
+//         <div className={styles.confirmModalFooter}>
+//           <button
+//             className={styles.btnSecondary}
+//             onClick={onClose}
+//             disabled={deleting}
+//           >
+//             Cancelar
+//           </button>
+//           <button
+//             className={styles.btnDanger}
+//             onClick={onConfirm}
+//             disabled={deleting}
+//           >
+//             {deleting ? (
+//               <><Loader size={16} className={styles.spinner} /> Eliminando...</>
+//             ) : (
+//               <><Trash2 size={16} /> Eliminar</>
+//             )}
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 // Componente Modal de Edición
 function EditModal({ isOpen, onClose, institution, responsible, onSave }) {
@@ -475,28 +478,31 @@ export default function InstitutionDetail() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [deleting, setDeleting] = useState(false);
-  const [ashEffect, setAshEffect] = useState(false);
+  // ============================================================================
+  // FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+  // ============================================================================
+  // const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  // const [deleting, setDeleting] = useState(false);
+  // const [ashEffect, setAshEffect] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const handleDeleteFromPage = async () => {
-    setDeleting(true);
-    try {
-      await institutionService.delete(id);
-      setIsDeleteModalOpen(false);
-      // Activar animación de cenizas en toda la página
-      setAshEffect(true);
-      // Navegar después de que termine la animación
-      setTimeout(() => {
-        navigate('/admin/institutions');
-      }, 1400);
-    } catch (err) {
-      setIsDeleteModalOpen(false);
-      setDeleting(false);
-      setToast({ message: 'Error al eliminar: ' + (err.response?.data?.detail || err.message), type: 'error' });
-    }
-  };
+  // const handleDeleteFromPage = async () => {
+  //   setDeleting(true);
+  //   try {
+  //     await institutionService.delete(id);
+  //     setIsDeleteModalOpen(false);
+  //     // Activar animación de cenizas en toda la página
+  //     setAshEffect(true);
+  //     // Navegar después de que termine la animación
+  //     setTimeout(() => {
+  //       navigate('/admin/institutions');
+  //     }, 1400);
+  //   } catch (err) {
+  //     setIsDeleteModalOpen(false);
+  //     setDeleting(false);
+  //     setToast({ message: 'Error al eliminar: ' + (err.response?.data?.detail || err.message), type: 'error' });
+  //   }
+  // };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -585,7 +591,7 @@ export default function InstitutionDetail() {
   const { institution, responsible, evaluations } = data;
 
   return (
-    <div className={`${styles.container} ${ashEffect ? styles.pageAsh : ''}`}>
+    <div className={styles.container}>
       {/* Navegación */}
       <div className={styles.breadcrumb}>
         <button onClick={() => navigate('/admin/institutions')} className={styles.backBtn}>
@@ -628,7 +634,10 @@ export default function InstitutionDetail() {
             <Edit2 size={18} />
             Editar
           </button>
-          <button
+          {/* ============================================================================
+          FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+          ============================================================================ */}
+          {/* <button
             onClick={() => setIsDeleteModalOpen(true)}
             className={styles.btnDanger}
             disabled={deleting}
@@ -644,7 +653,7 @@ export default function InstitutionDetail() {
                 Eliminar
               </>
             )}
-          </button>
+          </button> */}
           <button className={styles.btnPrimary} onClick={() => navigate(`/admin/evaluations/new?institution=${id}`)}>
             <Play size={18} />
             Nueva Evaluación
@@ -727,14 +736,17 @@ export default function InstitutionDetail() {
         />
       )}
 
+      {/* ============================================================================
+      FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+      ============================================================================ */}
       {/* Modal Confirmar Eliminar */}
-      <ConfirmDeleteModal
+      {/* <ConfirmDeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => !deleting && setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteFromPage}
         institutionName={institution?.name}
         deleting={deleting}
-      />
+      /> */}
 
       {/* Toast de notificación */}
       {toast && (

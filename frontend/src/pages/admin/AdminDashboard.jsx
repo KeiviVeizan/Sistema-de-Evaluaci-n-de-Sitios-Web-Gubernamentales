@@ -193,7 +193,7 @@ export default function AdminDashboard() {
       {/* Encabezado */}
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>Panel Administrativo</h1>
+          <h1 className={styles.title}>Bienvenido de vuelta</h1>
           <p className={styles.subtitle}>Monitoreo de evaluaciones y actividad del sistema</p>
         </div>
       </div>

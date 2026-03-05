@@ -109,8 +109,21 @@ class InstitutionCreate(BaseModel):
     @classmethod
     def validate_domain(cls, v: str) -> str:
         v = v.lower().strip()
+
+        # Remover protocolo (http:// o https://)
+        v = v.replace("https://", "").replace("http://", "")
+
+        # Remover www.
+        if v.startswith("www."):
+            v = v[4:]
+
+        # Remover trailing slashes y paths
+        v = v.split("/")[0]
+
+        # Validar que termine en .gob.bo
         if not v.endswith(".gob.bo"):
             raise ValueError("El dominio debe terminar en .gob.bo")
+
         return v
 
     @field_validator("contact_email")
@@ -163,8 +176,21 @@ class InstitutionUpdate(BaseModel):
     def validate_domain(cls, v: Optional[str]) -> Optional[str]:
         if v is not None:
             v = v.lower().strip()
+
+            # Remover protocolo (http:// o https://)
+            v = v.replace("https://", "").replace("http://", "")
+
+            # Remover www.
+            if v.startswith("www."):
+                v = v[4:]
+
+            # Remover trailing slashes y paths
+            v = v.split("/")[0]
+
+            # Validar que termine en .gob.bo
             if not v.endswith(".gob.bo"):
                 raise ValueError("El dominio debe terminar en .gob.bo")
+
         return v
 
 

@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   User,
   Mail,
   Shield,
-  ShieldAlert,
+  // ShieldAlert, // Comentado - usado solo en funcionalidad de eliminación deshabilitada
   Eye,
   EyeOff,
   Search,
   Plus,
   Edit2,
-  Trash2,
+  // Trash2, // Comentado - usado solo en funcionalidad de eliminación deshabilitada
   X,
   Loader,
   AlertCircle,
@@ -66,55 +67,58 @@ function getRoleLabel(role) {
   return roleLabels[role] || role;
 }
 
+// ============================================================================
+// FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+// ============================================================================
 // ── Modal Confirmar Eliminar ──────────────────────────────────────────────────
-function ConfirmDeleteModal({ isOpen, onClose, onConfirm, userName, deleting }) {
-  if (!isOpen) return null;
-
-  return (
-    <div className={styles.modalOverlay} onClick={!deleting ? onClose : undefined}>
-      <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.confirmModalIcon}>
-          <ShieldAlert size={32} />
-        </div>
-        <div className={styles.confirmModalContent}>
-          <h2 className={styles.confirmModalTitle}>Eliminar Usuario</h2>
-          <p className={styles.confirmModalMessage}>
-            ¿Está seguro de eliminar al usuario{' '}
-            <strong>"{userName}"</strong>?
-          </p>
-          <div className={styles.confirmModalWarning}>
-            <p>Esta acción es <strong>irreversible</strong> y eliminará:</p>
-            <ul>
-              <li>Todos los datos del usuario</li>
-              <li>Sus accesos al sistema</li>
-              <li>Sus evaluaciones asociadas</li>
-            </ul>
-          </div>
-        </div>
-        <div className={styles.confirmModalFooter}>
-          <button
-            className={styles.btnSecondary}
-            onClick={onClose}
-            disabled={deleting}
-          >
-            Cancelar
-          </button>
-          <button
-            className={styles.btnDanger}
-            onClick={onConfirm}
-            disabled={deleting}
-          >
-            {deleting ? (
-              <><Loader size={16} className={styles.spinner} /> Eliminando...</>
-            ) : (
-              <><Trash2 size={16} /> Eliminar</>
-            )}
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+// function ConfirmDeleteModal({ isOpen, onClose, onConfirm, userName, deleting }) {
+//   if (!isOpen) return null;
+//
+//   return (
+//     <div className={styles.modalOverlay} onClick={!deleting ? onClose : undefined}>
+//       <div className={styles.confirmModal} onClick={(e) => e.stopPropagation()}>
+//         <div className={styles.confirmModalIcon}>
+//           <ShieldAlert size={32} />
+//         </div>
+//         <div className={styles.confirmModalContent}>
+//           <h2 className={styles.confirmModalTitle}>Eliminar Usuario</h2>
+//           <p className={styles.confirmModalMessage}>
+//             ¿Está seguro de eliminar al usuario{' '}
+//             <strong>"{userName}"</strong>?
+//           </p>
+//           <div className={styles.confirmModalWarning}>
+//             <p>Esta acción es <strong>irreversible</strong> y eliminará:</p>
+//             <ul>
+//               <li>Todos los datos del usuario</li>
+//               <li>Sus accesos al sistema</li>
+//               <li>Sus evaluaciones asociadas</li>
+//             </ul>
+//           </div>
+//         </div>
+//         <div className={styles.confirmModalFooter}>
+//           <button
+//             className={styles.btnSecondary}
+//             onClick={onClose}
+//             disabled={deleting}
+//           >
+//             Cancelar
+//           </button>
+//           <button
+//             className={styles.btnDanger}
+//             onClick={onConfirm}
+//             disabled={deleting}
+//           >
+//             {deleting ? (
+//               <><Loader size={16} className={styles.spinner} /> Eliminando...</>
+//             ) : (
+//               <><Trash2 size={16} /> Eliminar</>
+//             )}
+//           </button>
+//         </div>
+//       </div>
+//     </div>
+//   );
+// }
 
 // Modal de Creación/Edición de Usuario
 function UserModal({ isOpen, onClose, user, onSave, currentUser }) {
@@ -605,6 +609,8 @@ const ROLE_FILTER_OPTIONS_SECRETARY = [
 // Componente principal
 export default function Users() {
   const { user: currentUser } = useAuth();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -614,8 +620,11 @@ export default function Users() {
   const [editingUser, setEditingUser] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null); // { id, username }
-  const [deleting, setDeleting] = useState(false);
+  // ============================================================================
+  // FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+  // ============================================================================
+  // const [deleteTarget, setDeleteTarget] = useState(null); // { id, username }
+  // const [deleting, setDeleting] = useState(false);
   const tableRef = useRef(null);
 
   const fetchUsers = useCallback(async () => {
@@ -632,6 +641,14 @@ export default function Users() {
     }
   }, [searchQuery]);
 
+  // Abrir modal automáticamente si viene de /admin/users/new
+  useEffect(() => {
+    if (location.pathname === '/admin/users/new') {
+      setIsCreateModalOpen(true);
+      navigate('/admin/users', { replace: true });
+    }
+  }, [location.pathname, navigate]);
+
   // Secretary solo ve evaluadores y entidades
   const visibleUsers = currentUser?.role === 'secretary'
     ? users.filter((u) => u.role === 'evaluator' || u.role === 'entity_user')
@@ -646,18 +663,21 @@ export default function Users() {
     ? ROLE_FILTER_OPTIONS_SECRETARY
     : ROLE_FILTER_OPTIONS_ALL;
 
-  /**
-   * Determina si el usuario actual puede eliminar al usuario objetivo.
-   * - superadmin: puede eliminar a cualquiera (excepto a sí mismo)
-   * - secretary: solo puede eliminar entity_user
-   */
-  const canDeleteUser = (targetUser) => {
-    if (!currentUser) return false;
-    if (targetUser.id === currentUser.id) return false;
-    if (currentUser.role === 'superadmin') return true;
-    if (currentUser.role === 'secretary' && targetUser.role === 'entity_user') return true;
-    return false;
-  };
+  // ============================================================================
+  // FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+  // ============================================================================
+  // /**
+  //  * Determina si el usuario actual puede eliminar al usuario objetivo.
+  //  * - superadmin: puede eliminar a cualquiera (excepto a sí mismo)
+  //  * - secretary: solo puede eliminar entity_user
+  //  */
+  // const canDeleteUser = (targetUser) => {
+  //   if (!currentUser) return false;
+  //   if (targetUser.id === currentUser.id) return false;
+  //   if (currentUser.role === 'superadmin') return true;
+  //   if (currentUser.role === 'secretary' && targetUser.role === 'entity_user') return true;
+  //   return false;
+  // };
 
   /**
    * Determina si el usuario actual puede editar al usuario objetivo.
@@ -671,27 +691,30 @@ export default function Users() {
     return false;
   };
 
-  const handleDeleteUser = (userId, username) => {
-    setDeleteTarget({ id: userId, username });
-  };
-
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      await userService.remove(deleteTarget.id);
-      setToast({ message: `Usuario "${deleteTarget.username}" eliminado exitosamente`, type: 'success' });
-      setDeleteTarget(null);
-      fetchUsers();
-    } catch (err) {
-      setToast({
-        message: err.response?.data?.detail || 'Error al eliminar usuario',
-        type: 'error',
-      });
-    } finally {
-      setDeleting(false);
-    }
-  };
+  // ============================================================================
+  // FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+  // ============================================================================
+  // const handleDeleteUser = (userId, username) => {
+  //   setDeleteTarget({ id: userId, username });
+  // };
+  //
+  // const handleConfirmDelete = async () => {
+  //   if (!deleteTarget) return;
+  //   setDeleting(true);
+  //   try {
+  //     await userService.remove(deleteTarget.id);
+  //     setToast({ message: `Usuario "${deleteTarget.username}" eliminado exitosamente`, type: 'success' });
+  //     setDeleteTarget(null);
+  //     fetchUsers();
+  //   } catch (err) {
+  //     setToast({
+  //       message: err.response?.data?.detail || 'Error al eliminar usuario',
+  //       type: 'error',
+  //     });
+  //   } finally {
+  //     setDeleting(false);
+  //   }
+  // };
 
   useEffect(() => {
     fetchUsers();
@@ -927,7 +950,10 @@ export default function Users() {
                               <Edit2 size={16} />
                             </button>
                           )}
-                          {canDeleteUser(user) && (
+                          {/* ============================================================================
+                          FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+                          ============================================================================ */}
+                          {/* {canDeleteUser(user) && (
                             <button
                               onClick={() => handleDeleteUser(user.id, user.username)}
                               className={`${styles.actionBtn} ${styles.actionBtnDanger}`}
@@ -935,7 +961,7 @@ export default function Users() {
                             >
                               <Trash2 size={16} />
                             </button>
-                          )}
+                          )} */}
                         </div>
                       </td>
                     </tr>
@@ -971,14 +997,17 @@ export default function Users() {
         />
       )}
 
+      {/* ============================================================================
+      FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+      ============================================================================ */}
       {/* Modal confirmar eliminación */}
-      <ConfirmDeleteModal
+      {/* <ConfirmDeleteModal
         isOpen={!!deleteTarget}
         onClose={() => !deleting && setDeleteTarget(null)}
         onConfirm={handleConfirmDelete}
         userName={deleteTarget?.username || ''}
         deleting={deleting}
-      />
+      /> */}
     </div>
   );
 }

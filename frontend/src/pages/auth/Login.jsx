@@ -43,9 +43,9 @@ export default function Login() {
             alt="AGETIC"
             className={styles.logo}
           />
-          <h1 className={styles.title}>Panel Administrativo</h1>
+          <h1 className={styles.title}>Sistema de Evaluación GOB.BO</h1>
           <p className={styles.subtitle}>
-            Sistema de Evaluación de Sitios Web Gubernamentales
+            Evaluación de Sitios Web Gubernamentales
           </p>
         </div>
 

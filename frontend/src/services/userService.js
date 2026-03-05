@@ -38,15 +38,18 @@ const userService = {
     return response.data;
   },
 
-  /**
-   * Eliminar un usuario
-   * @param {number} id - ID del usuario a eliminar
-   * @returns {Promise} Mensaje de confirmación
-   */
-  async remove(id) {
-    const response = await api.delete(`/admin/users/${id}`);
-    return response.data;
-  },
+  // ============================================================================
+  // FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+  // ============================================================================
+  // /**
+  //  * Eliminar un usuario
+  //  * @param {number} id - ID del usuario a eliminar
+  //  * @returns {Promise} Mensaje de confirmación
+  //  */
+  // async remove(id) {
+  //   const response = await api.delete(`/admin/users/${id}`);
+  //   return response.data;
+  // },
 };
 
 export default userService;

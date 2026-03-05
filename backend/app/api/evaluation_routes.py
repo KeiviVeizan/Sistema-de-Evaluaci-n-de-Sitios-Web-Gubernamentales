@@ -930,40 +930,39 @@ async def get_evaluation_by_id(
 
 
 # ============================================================================
-# Eliminar evaluación
+# FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
 # ============================================================================
-
-@router.delete(
-    "/{evaluation_id}",
-    summary="Eliminar evaluación",
-    description="Elimina una evaluación y todos sus resultados asociados."
-)
-async def delete_evaluation(
-    evaluation_id: int,
-    db: Session = Depends(get_db)
-):
-    """
-    Elimina una evaluación por su ID.
-
-    También elimina: criterios asociados y análisis NLP.
-    """
-    evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
-
-    if not evaluation:
-        raise HTTPException(status_code=404, detail="Evaluación no encontrada")
-
-    try:
-        # Los registros relacionados se eliminan por CASCADE
-        db.delete(evaluation)
-        db.commit()
-
-        logger.info(f"Evaluación {evaluation_id} eliminada exitosamente")
-        return {"message": f"Evaluación {evaluation_id} eliminada exitosamente"}
-
-    except Exception as e:
-        db.rollback()
-        logger.error(f"Error eliminando evaluación {evaluation_id}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+# @router.delete(
+#     "/{evaluation_id}",
+#     summary="Eliminar evaluación",
+#     description="Elimina una evaluación y todos sus resultados asociados."
+# )
+# async def delete_evaluation(
+#     evaluation_id: int,
+#     db: Session = Depends(get_db)
+# ):
+#     """
+#     Elimina una evaluación por su ID.
+#
+#     También elimina: criterios asociados y análisis NLP.
+#     """
+#     evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
+#
+#     if not evaluation:
+#         raise HTTPException(status_code=404, detail="Evaluación no encontrada")
+#
+#     try:
+#         # Los registros relacionados se eliminan por CASCADE
+#         db.delete(evaluation)
+#         db.commit()
+#
+#         logger.info(f"Evaluación {evaluation_id} eliminada exitosamente")
+#         return {"message": f"Evaluación {evaluation_id} eliminada exitosamente"}
+#
+#     except Exception as e:
+#         db.rollback()
+#         logger.error(f"Error eliminando evaluación {evaluation_id}: {e}")
+#         raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================

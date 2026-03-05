@@ -198,37 +198,40 @@ def update_website(
     return db_website
 
 
-@router.delete(
-    "/websites/{website_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    tags=["Websites"]
-)
-def delete_website(
-    website_id: int,
-    db: Session = Depends(get_db)
-) -> None:
-    """
-    Elimina un sitio web y todas sus evaluaciones.
-
-    Args:
-        website_id: ID del sitio web
-        db: Sesión de base de datos
-
-    Raises:
-        HTTPException: Si el sitio web no existe
-    """
-    db_website = db.query(Website).filter(Website.id == website_id).first()
-
-    if not db_website:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Sitio web {website_id} no encontrado"
-        )
-
-    db.delete(db_website)
-    db.commit()
-
-    logger.info(f"Sitio web eliminado: {website_id}")
+# ============================================================================
+# FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+# ============================================================================
+# @router.delete(
+#     "/websites/{website_id}",
+#     status_code=status.HTTP_204_NO_CONTENT,
+#     tags=["Websites"]
+# )
+# def delete_website(
+#     website_id: int,
+#     db: Session = Depends(get_db)
+# ) -> None:
+#     """
+#     Elimina un sitio web y todas sus evaluaciones.
+#
+#     Args:
+#         website_id: ID del sitio web
+#         db: Sesión de base de datos
+#
+#     Raises:
+#         HTTPException: Si el sitio web no existe
+#     """
+#     db_website = db.query(Website).filter(Website.id == website_id).first()
+#
+#     if not db_website:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"Sitio web {website_id} no encontrado"
+#         )
+#
+#     db.delete(db_website)
+#     db.commit()
+#
+#     logger.info(f"Sitio web eliminado: {website_id}")
 
 
 # ============================================================================
@@ -370,34 +373,37 @@ def get_evaluation(
     return evaluation
 
 
-@router.delete(
-    "/evaluations/{evaluation_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    tags=["Evaluations"]
-)
-def delete_evaluation(
-    evaluation_id: int,
-    db: Session = Depends(get_db)
-) -> None:
-    """
-    Elimina una evaluación y todos sus resultados.
-
-    Args:
-        evaluation_id: ID de la evaluación
-        db: Sesión de base de datos
-
-    Raises:
-        HTTPException: Si la evaluación no existe
-    """
-    db_evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
-
-    if not db_evaluation:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Evaluación {evaluation_id} no encontrada"
-        )
-
-    db.delete(db_evaluation)
-    db.commit()
-
-    logger.info(f"Evaluación eliminada: {evaluation_id}")
+# ============================================================================
+# FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+# ============================================================================
+# @router.delete(
+#     "/evaluations/{evaluation_id}",
+#     status_code=status.HTTP_204_NO_CONTENT,
+#     tags=["Evaluations"]
+# )
+# def delete_evaluation(
+#     evaluation_id: int,
+#     db: Session = Depends(get_db)
+# ) -> None:
+#     """
+#     Elimina una evaluación y todos sus resultados.
+#
+#     Args:
+#         evaluation_id: ID de la evaluación
+#         db: Sesión de base de datos
+#
+#     Raises:
+#         HTTPException: Si la evaluación no existe
+#     """
+#     db_evaluation = db.query(Evaluation).filter(Evaluation.id == evaluation_id).first()
+#
+#     if not db_evaluation:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail=f"Evaluación {evaluation_id} no encontrada"
+#         )
+#
+#     db.delete(db_evaluation)
+#     db.commit()
+#
+#     logger.info(f"Evaluación eliminada: {evaluation_id}")

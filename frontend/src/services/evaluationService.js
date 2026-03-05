@@ -106,6 +106,17 @@ const evaluationService = {
     link.remove();
     URL.revokeObjectURL(url);
   },
+
+  /**
+   * Obtiene todos los seguimientos de todas las evaluaciones (Solo Superadmin).
+   * Retorna evaluaciones agrupadas por evaluador con sus seguimientos.
+   *
+   * @returns {Promise<Array>}
+   */
+  async getAllFollowups() {
+    const response = await api.get('/admin/followups');
+    return response.data;
+  },
 };
 
 export default evaluationService;

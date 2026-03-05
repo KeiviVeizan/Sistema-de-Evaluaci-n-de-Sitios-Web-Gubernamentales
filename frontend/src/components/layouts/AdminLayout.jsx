@@ -189,7 +189,7 @@ export default function AdminLayout() {
           </button>
 
           <div className={styles.headerTitle}>
-            Panel Administrativo
+            Bienvenido de vuelta
           </div>
 
           <div className={styles.headerActions}>

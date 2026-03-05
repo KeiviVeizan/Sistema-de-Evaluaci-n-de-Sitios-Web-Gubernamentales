@@ -17,6 +17,7 @@ from app.services.email_service import email_service
 from app.models.database_models import (
     Evaluation,
     EvaluationStatus,
+    Followup,
     Institution,
     User,
     UserRole,
@@ -192,59 +193,62 @@ def list_users(
     )
 
 
-@router.delete(
-    "/users/{user_id}",
-    summary="Eliminar usuario (Superadmin o Secretary)",
-)
-def delete_user(
-    user_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(allow_admin_secretary),
-):
-    """
-    Elimina un usuario del sistema.
-
-    Permisos:
-    - superadmin: puede eliminar cualquier usuario
-    - secretary: solo puede eliminar usuarios con rol entity_user
-
-    No se permite la auto-eliminación.
-    """
-    if current_user.role not in [UserRole.SUPERADMIN, UserRole.SECRETARY]:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="No tienes permisos para eliminar usuarios",
-        )
-
-    user_to_delete = db.query(User).filter(User.id == user_id).first()
-    if not user_to_delete:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Usuario no encontrado",
-        )
-
-    # Secretary solo puede eliminar entity_user
-    if current_user.role == UserRole.SECRETARY and user_to_delete.role != UserRole.ENTITY_USER:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Solo puedes eliminar usuarios de tipo Entidad",
-        )
-
-    # No permitir auto-eliminación
-    if user_to_delete.id == current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="No puedes eliminarte a ti mismo",
-        )
-
-    username = user_to_delete.username
-    db.delete(user_to_delete)
-    db.commit()
-
-    logger.warning(
-        f"Usuario ELIMINADO: {username} (ID: {user_id}) por {current_user.username}"
-    )
-    return {"message": f"Usuario {username} eliminado exitosamente"}
+# ============================================================================
+# FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+# ============================================================================
+# @router.delete(
+#     "/users/{user_id}",
+#     summary="Eliminar usuario (Superadmin o Secretary)",
+# )
+# def delete_user(
+#     user_id: int,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(allow_admin_secretary),
+# ):
+#     """
+#     Elimina un usuario del sistema.
+#
+#     Permisos:
+#     - superadmin: puede eliminar cualquier usuario
+#     - secretary: solo puede eliminar usuarios con rol entity_user
+#
+#     No se permite la auto-eliminación.
+#     """
+#     if current_user.role not in [UserRole.SUPERADMIN, UserRole.SECRETARY]:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="No tienes permisos para eliminar usuarios",
+#         )
+#
+#     user_to_delete = db.query(User).filter(User.id == user_id).first()
+#     if not user_to_delete:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Usuario no encontrado",
+#         )
+#
+#     # Secretary solo puede eliminar entity_user
+#     if current_user.role == UserRole.SECRETARY and user_to_delete.role != UserRole.ENTITY_USER:
+#         raise HTTPException(
+#             status_code=status.HTTP_403_FORBIDDEN,
+#             detail="Solo puedes eliminar usuarios de tipo Entidad",
+#         )
+#
+#     # No permitir auto-eliminación
+#     if user_to_delete.id == current_user.id:
+#         raise HTTPException(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             detail="No puedes eliminarte a ti mismo",
+#         )
+#
+#     username = user_to_delete.username
+#     db.delete(user_to_delete)
+#     db.commit()
+#
+#     logger.warning(
+#         f"Usuario ELIMINADO: {username} (ID: {user_id}) por {current_user.username}"
+#     )
+#     return {"message": f"Usuario {username} eliminado exitosamente"}
 
 
 @router.patch("/users/{user_id}", response_model=UserResponse, summary="Actualizar usuario (Superadmin o Secretary)")
@@ -669,38 +673,41 @@ def update_institution(
     return InstitutionResponse.model_validate(institution)
 
 
-@router.delete(
-    "/institutions/{institution_id}",
-    status_code=status.HTTP_204_NO_CONTENT,
-    summary="Eliminar institución (Solo Superadmin)",
-)
-def delete_institution(
-    institution_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(allow_superadmin),
-):
-    """
-    Elimina una institución y todos sus datos relacionados.
-    
-    ADVERTENCIA: Esta operación es irreversible y eliminará:
-    - La institución
-    - Todos los usuarios asociados (responsables)
-    """
-    institution = db.query(Institution).filter(Institution.id == institution_id).first()
-    if not institution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Institución no encontrada",
-        )
-    
-    institution_name = institution.name
-    
-    # Eliminar la institución (cascade eliminará usuarios relacionados)
-    db.delete(institution)
-    db.commit()
-    
-    logger.warning(f"Institución ELIMINADA: {institution_name} (ID: {institution_id}) por {current_user.username}")
-    return None
+# ============================================================================
+# FUNCIONALIDAD DE ELIMINACIÓN DESHABILITADA - SE USA "DAR DE BAJA" INSTEAD
+# ============================================================================
+# @router.delete(
+#     "/institutions/{institution_id}",
+#     status_code=status.HTTP_204_NO_CONTENT,
+#     summary="Eliminar institución (Solo Superadmin)",
+# )
+# def delete_institution(
+#     institution_id: int,
+#     db: Session = Depends(get_db),
+#     current_user: User = Depends(allow_superadmin),
+# ):
+#     """
+#     Elimina una institución y todos sus datos relacionados.
+#
+#     ADVERTENCIA: Esta operación es irreversible y eliminará:
+#     - La institución
+#     - Todos los usuarios asociados (responsables)
+#     """
+#     institution = db.query(Institution).filter(Institution.id == institution_id).first()
+#     if not institution:
+#         raise HTTPException(
+#             status_code=status.HTTP_404_NOT_FOUND,
+#             detail="Institución no encontrada",
+#         )
+#
+#     institution_name = institution.name
+#
+#     # Eliminar la institución (cascade eliminará usuarios relacionados)
+#     db.delete(institution)
+#     db.commit()
+#
+#     logger.warning(f"Institución ELIMINADA: {institution_name} (ID: {institution_id}) por {current_user.username}")
+#     return None
 
 
 # ============================================================================
@@ -768,3 +775,84 @@ def get_stats(
         evaluations_by_status=evaluations_by_status,
         avg_score=round(avg_result, 2) if avg_result else None,
     )
+
+
+# ============================================================================
+# Followups Endpoint (Superadmin)
+# ============================================================================
+
+@router.get(
+    "/followups",
+    summary="Ver todos los seguimientos por evaluador (Solo Superadmin)",
+)
+def get_all_followups(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(allow_superadmin),
+):
+    """
+    Retorna todas las evaluaciones que tienen seguimientos agrupadas por evaluador.
+    Solo accesible para superadmin.
+    """
+    # Obtener todas las evaluaciones que tienen al menos un seguimiento
+    evaluations_with_followups = (
+        db.query(Evaluation)
+        .join(Followup, Followup.evaluation_id == Evaluation.id)
+        .options(
+            joinedload(Evaluation.website),
+            joinedload(Evaluation.evaluator),
+        )
+        .distinct()
+        .order_by(Evaluation.id.desc())
+        .all()
+    )
+
+    # Obtener todos los seguimientos de estas evaluaciones
+    evaluation_ids = [e.id for e in evaluations_with_followups]
+    followups_query = (
+        db.query(Followup)
+        .filter(Followup.evaluation_id.in_(evaluation_ids))
+        .all()
+    )
+
+    # Agrupar seguimientos por evaluation_id
+    followups_by_evaluation = {}
+    for f in followups_query:
+        if f.evaluation_id not in followups_by_evaluation:
+            followups_by_evaluation[f.evaluation_id] = []
+        followups_by_evaluation[f.evaluation_id].append({
+            "id": f.id,
+            "status": f.status,
+            "due_date": f.due_date.isoformat() if f.due_date else None,
+            "created_at": f.created_at.isoformat() if f.created_at else None,
+            "corrected_at": f.corrected_at.isoformat() if f.corrected_at else None,
+            "validated_at": f.validated_at.isoformat() if f.validated_at else None,
+        })
+
+    # Construir respuesta
+    result = []
+    for evaluation in evaluations_with_followups:
+        website = evaluation.website
+        evaluator = evaluation.evaluator
+
+        # Buscar institución por dominio del website
+        institution = None
+        institution_name = None
+        if website:
+            institution = db.query(Institution).filter(
+                Institution.domain == website.domain
+            ).first()
+            institution_name = institution.name if institution else website.domain
+
+        result.append({
+            "id": evaluation.id,
+            "institution_name": institution_name,
+            "website_url": website.domain if website else None,
+            "overall_score": evaluation.score_total,
+            "created_at": evaluation.started_at.isoformat() if evaluation.started_at else None,
+            "evaluator_id": evaluator.id if evaluator else None,
+            "evaluator_name": evaluator.full_name if evaluator else "Sin asignar",
+            "evaluator_email": evaluator.email if evaluator else None,
+            "followups": followups_by_evaluation.get(evaluation.id, []),
+        })
+
+    return result
