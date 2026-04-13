@@ -44,6 +44,13 @@ class FollowupCreate(BaseModel):
     notes: str = ""
 
 
+class FollowupCreateBulk(BaseModel):
+    evaluation_id: int
+    criteria_result_ids: list[int]
+    due_date: str  # ISO format YYYY-MM-DD
+    notes: str = ""
+
+
 class FollowupUpdate(BaseModel):
     status: str
     notes: Optional[str] = None
@@ -182,6 +189,95 @@ async def create_followup(
         logger.exception("Error al enviar email de seguimiento creado (ignorado)")
 
     return _followup_to_dict(followup)
+
+
+@router.post("/bulk", summary="Crear seguimientos para múltiples criterios")
+async def create_followup_bulk(
+    data: FollowupCreateBulk,
+    current_user=Depends(allow_staff_followups),
+    db: Session = Depends(get_db),
+):
+    """Crea seguimientos para múltiples criterios no cumplidos. Envía un solo email consolidado."""
+    if not data.criteria_result_ids:
+        raise HTTPException(status_code=400, detail="Debe seleccionar al menos un criterio")
+
+    evaluation = db.query(Evaluation).filter(Evaluation.id == data.evaluation_id).first()
+    if not evaluation:
+        raise HTTPException(status_code=404, detail="Evaluación no encontrada")
+
+    try:
+        due_date = datetime.fromisoformat(data.due_date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Formato de fecha inválido. Use YYYY-MM-DD")
+
+    # Validar que todos los criteria_result pertenecen a la evaluación
+    criteria_results = (
+        db.query(CriteriaResult)
+        .filter(
+            CriteriaResult.id.in_(data.criteria_result_ids),
+            CriteriaResult.evaluation_id == data.evaluation_id,
+        )
+        .all()
+    )
+    found_ids = {cr.id for cr in criteria_results}
+    missing = set(data.criteria_result_ids) - found_ids
+    if missing:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Criterios no encontrados en esta evaluación: {missing}",
+        )
+
+    # Crear un Followup por cada criterio
+    created_followups = []
+    for cr in criteria_results:
+        followup = Followup(
+            evaluation_id=data.evaluation_id,
+            criteria_result_id=cr.id,
+            due_date=due_date,
+            notes=data.notes or None,
+            status="pending",
+        )
+        db.add(followup)
+        created_followups.append(followup)
+
+    db.commit()
+    for f in created_followups:
+        db.refresh(f)
+
+    # Recargar con relaciones
+    result_followups = (
+        db.query(Followup)
+        .options(joinedload(Followup.criteria_result))
+        .filter(Followup.id.in_([f.id for f in created_followups]))
+        .all()
+    )
+
+    # Notificación por email consolidado (no bloqueante)
+    try:
+        website = db.query(Website).filter(Website.id == evaluation.website_id).first()
+        if website:
+            responsible = _get_institution_responsible(website, db)
+            if responsible:
+                institution = db.query(Institution).filter(
+                    Institution.domain == website.domain
+                ).first()
+                institution_name = institution.name if institution else website.domain
+                criteria_list = [
+                    {"code": cr.criteria_id, "name": cr.criteria_name}
+                    for cr in criteria_results
+                ]
+                await email_service.send_followup_created_bulk_email(
+                    to_email=responsible.email,
+                    institution_name=institution_name,
+                    criteria_list=criteria_list,
+                    due_date=due_date.strftime("%d/%m/%Y"),
+                    observations=data.notes or "",
+                    evaluation_id=data.evaluation_id,
+                )
+    except Exception:
+        logger.exception("Error al enviar email de seguimiento bulk creado (ignorado)")
+
+    return [_followup_to_dict(f) for f in result_followups]
 
 
 @router.get("", summary="Listar seguimientos")

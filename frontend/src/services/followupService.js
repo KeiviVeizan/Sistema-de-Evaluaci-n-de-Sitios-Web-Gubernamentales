@@ -11,6 +11,16 @@ const followupService = {
   },
 
   /**
+   * Crea seguimientos para múltiples criterios. Solo admin/secretaría.
+   * @param {{ evaluation_id: number, criteria_result_ids: number[], due_date: string, notes?: string }} data
+   * @returns {Promise<Array>} Lista de seguimientos creados
+   */
+  async createBulk(data) {
+    const response = await api.post('/followups/bulk', data);
+    return response.data;
+  },
+
+  /**
    * Lista seguimientos con filtros opcionales.
    * Los entity_user solo ven los seguimientos de su institución (filtrado en backend).
    * @param {{ status?: string, evaluation_id?: number }} filters

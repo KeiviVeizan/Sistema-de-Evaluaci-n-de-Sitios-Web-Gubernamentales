@@ -62,7 +62,7 @@ class EvaluadorUsabilidad(BaseEvaluator):
         max_score = 14
 
         # Obtener título del sitio
-        title = metadata.get('title', '').strip()
+        title = (metadata.get('title') or '').strip()
 
         # Palabras clave que indican institución gubernamental boliviana
         keywords_institucion = [
@@ -146,10 +146,10 @@ class EvaluadorUsabilidad(BaseEvaluator):
         leyenda = "bolivia a tu servicio"
 
         # Obtener textos de diferentes secciones
-        header_text = text_corpus.get('header_text', '').lower()
-        footer_text = text_corpus.get('footer_text', '').lower()
+        header_text = (text_corpus.get('header_text') or '').lower()
+        footer_text = (text_corpus.get('footer_text') or '').lower()
         # Usar full_text para verificar en el resto del body (excluye header/footer ya verificados)
-        full_text = text_corpus.get('full_text', '').lower()
+        full_text = (text_corpus.get('full_text') or '').lower()
 
         # Flag general del crawler
         has_bolivia_service = text_corpus.get('has_bolivia_service_text', False)

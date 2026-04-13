@@ -221,10 +221,15 @@ class EvaluationListResponse(BaseModel):
 class CriterionResultInput(BaseModel):
     """Resultado de un criterio individual para guardar."""
     criterion_id: str = Field(..., description="ID del criterio (ej: ACC-01)")
+    criteria_name: Optional[str] = Field(None, description="Nombre del criterio (ej: Texto alternativo en imágenes)")
+    dimension: Optional[str] = Field(None, description="Dimensión del criterio (ej: accesibilidad)")
+    lineamiento: Optional[str] = Field(None, description="Lineamiento asociado")
     status: str = Field(..., description="Estado: pass, fail, partial, na")
     score: Optional[float] = Field(None, description="Puntaje real obtenido (si se omite se calcula desde status)")
     max_score: Optional[float] = Field(None, description="Puntaje máximo posible del criterio")
     observations: Optional[str] = Field(None, description="Observaciones del evaluador")
+    details: Optional[Dict[str, Any]] = Field(None, description="Detalles completos del criterio evaluado")
+    evidence: Optional[Any] = Field(None, description="Evidencia del criterio evaluado")
 
 
 class SaveEvaluationRequest(BaseModel):
@@ -238,6 +243,10 @@ class SaveEvaluationRequest(BaseModel):
     scores_override: Optional[Dict[str, Any]] = Field(
         None,
         description="Scores ya calculados por el engine (si se proporcionan, se usan directamente sin recalcular)"
+    )
+    nlp_analysis: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Análisis NLP completo del engine (incluye detalles de coherencia, ambigüedad, claridad y recomendaciones)"
     )
 
 

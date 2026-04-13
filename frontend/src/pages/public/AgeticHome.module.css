@@ -1,0 +1,374 @@
+/* ============================
+   Página principal AGETIC
+   ============================ */
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  font-family: 'Roboto', sans-serif;
+}
+
+/* --- Barra superior gobierno --- */
+.govBar {
+  background: #f0f0f0;
+  border-bottom: 1px solid #ddd;
+  padding: 6px 0;
+  font-size: 0.8rem;
+}
+
+.govBarContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.govFlag {
+  font-size: 1rem;
+}
+
+.govText {
+  color: #555;
+}
+
+/* --- Header principal --- */
+.header {
+  background: #fff;
+  padding: 24px 0;
+  border-bottom: 1px solid #eee;
+}
+
+.headerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.ageticLogo {
+  height: 80px;
+  object-fit: contain;
+}
+
+.headerInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.ageticTitle {
+  font-size: 2.5rem;
+  font-weight: 300;
+  color: #333;
+  margin: 0;
+  line-height: 1;
+  letter-spacing: 2px;
+}
+
+.ageticSubtitle {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 4px 0 0;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.ageticTagline {
+  font-size: 0.85rem;
+  color: #777;
+  margin: 2px 0 0;
+  font-style: italic;
+}
+
+.headerRight {
+  flex-shrink: 0;
+}
+
+.escudoLogo {
+  height: 90px;
+  object-fit: contain;
+}
+
+/* --- Navbar --- */
+.navbar {
+  background: #4a4a4a;
+  border-bottom: 3px solid #800000;
+}
+
+.navContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-wrap: wrap;
+}
+
+.navItem {
+  color: #fff;
+  font-size: 0.9rem;
+  padding: 14px 18px;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 0.2s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navArrow {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* --- Breadcrumb --- */
+.breadcrumb {
+  background: #f9f9f9;
+  border-bottom: 1px solid #eee;
+  padding: 12px 0;
+}
+
+.breadcrumbContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  font-size: 0.85rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breadcrumbLink {
+  color: #800000;
+  text-decoration: underline;
+  cursor: default;
+}
+
+.breadcrumbSep {
+  color: #bbb;
+}
+
+.breadcrumbCurrent {
+  color: #555;
+}
+
+/* --- Main contenido --- */
+.main {
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 32px 24px 60px;
+  flex: 1;
+}
+
+.pageTitle {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #222;
+  margin: 0 0 32px;
+}
+
+/* --- Lista de servicios --- */
+.servicesList {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.serviceCard {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 32px;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  background: #fff;
+  transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.serviceCard:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-color: #ccc;
+}
+
+.serviceCard:last-child {
+  border-color: #800000;
+  background: linear-gradient(135deg, #fff 0%, #fdf6f6 100%);
+}
+
+.serviceCard:last-child:hover {
+  box-shadow: 0 4px 20px rgba(128, 0, 0, 0.12);
+  border-color: #800000;
+}
+
+.serviceIcon {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #555;
+}
+
+.serviceCard:last-child .serviceIcon {
+  color: #800000;
+}
+
+.serviceInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.serviceTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 8px;
+}
+
+.serviceCard:last-child .serviceTitle {
+  color: #800000;
+}
+
+.serviceDesc {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.serviceAction {
+  flex-shrink: 0;
+}
+
+.serviceButton {
+  display: inline-block;
+  padding: 10px 20px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #333;
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.serviceButton:hover {
+  background: #f5f5f5;
+  border-color: #999;
+}
+
+.serviceCard:last-child .serviceButton {
+  color: #fff;
+  background: #800000;
+  border-color: #800000;
+}
+
+.serviceCard:last-child .serviceButton:hover {
+  background: #5c0000;
+  border-color: #5c0000;
+}
+
+/* --- Footer --- */
+.footer {
+  background: #333;
+  color: #ccc;
+  padding: 24px 0;
+  margin-top: auto;
+}
+
+.footerContent {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px;
+  text-align: center;
+}
+
+.footerContent p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.footerSub {
+  margin-top: 4px !important;
+  font-size: 0.75rem !important;
+  color: #999;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .headerContent {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .headerLeft {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ageticTitle {
+    font-size: 1.8rem;
+  }
+
+  .ageticSubtitle br {
+    display: none;
+  }
+
+  .headerRight {
+    display: none;
+  }
+
+  .navContent {
+    justify-content: center;
+  }
+
+  .navItem {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .serviceCard {
+    flex-direction: column;
+    text-align: center;
+    padding: 24px 20px;
+    gap: 16px;
+  }
+
+  .serviceAction {
+    width: 100%;
+  }
+
+  .serviceButton {
+    width: 100%;
+    text-align: center;
+    display: block;
+  }
+
+  .pageTitle {
+    font-size: 1.5rem;
+  }
+}

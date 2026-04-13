@@ -130,13 +130,51 @@ class GobBoCrawler:
                 browser.close()
 
                 logger.info(f"HTML obtenido exitosamente ({len(html)} caracteres)")
+
+                # Si Playwright obtuvo muy poco HTML, intentar fallback con requests
+                if len(html) < 500:
+                    logger.warning(
+                        f"Playwright obtuvo solo {len(html)} caracteres para {url}. "
+                        f"Intentando fallback con requests..."
+                    )
+                    browser.close()
+                    return self._fetch_page_with_requests(url) or html
+
                 return html
 
         except PlaywrightTimeout as e:
             logger.error(f"Timeout de Playwright al cargar {url}: {e}")
-            return None
+            logger.info("Intentando fallback con requests...")
+            return self._fetch_page_with_requests(url)
         except Exception as e:
             logger.error(f"Error con Playwright al cargar {url}: {e}")
+            logger.info("Intentando fallback con requests...")
+            return self._fetch_page_with_requests(url)
+
+    def _fetch_page_with_requests(self, url: str) -> Optional[str]:
+        """
+        Fallback: obtiene HTML usando requests cuando Playwright falla o retorna poco contenido.
+
+        Args:
+            url: URL del sitio web a cargar
+
+        Returns:
+            str: HTML obtenido, o None si hay error
+        """
+        try:
+            logger.info(f"Usando requests como fallback para {url}")
+            response = self.session.get(
+                url,
+                timeout=self.timeout,
+                verify=False,
+                allow_redirects=True
+            )
+            response.raise_for_status()
+            html = response.text
+            logger.info(f"Fallback requests obtuvo {len(html)} caracteres para {url}")
+            return html if len(html) > 100 else None
+        except Exception as e:
+            logger.error(f"Fallback requests también falló para {url}: {e}")
             return None
 
     def _validate_content_loaded(self, soup: BeautifulSoup) -> bool:

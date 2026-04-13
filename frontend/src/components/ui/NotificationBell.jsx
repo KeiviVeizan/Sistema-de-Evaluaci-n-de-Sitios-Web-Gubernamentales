@@ -23,6 +23,8 @@ export default function NotificationBell() {
 
   // Cargar contador de no leídas
   const fetchUnreadCount = useCallback(async () => {
+    // No intentar si no hay token de autenticación
+    if (!localStorage.getItem('accessToken')) return;
     try {
       const data = await notificationService.getUnreadCount();
       setUnreadCount(data.count);

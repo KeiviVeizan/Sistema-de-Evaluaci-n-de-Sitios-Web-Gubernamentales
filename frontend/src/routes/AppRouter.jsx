@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { ROLES } from '../contexts/AuthContext';
 
 // Componentes de routing
@@ -17,6 +17,9 @@ import AdminFollowups from '../pages/admin/AdminFollowups';
 
 // Página pública (evaluador público)
 import PublicEvaluator from '../pages/public/PublicEvaluator';
+
+// Página de inicio AGETIC (temporal)
+import AgeticHome from '../pages/public/AgeticHome';
 
 // Páginas del panel de institución
 import MyFollowups from '../pages/institution/MyFollowups';
@@ -57,8 +60,8 @@ export default function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Raíz → redirige al login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        {/* Página de inicio AGETIC (temporal hasta tener acceso al sistema real) */}
+        <Route path="/" element={<AgeticHome />} />
 
         {/* Rutas de autenticación (solo sin autenticación) */}
         <Route

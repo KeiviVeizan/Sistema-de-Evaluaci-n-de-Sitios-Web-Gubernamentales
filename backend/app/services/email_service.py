@@ -61,12 +61,6 @@ class EmailService:
             body=html_content,
             alternative_body=self._html_to_plain_text(html_content),
             subtype=MessageType.html,
-            reply_to=[settings.mail_from],
-            headers={
-                "X-Mailer": "Evaluador GOB.BO",
-                "Precedence": "bulk",
-                "Auto-Submitted": "auto-generated",
-            },
         )
 
     def _initialize(self):
@@ -478,7 +472,7 @@ class EmailService:
 
         from app.config import settings
 
-        subject = "Verificación de acceso - Evaluador GOB.BO"
+        subject = f"Tu código de verificación: {code}"
         html_content = self._get_2fa_html_template(code, username)
 
         # Si el servicio de correo no está disponible (credenciales inválidas,
@@ -507,6 +501,8 @@ class EmailService:
             message = self._build_message(subject, [email], html_content)
             await self._fastmail.send_message(message)
             logger.info(f"Correo 2FA enviado exitosamente a {email}")
+            # Mostrar código en consola como respaldo (Gmail puede bloquear la entrega)
+            logger.info(f"[RESPALDO] Código 2FA para {username}: {code}")
             return True
 
         except smtplib.SMTPAuthenticationError as e:
@@ -672,6 +668,162 @@ class EmailService:
         except Exception as e:
             logger.error(
                 f"Error al enviar email de seguimiento creado a {to_email}: "
+                f"{type(e).__name__}: {str(e)}"
+            )
+            return False
+
+    @staticmethod
+    def _get_followup_created_bulk_html(
+        institution_name: str,
+        criteria_list: list[dict],
+        due_date: str,
+        observations: str,
+        evaluation_url: str,
+    ) -> str:
+        """Template HTML para notificación de seguimiento con múltiples criterios."""
+        obs_block = observations if observations else "Sin observaciones adicionales."
+        count = len(criteria_list)
+
+        # Construir filas de criterios
+        criteria_rows = ""
+        for i, c in enumerate(criteria_list):
+            bg = "#f9f9f9" if i % 2 == 0 else "#ffffff"
+            criteria_rows += f"""
+                <tr>
+                    <td style="padding:10px 12px;border-bottom:1px solid #eee;background:{bg};font-size:14px;">
+                        <strong>{c['code']}</strong>
+                    </td>
+                    <td style="padding:10px 12px;border-bottom:1px solid #eee;background:{bg};font-size:14px;color:#555;">
+                        {c['name']}
+                    </td>
+                </tr>"""
+
+        return f"""<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:#f4f4f4;">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0"
+           style="max-width:600px;margin:0 auto;padding:20px;">
+        <tr>
+            <td style="background-color:#800000;padding:30px;text-align:center;border-radius:12px 12px 0 0;">
+                <h1 style="color:white;margin:0;font-size:24px;">Evaluador GOB.BO</h1>
+                <p style="color:rgba(255,255,255,0.8);margin:8px 0 0;font-size:14px;">
+                    Seguimientos Asignados ({count} criterio{"s" if count != 1 else ""})
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td style="background-color:white;padding:40px 30px;border-radius:0 0 12px 12px;
+                       box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+                <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 20px;">
+                    Estimado equipo de <strong>{institution_name}</strong>,
+                </p>
+                <p style="color:#555;font-size:15px;line-height:1.6;margin:0 0 24px;">
+                    Se han programado seguimientos para corregir los siguientes criterios de
+                    cumplimiento detectados en la evaluación de su sitio web.
+                </p>
+
+                <!-- Tabla de criterios -->
+                <table width="100%" cellspacing="0" cellpadding="0"
+                       style="border:1px solid #e0e0e0;border-radius:8px;overflow:hidden;margin:0 0 20px;">
+                    <tr>
+                        <th style="padding:10px 12px;background:#800000;color:white;text-align:left;font-size:13px;">Código</th>
+                        <th style="padding:10px 12px;background:#800000;color:white;text-align:left;font-size:13px;">Criterio</th>
+                    </tr>
+                    {criteria_rows}
+                </table>
+
+                <!-- Observaciones -->
+                <div style="background:#f9f9f9;padding:16px;border-radius:8px;margin:0 0 20px;">
+                    <p style="margin:0;font-size:14px;color:#666;">
+                        <strong>Observaciones:</strong> {obs_block}
+                    </p>
+                </div>
+
+                <!-- Alerta fecha límite -->
+                <div style="background:#fef3c7;border-left:4px solid #f59e0b;padding:15px 20px;
+                            border-radius:0 8px 8px 0;margin:0 0 24px;">
+                    <p style="margin:0;font-size:14px;color:#92400e;">
+                        <strong>Fecha límite de corrección:</strong> {due_date}
+                    </p>
+                </div>
+
+                <!-- Pasos -->
+                <h3 style="color:#333;font-size:16px;margin:0 0 10px;">Próximos pasos</h3>
+                <ol style="color:#555;font-size:14px;line-height:1.8;margin:0 0 28px;padding-left:20px;">
+                    <li>Revise el detalle completo de la evaluación</li>
+                    <li>Implemente las correcciones necesarias en su sitio web</li>
+                    <li>Marque cada seguimiento como <strong>Corregido</strong> en el sistema</li>
+                    <li>Espere la validación del administrador</li>
+                </ol>
+
+                <!-- Botón -->
+                <div style="text-align:center;margin:0 0 10px;">
+                    <a href="{evaluation_url}"
+                       style="display:inline-block;background:#800000;color:white;
+                              padding:14px 36px;text-decoration:none;border-radius:8px;
+                              font-size:15px;font-weight:600;">
+                        Ver Evaluación Completa
+                    </a>
+                </div>
+            </td>
+        </tr>
+        <tr>
+            <td style="padding:20px;text-align:center;">
+                <p style="color:#999;font-size:11px;margin:0;line-height:1.6;">
+                    Este es un mensaje automático del Sistema de Evaluación GOB.BO<br>
+                    Por favor no respondas a este correo.
+                </p>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>"""
+
+    async def send_followup_created_bulk_email(
+        self,
+        to_email: str,
+        institution_name: str,
+        criteria_list: list[dict],
+        due_date: str,
+        observations: str,
+        evaluation_id: int,
+    ) -> bool:
+        """Envía email consolidado cuando se crean seguimientos para múltiples criterios."""
+        self._initialize()
+
+        from app.config import settings
+
+        count = len(criteria_list)
+        codes = ", ".join(c["code"] for c in criteria_list)
+        subject = f"Seguimientos asignados ({count} criterio{'s' if count != 1 else ''}): {codes} — {institution_name}"
+        evaluation_url = f"{settings.frontend_url}/admin/evaluations/{evaluation_id}"
+        html_content = self._get_followup_created_bulk_html(
+            institution_name, criteria_list, due_date, observations, evaluation_url,
+        )
+
+        if not self._fastmail:
+            logger.info("=" * 50)
+            logger.info("[MODO DESARROLLO] Email de seguimiento bulk simulado:")
+            logger.info(f"  Para: {to_email}")
+            logger.info(f"  Institución: {institution_name}")
+            logger.info(f"  Criterios ({count}): {codes}")
+            logger.info(f"  Fecha límite: {due_date}")
+            logger.info("=" * 50)
+            return True
+
+        try:
+            logger.info(f"Enviando email de seguimiento bulk a {to_email} ({count} criterios)...")
+            message = self._build_message(subject, [to_email], html_content)
+            await self._fastmail.send_message(message)
+            logger.info(f"Email de seguimiento bulk enviado exitosamente a {to_email}")
+            return True
+        except Exception as e:
+            logger.error(
+                f"Error al enviar email de seguimiento bulk a {to_email}: "
                 f"{type(e).__name__}: {str(e)}"
             )
             return False

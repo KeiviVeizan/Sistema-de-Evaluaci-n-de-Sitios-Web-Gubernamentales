@@ -7,7 +7,9 @@ criterios no cumplidos y recomendaciones generales.
 """
 
 import io
+import re
 from collections import defaultdict
+from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime
 from sqlalchemy.orm import Session
 
@@ -25,8 +27,10 @@ from reportlab.graphics import renderPDF
 from reportlab.platypus.flowables import Flowable
 
 from app.models.database_models import (
-    Evaluation, CriteriaResult, Website, Institution, NLPAnalysis
+    Evaluation, CriteriaResult, Website, Institution, NLPAnalysis,
+    Followup, User, UserRole
 )
+from app.evaluator.evaluation_engine import _CRITERIA_ENRICHMENT
 
 import logging
 
@@ -125,11 +129,8 @@ RECOMMENDATIONS_BY_DIMENSION = {
 }
 
 RESOURCES = [
-    "WCAG 2.1 – https://www.w3.org/TR/WCAG21/",
-    "D.S. 3925 – Decreto Supremo sobre gobierno electrónico Bolivia",
-    "Validador W3C – https://validator.w3.org/",
-    "Herramienta WAVE – https://wave.webaim.org/",
-    "Google Lighthouse – https://developer.chrome.com/docs/lighthouse/",
+    "WCAG 2.0 – https://www.w3.org/TR/WCAG20/",
+    "Construyendo Servicios Digitales Web – Guía de lineamientos para sitios web del Estado Plurinacional de Bolivia",
 ]
 
 
@@ -241,6 +242,22 @@ def _th(text: str, styles: dict) -> Paragraph:
     return Paragraph(f"<b>{text}</b>", styles['th_white'])
 
 
+def _sanitize_for_pdf(text: str) -> str:
+    """Escapa HTML/XML peligroso para ReportLab Paragraph, preservando tags seguros."""
+    if not text:
+        return ""
+    # Primero escapar todo el HTML
+    safe = xml_escape(str(text))
+    # Restaurar solo los tags seguros que ReportLab entiende
+    safe = safe.replace('&lt;br/&gt;', '<br/>')
+    safe = safe.replace('&lt;b&gt;', '<b>').replace('&lt;/b&gt;', '</b>')
+    safe = safe.replace('&lt;i&gt;', '<i>').replace('&lt;/i&gt;', '</i>')
+    # Truncar si es demasiado largo
+    if len(safe) > 1500:
+        safe = safe[:1500] + "..."
+    return safe
+
+
 def _extract_observations(details: dict | None) -> str:
     if not details:
         return ""
@@ -253,15 +270,31 @@ def _extract_observations(details: dict | None) -> str:
     return ""
 
 
-def _extract_recommendations(details: dict | None) -> str:
-    if not details:
-        return ""
-    val = details.get('recommendations') or details.get('recommendation') or details.get('fix')
-    if not val:
-        return ""
-    if isinstance(val, list):
-        return "; ".join(str(v) for v in val[:3])
-    return str(val)[:250]
+def _extract_recommendations(details: dict | None, evidence: dict | None = None) -> str:
+    """Extrae recomendaciones específicas del criterio desde details y/o evidence."""
+    # 1. Buscar en evidence (datos enriquecidos del evaluation_engine)
+    if evidence:
+        # Recomendación detallada con 'como_corregir'
+        rec_det = evidence.get('recomendacion_detallada') or evidence.get('recomendacion')
+        if isinstance(rec_det, dict) and rec_det.get('como_corregir'):
+            corr = rec_det['como_corregir']
+            if isinstance(corr, list):
+                return "\n".join(f"• {c}" for c in corr)
+            return str(corr)[:500]
+        # Lista de recomendaciones directas
+        recs = evidence.get('recomendaciones')
+        if recs and isinstance(recs, list):
+            return "\n".join(f"• {r}" for r in recs)
+
+    # 2. Buscar en details
+    if details:
+        val = details.get('recommendations') or details.get('recommendation') or details.get('fix')
+        if val:
+            if isinstance(val, list):
+                return "\n".join(f"• {v}" for v in val[:5])
+            return str(val)[:500]
+
+    return ""
 
 
 def _bar_chart(dim_scores: dict, width_pts: float = 430, bar_h: int = 18, gap: int = 6) -> Drawing:
@@ -318,7 +351,7 @@ def _hex_rgb(c: colors.Color):
 def _build_cover(story: list, styles: dict,
                  institution_name: str, domain: str,
                  eval_date: datetime, evaluator_name: str,
-                 total_score: float):
+                 total_score: float, entity_responsible: str = ""):
     """Portada del informe."""
     # Bloque azul superior simulado con tabla de fondo
     cover_data = [[
@@ -354,12 +387,21 @@ def _build_cover(story: list, styles: dict,
          Paragraph(eval_date.strftime("%d de %B de %Y"), styles['body'])],
         [Paragraph("<b>Evaluador responsable:</b>", styles['body']),
          Paragraph(evaluator_name, styles['body'])],
-        [Paragraph("<b>Puntaje global:</b>", styles['body']),
-         Paragraph(
-             f'<font color="#{_hex(_score_color(total_score))}"><b>{total_score:.1f}%</b></font>',
-             styles['body_bold']
-         )],
     ]
+    # Agregar responsable de la entidad si existe
+    if entity_responsible:
+        meta_data.append([
+            Paragraph("<b>Responsable de la entidad:</b>", styles['body']),
+            Paragraph(entity_responsible, styles['body']),
+        ])
+    meta_data.append([
+        Paragraph("<b>Puntaje global:</b>", styles['body']),
+        Paragraph(
+            f'<font color="#{_hex(_score_color(total_score))}"><b>{total_score:.1f}%</b></font>',
+            styles['body_bold']
+        ),
+    ])
+
     meta_table = Table(meta_data, colWidths=[5.5 * cm, None])
     meta_table.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (0, -1), COLOR_ACCENT),
@@ -755,7 +797,7 @@ def _build_non_compliant(story: list, styles: dict, non_compliant: list):
         dim_label = DIMENSION_LABELS.get(cr.dimension, cr.dimension or "")
 
         obs = _extract_observations(cr.details)
-        rec = _extract_recommendations(cr.details)
+        rec = _extract_recommendations(cr.details, cr.evidence)
 
         # Bloque por criterio
         block = []
@@ -807,13 +849,54 @@ def _build_non_compliant(story: list, styles: dict, non_compliant: list):
         ]))
         block.append(detail_t)
 
-        # Observaciones y recomendaciones
+        # Observaciones y recomendaciones detalladas
+        # Construir texto detallado de por qué falló
+        obs_detail = _sanitize_for_pdf(obs) or "Sin observaciones detalladas registradas."
+
+        # Construir recomendaciones técnicas detalladas
+        rec_detail = ""
+        if rec:
+            rec_detail = _sanitize_for_pdf(rec)
+        else:
+            # Fallback: usar enrichment estático del evaluation_engine
+            enrichment = _CRITERIA_ENRICHMENT.get(cr.criteria_id, {})
+            if enrichment.get('como_corregir'):
+                rec_detail = "\n".join(f"• {c}" for c in enrichment['como_corregir'])
+                rec_detail = _sanitize_for_pdf(rec_detail)
+            else:
+                # Último recurso: recomendaciones genéricas de la dimensión
+                dim_recs = RECOMMENDATIONS_BY_DIMENSION.get(cr.dimension, [])
+                if dim_recs:
+                    rec_detail = "\n".join(f"• {r}" for r in dim_recs[:3])
+
+        # Si hay evidencia adicional, agregarla al detalle
+        # Solo incluir valores simples (str, int, float, bool); excluir dicts/lists complejos
+        evidence_text = ""
+        if cr.evidence and isinstance(cr.evidence, dict):
+            for ek, ev_val in cr.evidence.items():
+                if not ev_val:
+                    continue
+                if isinstance(ev_val, (str, int, float, bool)):
+                    evidence_text += f"<br/><b>{xml_escape(str(ek))}:</b> {_sanitize_for_pdf(str(ev_val))}"
+
         obs_rec_rows = [
             [Paragraph("<b>¿Por qué falló?</b>", styles['body']),
-             Paragraph(obs or "Sin observaciones detalladas registradas.", styles['obs_text'])],
-            [Paragraph("<b>¿Cómo corregirlo?</b>", styles['body']),
-             Paragraph(rec or "Ver recomendaciones generales de la dimensión.", styles['obs_text'])],
+             Paragraph(obs_detail, styles['obs_text'])],
         ]
+        if evidence_text:
+            obs_rec_rows.append([
+                Paragraph("<b>Evidencia:</b>", styles['body']),
+                Paragraph(re.sub(r'^(<br/>)+', '', evidence_text), styles['obs_text']),
+            ])
+        obs_rec_rows.append([
+            Paragraph("<b>¿Cómo corregirlo?</b>", styles['body']),
+            Paragraph(
+                rec_detail.replace("\n", "<br/>") if rec_detail
+                else "Consultar las recomendaciones generales de la dimensión.",
+                styles['obs_text']
+            ),
+        ])
+
         obs_rec_t = Table(obs_rec_rows, colWidths=[3.5 * cm, None])
         obs_rec_t.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), COLOR_ACCENT),
@@ -836,80 +919,260 @@ def _build_non_compliant(story: list, styles: dict, non_compliant: list):
 def _build_recommendations(story: list, styles: dict,
                             non_compliant: list,
                             dimension_scores: dict):
-    """Sección 4 – Recomendaciones Generales."""
-    story.append(Paragraph("4. RECOMENDACIONES GENERALES", styles['section']))
+    """Sección 4 – Recursos Útiles."""
+    # Solo mostrar recursos útiles de referencia
+    story.append(Paragraph("4. RECURSOS ÚTILES", styles['section']))
+    story.append(Spacer(1, 0.3 * cm))
+    for res in RESOURCES:
+        story.append(Paragraph(f"• {res}", styles['bullet']))
+
+
+FOLLOWUP_STATUS_LABELS = {
+    'pending':   'Pendiente',
+    'corrected': 'Corregido',
+    'validated': 'Validado',
+    'rejected':  'Rechazado',
+    'cancelled': 'Cancelado',
+}
+
+FOLLOWUP_STATUS_COLORS = {
+    'pending':   COLOR_PARTIAL,
+    'corrected': COLOR_SUBHEADER,
+    'validated': COLOR_PASS,
+    'rejected':  COLOR_FAIL,
+    'cancelled': COLOR_NA,
+}
+
+
+def _build_followups(story: list, styles: dict, followups: list, now: datetime):
+    """Sección 5 – Seguimientos asignados y su estado."""
+    story.append(PageBreak())
+    story.append(Paragraph("5. SEGUIMIENTOS Y PLAN DE CORRECCIÓN", styles['section']))
     story.append(Spacer(1, 0.2 * cm))
 
+    if not followups:
+        story.append(Paragraph(
+            "No se han asignado seguimientos para esta evaluación.",
+            styles['body']
+        ))
+        return
+
     story.append(Paragraph(
-        "A continuación se presentan las acciones prioritarias recomendadas para mejorar "
-        "el nivel de cumplimiento del sitio evaluado:",
+        "A continuación se detallan los seguimientos asignados para los criterios "
+        "que requieren corrección, incluyendo plazos, estado actual y si se encuentran vencidos.",
         styles['body_justify']
     ))
     story.append(Spacer(1, 0.3 * cm))
 
-    # Dimensiones afectadas (ordenadas por puntaje ascendente)
-    dims_affected = sorted(
-        [(k, float(v or 0)) for k, v in dimension_scores.items()],
-        key=lambda x: x[1]
+    # Estadísticas de seguimientos
+    total_f = len(followups)
+    pending_f = sum(1 for f in followups if f.status == 'pending')
+    corrected_f = sum(1 for f in followups if f.status == 'corrected')
+    validated_f = sum(1 for f in followups if f.status == 'validated')
+    rejected_f = sum(1 for f in followups if f.status == 'rejected')
+    overdue_f = sum(
+        1 for f in followups
+        if f.status in ('pending', 'rejected') and f.due_date and f.due_date < now
     )
 
-    for dim_key, pct in dims_affected:
-        if pct >= 80:
-            continue  # dimensión satisfactoria, sin recomendaciones urgentes
-        dim_label = DIMENSION_LABELS.get(dim_key, dim_key)
-        recs = RECOMMENDATIONS_BY_DIMENSION.get(dim_key, [])
-        priority = PRIORITY_MAP.get(dim_key, 'Media')
-        p_color = PRIORITY_COLOR[priority]
-
-        story.append(Paragraph(
-            f'■ {dim_label} '
-            f'(<font color="#{_hex(p_color)}"><b>Prioridad {priority}</b></font> — '
-            f'Puntaje actual: {pct:.1f}%)',
-            styles['rec_title']
-        ))
-        for rec in recs:
-            story.append(Paragraph(f"• {rec}", styles['bullet']))
-        story.append(Spacer(1, 0.2 * cm))
-
-    # Plazo sugerido
-    story.append(Spacer(1, 0.1 * cm))
-    story.append(Paragraph("Plazo Sugerido de Corrección", styles['dim_header']))
-
-    plazo_data = [
-        [Paragraph("<b>Prioridad</b>", styles['th_white']),
-         Paragraph("<b>Plazo recomendado</b>", styles['th_white']),
-         Paragraph("<b>Criterio</b>", styles['th_white'])],
-        [Paragraph(f'<font color="#{_hex(COLOR_PRIORITY_HIGH)}"><b>Alta</b></font>', styles['body']),
-         Paragraph("30 días hábiles", styles['body']),
-         Paragraph("Accesibilidad, Soberanía Digital", styles['body'])],
-        [Paragraph(f'<font color="#{_hex(COLOR_PRIORITY_MED)}"><b>Media</b></font>', styles['body']),
-         Paragraph("60 días hábiles", styles['body']),
-         Paragraph("Usabilidad, Semántica Técnica", styles['body'])],
-        [Paragraph(f'<font color="#{_hex(COLOR_PRIORITY_LOW)}"><b>Baja</b></font>', styles['body']),
-         Paragraph("90 días hábiles", styles['body']),
-         Paragraph("Semántica NLP", styles['body'])],
+    # Resumen de seguimientos
+    summary_header = [
+        _th("Total", styles),
+        _th("Pendientes", styles),
+        _th("Corregidos", styles),
+        _th("Validados", styles),
+        _th("Rechazados", styles),
+        _th("Vencidos", styles),
     ]
-    plazo_t = Table(plazo_data, colWidths=[3 * cm, 5 * cm, None])
-    plazo_ts = TableStyle([
+
+    def _fnum(v, c):
+        return Paragraph(
+            f'<font color="#{_hex(c)}"><b>{v}</b></font>',
+            ParagraphStyle('fn', fontSize=12, alignment=TA_CENTER, fontName='Helvetica-Bold')
+        )
+
+    summary_vals = [
+        _fnum(total_f, COLOR_HEADER),
+        _fnum(pending_f, COLOR_PARTIAL),
+        _fnum(corrected_f, COLOR_SUBHEADER),
+        _fnum(validated_f, COLOR_PASS),
+        _fnum(rejected_f, COLOR_FAIL),
+        _fnum(overdue_f, colors.HexColor('#dc2626')),
+    ]
+    summary_t = Table([summary_header, summary_vals], colWidths=[None] * 6)
+    summary_t.setStyle(TableStyle([
         ('BACKGROUND', (0, 0), (-1, 0), COLOR_TABLE_HEADER),
+        ('BACKGROUND', (0, 1), (-1, 1), COLOR_ACCENT),
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#d0dce8')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-        ('LEFTPADDING', (0, 0), (-1, -1), 8),
-        ('RIGHTPADDING', (0, 0), (-1, -1), 8),
-        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
-    ])
-    for i in range(1, 4):
-        bg = COLOR_ROW_ODD if i % 2 == 1 else COLOR_ROW_EVEN
-        plazo_ts.add('BACKGROUND', (0, i), (-1, i), bg)
-    plazo_t.setStyle(plazo_ts)
-    story.append(plazo_t)
+    ]))
+    story.append(summary_t)
     story.append(Spacer(1, 0.4 * cm))
 
-    # Recursos útiles
-    story.append(Paragraph("Recursos Útiles", styles['dim_header']))
-    for res in RESOURCES:
-        story.append(Paragraph(f"• {res}", styles['bullet']))
+    # Tabla detallada de seguimientos
+    story.append(Paragraph("Detalle de Seguimientos", styles['dim_header']))
+    story.append(Spacer(1, 0.15 * cm))
+
+    detail_header = [
+        _th("Criterio", styles),
+        _th("Nombre", styles),
+        _th("Fecha límite", styles),
+        _th("Estado", styles),
+        _th("Vencido", styles),
+    ]
+    detail_rows = [detail_header]
+
+    # Ordenar: vencidos primero, luego por fecha límite
+    sorted_followups = sorted(
+        followups,
+        key=lambda f: (
+            0 if (f.status in ('pending', 'rejected') and f.due_date and f.due_date < now) else 1,
+            f.due_date or now,
+        )
+    )
+
+    for f in sorted_followups:
+        cr = f.criteria_result
+        is_overdue = (
+            f.status in ('pending', 'rejected')
+            and f.due_date
+            and f.due_date < now
+        )
+        f_status = FOLLOWUP_STATUS_LABELS.get(f.status, f.status)
+        f_color = FOLLOWUP_STATUS_COLORS.get(f.status, COLOR_NA)
+
+        overdue_text = "SÍ" if is_overdue else "No"
+        overdue_color = colors.HexColor('#dc2626') if is_overdue else COLOR_PASS
+
+        due_str = f.due_date.strftime("%d/%m/%Y") if f.due_date else "—"
+
+        detail_rows.append([
+            Paragraph(cr.criteria_id if cr else "—", styles['criteria_text']),
+            Paragraph(cr.criteria_name if cr else "—", styles['criteria_text']),
+            Paragraph(due_str, styles['cell_center']),
+            Paragraph(
+                f'<font color="#{_hex(f_color)}"><b>{f_status}</b></font>',
+                styles['cell_bold_center']
+            ),
+            Paragraph(
+                f'<font color="#{_hex(overdue_color)}"><b>{overdue_text}</b></font>',
+                styles['cell_bold_center']
+            ),
+        ])
+
+    detail_t = Table(
+        detail_rows,
+        colWidths=[2.2 * cm, 5.5 * cm, 2.8 * cm, 3.0 * cm, 2.0 * cm],
+        repeatRows=1,
+    )
+    detail_ts = TableStyle([
+        ('BACKGROUND', (0, 0), (-1, 0), COLOR_TABLE_HEADER),
+        ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#d0dce8')),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TOPPADDING', (0, 0), (-1, -1), 5),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+        ('LEFTPADDING', (0, 0), (-1, -1), 5),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 5),
+    ])
+    for i in range(1, len(detail_rows)):
+        f = sorted_followups[i - 1]
+        is_overdue = (
+            f.status in ('pending', 'rejected')
+            and f.due_date
+            and f.due_date < now
+        )
+        if is_overdue:
+            detail_ts.add('BACKGROUND', (0, i), (-1, i), colors.HexColor('#fef2f2'))
+        else:
+            bg = COLOR_ROW_ODD if i % 2 == 1 else COLOR_ROW_EVEN
+            detail_ts.add('BACKGROUND', (0, i), (-1, i), bg)
+    detail_t.setStyle(detail_ts)
+    story.append(detail_t)
+    story.append(Spacer(1, 0.4 * cm))
+
+    # Detalle individual de seguimientos con notas
+    followups_with_notes = [f for f in sorted_followups if f.notes or f.validation_notes]
+    if followups_with_notes:
+        story.append(Paragraph("Notas de Seguimiento", styles['dim_header']))
+        story.append(Spacer(1, 0.15 * cm))
+
+        for f in followups_with_notes:
+            cr = f.criteria_result
+            is_overdue = (
+                f.status in ('pending', 'rejected')
+                and f.due_date
+                and f.due_date < now
+            )
+            block = []
+
+            # Encabezado
+            f_status = FOLLOWUP_STATUS_LABELS.get(f.status, f.status)
+            f_color = FOLLOWUP_STATUS_COLORS.get(f.status, COLOR_NA)
+            hdr_bg = colors.HexColor('#dc2626') if is_overdue else f_color
+
+            hdr_data = [[
+                Paragraph(
+                    f'<b>[{cr.criteria_id if cr else "?"}] {cr.criteria_name if cr else "—"}</b>',
+                    ParagraphStyle('fh', fontSize=9, textColor=colors.white,
+                                   fontName='Helvetica-Bold', leading=13)
+                ),
+                Paragraph(
+                    f'<b>{"VENCIDO — " if is_overdue else ""}{f_status}</b>',
+                    ParagraphStyle('fs', fontSize=9, textColor=colors.white,
+                                   fontName='Helvetica-Bold', alignment=TA_RIGHT, leading=13)
+                ),
+            ]]
+            hdr_t = Table(hdr_data, colWidths=['70%', '30%'])
+            hdr_t.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), hdr_bg),
+                ('TOPPADDING', (0, 0), (-1, -1), 5),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 5),
+                ('LEFTPADDING', (0, 0), (-1, -1), 8),
+                ('RIGHTPADDING', (0, 0), (-1, -1), 8),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ]))
+            block.append(hdr_t)
+
+            note_rows = []
+            if f.notes:
+                note_rows.append([
+                    Paragraph("<b>Notas del evaluador:</b>", styles['body']),
+                    Paragraph(str(f.notes), styles['obs_text']),
+                ])
+            if f.validation_notes:
+                note_rows.append([
+                    Paragraph("<b>Notas de validación:</b>", styles['body']),
+                    Paragraph(str(f.validation_notes), styles['obs_text']),
+                ])
+            if f.corrected_at:
+                note_rows.append([
+                    Paragraph("<b>Fecha de corrección:</b>", styles['body']),
+                    Paragraph(f.corrected_at.strftime("%d/%m/%Y %H:%M"), styles['body']),
+                ])
+            if f.validated_at:
+                note_rows.append([
+                    Paragraph("<b>Fecha de validación:</b>", styles['body']),
+                    Paragraph(f.validated_at.strftime("%d/%m/%Y %H:%M"), styles['body']),
+                ])
+
+            if note_rows:
+                note_t = Table(note_rows, colWidths=[4.0 * cm, None])
+                note_t.setStyle(TableStyle([
+                    ('BACKGROUND', (0, 0), (0, -1), COLOR_ACCENT),
+                    ('BACKGROUND', (1, 0), (1, -1), colors.white),
+                    ('GRID', (0, 0), (-1, -1), 0.4, colors.HexColor('#e5e7eb')),
+                    ('TOPPADDING', (0, 0), (-1, -1), 4),
+                    ('BOTTOMPADDING', (0, 0), (-1, -1), 4),
+                    ('LEFTPADDING', (0, 0), (-1, -1), 6),
+                    ('RIGHTPADDING', (0, 0), (-1, -1), 6),
+                    ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+                ]))
+                block.append(note_t)
+
+            block.append(Spacer(1, 0.25 * cm))
+            story.append(KeepTogether(block))
 
 
 # ── Función principal ─────────────────────────────────────────────────────────
@@ -954,8 +1217,27 @@ def generate_evaluation_report(evaluation_id: int, db: Session) -> bytes:
     eval_date = evaluation.completed_at or evaluation.started_at or datetime.utcnow()
     generation_date = datetime.utcnow()
 
-    # Evaluador: el modelo Evaluation no tiene FK a User; se indica sistema
+    # Evaluador: usar nombre completo del evaluador si existe
     evaluator_name = "Sistema de Evaluación Automática GOB.BO"
+    if evaluation.evaluator and evaluation.evaluator.full_name:
+        evaluator_name = evaluation.evaluator.full_name
+    elif evaluation.evaluator:
+        evaluator_name = evaluation.evaluator.username
+
+    # Responsable de la entidad: buscar usuario entity_user de la institución
+    entity_responsible = ""
+    if institution:
+        entity_user = db.query(User).filter(
+            User.institution_id == institution.id,
+            User.role == UserRole.ENTITY_USER,
+            User.is_active == True,
+        ).first()
+        if entity_user and entity_user.full_name:
+            entity_responsible = entity_user.full_name
+            if entity_user.position:
+                entity_responsible += f" — {entity_user.position}"
+        elif entity_user:
+            entity_responsible = entity_user.username
 
     # Puntajes por dimensión
     dimension_scores: dict = {
@@ -991,6 +1273,11 @@ def generate_evaluation_report(evaluation_id: int, db: Session) -> bytes:
     for cr in criteria_results:
         criteria_by_dim[cr.dimension or 'unknown'].append(cr)
 
+    # Cargar seguimientos de esta evaluación
+    followups = db.query(Followup).filter(
+        Followup.evaluation_id == evaluation_id
+    ).order_by(Followup.due_date).all()
+
     # ── 3. Construir PDF ──────────────────────────────────────────────────────
     buffer = io.BytesIO()
 
@@ -1025,7 +1312,8 @@ def generate_evaluation_report(evaluation_id: int, db: Session) -> bytes:
     # ── PORTADA ───────────────────────────────────────────────────────────────
     _build_cover(story, styles,
                  institution_name, domain,
-                 eval_date, evaluator_name, total_score)
+                 eval_date, evaluator_name, total_score,
+                 entity_responsible=entity_responsible)
 
     # ── RESUMEN EJECUTIVO ─────────────────────────────────────────────────────
     _build_executive_summary(story, styles,
@@ -1041,6 +1329,9 @@ def generate_evaluation_report(evaluation_id: int, db: Session) -> bytes:
 
     # ── RECOMENDACIONES GENERALES ─────────────────────────────────────────────
     _build_recommendations(story, styles, non_compliant, dimension_scores)
+
+    # ── SEGUIMIENTOS ───────────────────────────────────────────────────────────
+    _build_followups(story, styles, followups, generation_date)
 
     # ── PIE DE PÁGINA FINAL ───────────────────────────────────────────────────
     story.append(Spacer(1, 0.8 * cm))

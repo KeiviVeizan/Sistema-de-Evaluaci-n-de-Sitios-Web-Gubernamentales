@@ -9,11 +9,12 @@ const evaluationService = {
    * @param {Array<{criterion_id: string, status: string, observations?: string}>} data.criteria_results
    * @returns {Promise<{evaluation_id: number, institution_id: number, scores: Object, total_score: number, created_at: string}>}
    */
-  async saveEvaluation({ institution_id, criteria_results, scores_override }) {
+  async saveEvaluation({ institution_id, criteria_results, scores_override, nlp_analysis }) {
     const response = await api.post('/evaluation/save', {
       institution_id,
       criteria_results,
       scores_override,
+      nlp_analysis,
     });
     return response.data;
   },

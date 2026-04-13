@@ -26,39 +26,71 @@ const FOLLOWUP_STATUS_LABELS = {
 };
 
 function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
-  const [criteriaResultId, setCriteriaResultId] = useState('');
+  const [selectedIds, setSelectedIds] = useState(new Set());
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const toggleCriteria = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === nonCompliant.length) setSelectedIds(new Set());
+    else setSelectedIds(new Set(nonCompliant.map(c => c.id)));
+  };
+
   const handleSave = async () => {
-    if (!criteriaResultId) { setError('Seleccione un criterio'); return; }
-    if (!dueDate)          { setError('Seleccione una fecha de vencimiento'); return; }
-    const payload = { evaluation_id: evaluationId, criteria_result_id: Number(criteriaResultId), due_date: dueDate, notes };
+    if (selectedIds.size === 0) { setError('Seleccione al menos un criterio'); return; }
+    if (!dueDate)               { setError('Seleccione una fecha de vencimiento'); return; }
+    const payload = {
+      evaluation_id: evaluationId,
+      criteria_result_ids: Array.from(selectedIds).map(Number),
+      due_date: dueDate,
+      notes,
+    };
     setSaving(true);
     setError('');
     try {
       await onSave(payload);
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.detail || 'Error al guardar el seguimiento');
+      setError(err?.response?.data?.detail || 'Error al guardar los seguimientos');
     } finally {
       setSaving(false);
     }
   };
 
+  const allSelected = selectedIds.size === nonCompliant.length;
+
   return (
     <div style={modalOverlay}>
-      <div style={modalBox}>
+      <div style={{ ...modalBox, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
         <h3 style={{ margin: '0 0 16px', color: '#1a3a5c', fontSize: '1rem', fontWeight: 700 }}>Programar Seguimiento</h3>
-        <label style={labelStyle}>Criterio *</label>
-        <select value={criteriaResultId} onChange={e => setCriteriaResultId(e.target.value)} style={inputStyle}>
-          <option value="">Seleccionar criterio...</option>
+
+        <label style={labelStyle}>Criterios a corregir * <span style={{ fontWeight: 400, color: '#888', fontSize: '0.8rem' }}>({selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''})</span></label>
+        <div style={{ border: '1px solid #d0dce8', borderRadius: '6px', maxHeight: '200px', overflowY: 'auto', marginBottom: '12px' }}>
+          {/* Seleccionar todos */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '2px solid #d0dce8', cursor: 'pointer', background: '#f0f4f8', fontSize: '0.85rem', fontWeight: 600, color: '#1a3a5c' }}>
+            <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ accentColor: '#800000' }} />
+            Seleccionar todos
+          </label>
           {nonCompliant.map(c => (
-            <option key={c.id} value={c.id}>{c.criteria_id} - {c.criteria_name}</option>
+            <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #f0f0f0', cursor: 'pointer', background: selectedIds.has(c.id) ? '#fdf2f2' : 'transparent', fontSize: '0.85rem', color: '#333' }}>
+              <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleCriteria(c.id)} style={{ accentColor: '#800000' }} />
+              <code style={{ fontSize: '0.78rem', color: '#800000', fontWeight: 600 }}>{c.criteria_id}</code>
+              <span style={{ flex: 1 }}>{c.criteria_name}</span>
+              <span style={{ fontSize: '0.72rem', padding: '1px 6px', borderRadius: '3px', background: c.status === 'fail' ? '#fde8e8' : '#fef3c7', color: c.status === 'fail' ? '#c0392b' : '#92400e', fontWeight: 600 }}>{c.status === 'fail' ? 'Fallido' : 'Parcial'}</span>
+            </label>
           ))}
-        </select>
+        </div>
+
         <label style={labelStyle}>Fecha de vencimiento *</label>
         <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={inputStyle} min={new Date().toISOString().split('T')[0]} />
         <label style={labelStyle}>Notas</label>
@@ -66,7 +98,7 @@ function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
         {error && <p style={{ color: '#c0392b', fontSize: '0.83rem', margin: '4px 0 0' }}>{error}</p>}
         <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
           <button onClick={onClose} style={btnSecondary} disabled={saving}>Cancelar</button>
-          <button onClick={handleSave} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }} disabled={saving}>{saving ? 'Guardando...' : 'Guardar'}</button>
+          <button onClick={handleSave} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }} disabled={saving}>{saving ? 'Guardando...' : `Guardar${selectedIds.size > 1 ? ` (${selectedIds.size})` : ''}`}</button>
         </div>
       </div>
     </div>
@@ -118,9 +150,10 @@ export default function EvaluationDetail() {
 
   const handleCreateFollowup = async (data) => {
     try {
-      const created = await followupService.create(data);
-      setFollowups(prev => [...prev, created]);
-      showToast('Seguimiento programado correctamente');
+      const createdList = await followupService.createBulk(data);
+      setFollowups(prev => [...prev, ...createdList]);
+      const count = createdList.length;
+      showToast(`${count} seguimiento${count !== 1 ? 's' : ''} programado${count !== 1 ? 's' : ''} correctamente`);
     } catch (err) { throw err; }
   };
 

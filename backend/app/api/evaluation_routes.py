@@ -239,21 +239,22 @@ _DIMENSION_ALIASES = {
 
 # Mapa criterion_id -> metadatos (IDs reales de los evaluadores)
 _CRITERIA_META: dict = {
-    # Accesibilidad
-    'ACC-01': {'name': 'Texto alternativo en imágenes', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    'ACC-02': {'name': 'Contraste de color', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    'ACC-03': {'name': 'Navegación por teclado', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    'ACC-04': {'name': 'Etiquetas en formularios', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    'ACC-05': {'name': 'Idioma declarado', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    'ACC-06': {'name': 'Estructura de encabezados', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    'ACC-07': {'name': 'Coherencia semántica NLP', 'dimension': 'semantica_nlp', 'max_score': 10.0},
-    'ACC-07-NLP': {'name': 'Coherencia semántica NLP', 'dimension': 'semantica_nlp', 'max_score': 1.0},
-    'ACC-08': {'name': 'Detección de ambigüedad NLP', 'dimension': 'semantica_nlp', 'max_score': 10.0},
+    # Accesibilidad (nombres y pesos según accesibilidad_evaluator.py)
+    'ACC-01': {'name': 'Texto alternativo en imágenes', 'dimension': 'accesibilidad', 'max_score': 14.0},
+    'ACC-02': {'name': 'Idioma de la página', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-03': {'name': 'Título descriptivo de página', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-04': {'name': 'Estructura de encabezados', 'dimension': 'accesibilidad', 'max_score': 12.0},
+    'ACC-05': {'name': 'Sin auto reproducción multimedia', 'dimension': 'accesibilidad', 'max_score': 10.0},
+    'ACC-06': {'name': 'Contraste texto-fondo', 'dimension': 'accesibilidad', 'max_score': 12.0},
+    'ACC-07': {'name': 'Etiquetas en formularios', 'dimension': 'accesibilidad', 'max_score': 12.0},
+    'ACC-08': {'name': 'Enlaces descriptivos', 'dimension': 'accesibilidad', 'max_score': 8.0},
+    'ACC-09': {'name': 'Encabezados y etiquetas descriptivas', 'dimension': 'accesibilidad', 'max_score': 6.0},
+    'ACC-10': {'name': 'Idioma de partes', 'dimension': 'accesibilidad', 'max_score': 6.0},
+    # NLP (criterios de análisis semántico IA)
+    'ACC-07-NLP': {'name': 'Etiquetas e instrucciones (NLP)', 'dimension': 'semantica_nlp', 'max_score': 1.0},
     'ACC-08-NLP': {'name': 'Propósito de enlaces (NLP)', 'dimension': 'semantica_nlp', 'max_score': 1.0},
-    'ACC-09': {'name': 'Claridad y legibilidad NLP', 'dimension': 'semantica_nlp', 'max_score': 10.0},
     'ACC-09-NLP': {'name': 'Encabezados y etiquetas (NLP)', 'dimension': 'semantica_nlp', 'max_score': 1.0},
-    'ACC-10': {'name': 'Subtítulos en multimedia', 'dimension': 'accesibilidad', 'max_score': 10.0},
-    # Usabilidad (IDs reales: IDEN-*, NAV-*, PART-*)
+    # Usabilidad (nombres y pesos según usabilidad_evaluator.py)
     'IDEN-01': {'name': 'Nombre institución en título', 'dimension': 'usabilidad', 'max_score': 14.0},
     'IDEN-02': {'name': "Leyenda 'Bolivia a tu servicio'", 'dimension': 'usabilidad', 'max_score': 12.0},
     'NAV-01': {'name': 'Menú de navegación', 'dimension': 'usabilidad', 'max_score': 16.0},
@@ -263,7 +264,7 @@ _CRITERIA_META: dict = {
     'PART-03': {'name': 'Enlace a correo electrónico', 'dimension': 'usabilidad', 'max_score': 10.0},
     'PART-04': {'name': 'Enlace a teléfono', 'dimension': 'usabilidad', 'max_score': 8.0},
     'PART-05': {'name': 'Botones compartir en RRSS', 'dimension': 'usabilidad', 'max_score': 4.0},
-    # Semantica tecnica (IDs reales: SEM-*, SEO-*, FMT-*)
+    # Semántica técnica (nombres y pesos según semantica_evaluator.py)
     'SEM-01': {'name': 'Uso de DOCTYPE HTML5', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
     'SEM-02': {'name': 'Codificación UTF-8', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
     'SEM-03': {'name': 'Elementos semánticos HTML5', 'dimension': 'semantica_tecnica', 'max_score': 14.0},
@@ -274,7 +275,7 @@ _CRITERIA_META: dict = {
     'SEO-04': {'name': 'Jerarquía de headings válida', 'dimension': 'semantica_tecnica', 'max_score': 14.0},
     'FMT-01': {'name': 'Uso de formatos abiertos', 'dimension': 'semantica_tecnica', 'max_score': 10.0},
     'FMT-02': {'name': 'Imágenes optimizadas', 'dimension': 'semantica_tecnica', 'max_score': 8.0},
-    # Soberania digital (IDs reales: PROH-*)
+    # Soberanía digital (nombres y pesos según soberania_evaluator.py)
     'PROH-01': {'name': 'Sin iframes externos', 'dimension': 'soberania', 'max_score': 25.0},
     'PROH-02': {'name': 'Sin CDNs externos no autorizados', 'dimension': 'soberania', 'max_score': 25.0},
     'PROH-03': {'name': 'Sin fuentes externas', 'dimension': 'soberania', 'max_score': 20.0},
@@ -433,17 +434,32 @@ async def save_evaluation(
         effective_max_score = item.max_score if item.max_score is not None else meta['max_score']
         # Usar score real del frontend si viene, si no calcular desde status
         effective_score = item.score if item.score is not None else _status_to_score(item.status, effective_max_score)
+
+        # Usar nombre/dimensión del frontend si vienen, si no del meta
+        effective_name = item.criteria_name or meta['name']
+        effective_dimension = item.dimension or meta['dimension']
+        # Normalizar alias de dimensión
+        effective_dimension = _DIMENSION_ALIASES.get(effective_dimension, effective_dimension)
+
+        # Preservar details completos del frontend si vienen
+        effective_details = item.details if item.details else {}
+        if item.observations and not effective_details.get('observations'):
+            effective_details['observations'] = item.observations
+
+        # Preservar evidence del frontend si viene
+        effective_evidence = item.evidence if item.evidence else {}
+
         cr = CriteriaResult(
             evaluation_id=evaluation.id,
             criteria_id=item.criterion_id,
-            criteria_name=meta['name'],
-            dimension=meta['dimension'],
-            lineamiento=item.criterion_id,
+            criteria_name=effective_name,
+            dimension=effective_dimension,
+            lineamiento=item.lineamiento or item.criterion_id,
             status=item.status,
             score=effective_score,
             max_score=effective_max_score,
-            details={'observations': item.observations} if item.observations else {},
-            evidence=[],
+            details=effective_details,
+            evidence=effective_evidence,
         )
         db.add(cr)
         criteria_records.append(cr)
@@ -522,11 +538,37 @@ async def save_evaluation(
     logger.info(f"  score_total               = {evaluation.score_total}")
     # ── FIN DEBUG ────────────────────────────────────────────────────────────
 
-    # 7. Guardar NLPAnalysis si scores_override contiene semantica_nlp
+    # 7. Guardar NLPAnalysis
+    # Prioridad: usar nlp_analysis completo del request si viene, si no scores_override
+    nlp_full = request.nlp_analysis  # Análisis NLP completo del engine
     nlp_override = scores.get('semantica_nlp') if isinstance(scores, dict) else None
-    if isinstance(nlp_override, dict) and nlp_override.get('percentage', 0) > 0:
+
+    if nlp_full and isinstance(nlp_full, dict) and nlp_full.get('global_score', 0) > 0:
+        # Usar nlp_analysis completo (tiene todos los detalles)
+        nlp_details = nlp_full.get('details', {})
+        nlp_record = NLPAnalysis(
+            evaluation_id=evaluation.id,
+            nlp_global_score=float(nlp_full.get('global_score', 0)),
+            coherence_score=float(nlp_full.get('coherence_score', 0)),
+            ambiguity_score=float(nlp_full.get('ambiguity_score', 0)),
+            clarity_score=float(nlp_full.get('clarity_score', 0)),
+            wcag_compliance=nlp_full.get('wcag_compliance', {}),
+            coherence_details=nlp_details.get('coherence', {}) if isinstance(nlp_details, dict) else {},
+            ambiguity_details=nlp_details.get('ambiguity', {}) if isinstance(nlp_details, dict) else {},
+            clarity_details=nlp_details.get('clarity', {}) if isinstance(nlp_details, dict) else {},
+            recommendations=nlp_full.get('recommendations', []),
+        )
+        db.add(nlp_record)
+        logger.info(
+            f"NLPAnalysis creado desde nlp_analysis completo: "
+            f"global={nlp_record.nlp_global_score}, "
+            f"coherence={nlp_record.coherence_score}, "
+            f"ambiguity={nlp_record.ambiguity_score}, "
+            f"clarity={nlp_record.clarity_score}"
+        )
+    elif isinstance(nlp_override, dict) and nlp_override.get('percentage', 0) > 0:
+        # Fallback: usar scores_override (menos detallado)
         wcag_raw = nlp_override.get('wcag_compliance', {})
-        # Preservar detalles NLP si están disponibles
         nlp_details = nlp_override.get('details', {})
         nlp_record = NLPAnalysis(
             evaluation_id=evaluation.id,
@@ -549,7 +591,7 @@ async def save_evaluation(
             f"clarity={nlp_record.clarity_score}"
         )
     else:
-        logger.info("✗ semantica_nlp no presente o percentage=0 en scores_override; NLPAnalysis no creado")
+        logger.info("✗ NLP no disponible; NLPAnalysis no creado")
 
     try:
         db.commit()

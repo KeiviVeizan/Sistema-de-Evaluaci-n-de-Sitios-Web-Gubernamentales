@@ -180,7 +180,7 @@ class NLPDataAdapter:
                     'word_count': len(content.split()) if content else 0
                 })
 
-        # Opción 3: Si no hay headings, crear sección genérica
+        # Opción 3: Si no hay headings, crear sección genérica desde párrafos
         if not sections and paragraphs:
             full_content = ' '.join(paragraphs[:5])  # Primeros 5 párrafos
             sections.append({
@@ -189,6 +189,26 @@ class NLPDataAdapter:
                 'content': full_content,
                 'word_count': len(full_content.split())
             })
+
+        # Opción 4: Último fallback - usar full_text del crawler
+        if not sections and text_corpus:
+            full_text = (text_corpus.get('full_text') or '').strip()
+            title = (text_corpus.get('title') or 'Contenido Principal').strip()
+            if full_text and len(full_text) > 50:
+                # Dividir full_text en secciones artificiales por párrafos
+                paragraphs_from_text = [p.strip() for p in full_text.split('\n') if p.strip() and len(p.strip()) > 20]
+                if paragraphs_from_text:
+                    # Crear sección con el título de la página y el contenido completo
+                    content = ' '.join(paragraphs_from_text[:10])
+                    sections.append({
+                        'heading': title or 'Contenido Principal',
+                        'heading_level': 1,
+                        'content': content[:5000],
+                        'word_count': len(content.split())
+                    })
+                    logger.info(
+                        f"Adapter: Fallback full_text - creada 1 sección con {len(content.split())} palabras"
+                    )
 
         return sections
 

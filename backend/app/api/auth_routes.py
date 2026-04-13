@@ -104,21 +104,27 @@ async def login(
     # Usar username si existe, sino email como clave del código 2FA
     user_key = user.username or user.email
 
-    # Generar código de 6 dígitos
-    code = str(random.randint(100000, 999999))
-    _2fa_codes[user_key] = code
+    # Reusar código existente si fue generado hace menos de 60 segundos
+    # Esto evita que doble-click o requests duplicados generen códigos distintos
+    existing = _2fa_codes.get(user_key)
+    if existing and (datetime.now() - existing["created_at"]).total_seconds() < 60:
+        code = existing["code"]
+        logger.info(f"Reusando código 2FA existente para '{user_key}' (generado hace < 60s)")
+    else:
+        # Generar código nuevo de 6 dígitos
+        code = str(random.randint(100000, 999999))
+        _2fa_codes[user_key] = {"code": code, "created_at": datetime.now()}
+        logger.info(f"Código 2FA generado para '{user_key}' (email: {user.email})")
 
-    logger.info(f"Código 2FA generado para '{user_key}' (email: {user.email})")
+        # Enviar código por correo electrónico (en segundo plano)
+        background_tasks.add_task(
+            email_service.send_2fa_code,
+            email=user.email,
+            code=code,
+            username=user_key,
+        )
 
-    # Enviar código por correo electrónico (en segundo plano)
-    background_tasks.add_task(
-        email_service.send_2fa_code,
-        email=user.email,
-        code=code,
-        username=user_key,
-    )
-
-    logger.info(f"Tarea de envío 2FA encolada para {user.email}")
+        logger.info(f"Tarea de envío 2FA encolada para {user.email}")
 
     return {
         "message": "Código de verificación enviado a tu correo electrónico.",
@@ -139,15 +145,25 @@ async def verify_2fa(
     Verifica el código 2FA y retorna el JWT si es válido.
     """
     # Validar que existe un código pendiente
-    if verification.username not in _2fa_codes:
+    stored = _2fa_codes.get(verification.username)
+    if not stored:
         logger.warning(f"verify-2fa: no hay código pendiente para '{verification.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="No hay código pendiente para este usuario",
         )
 
+    # Verificar expiración (5 minutos)
+    if (datetime.now() - stored["created_at"]).total_seconds() > 300:
+        del _2fa_codes[verification.username]
+        logger.warning(f"verify-2fa: código expirado para '{verification.username}'")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="El código ha expirado. Solicita uno nuevo",
+        )
+
     # Validar que el código coincida
-    if _2fa_codes[verification.username] != verification.code:
+    if stored["code"] != verification.code:
         logger.warning(f"verify-2fa: código incorrecto para '{verification.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

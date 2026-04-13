@@ -139,6 +139,9 @@ function extractDomain(url) {
 function mapCriteriaForSave(criteriaResults) {
   return (criteriaResults || []).map((cr) => ({
     criterion_id: cr.criteria_id,
+    criteria_name: cr.criteria_name || null,
+    dimension: cr.dimension || null,
+    lineamiento: cr.lineamiento || null,
     status: cr.status,
     score: typeof cr.score === 'number' ? cr.score : null,
     max_score: typeof cr.max_score === 'number' ? cr.max_score : null,
@@ -147,6 +150,8 @@ function mapCriteriaForSave(criteriaResults) {
         ? cr.details
         : cr.details.message || cr.details.observations || null
       : null,
+    details: cr.details && typeof cr.details === 'object' ? cr.details : null,
+    evidence: cr.evidence || null,
   }));
 }
 
@@ -323,6 +328,7 @@ export default function NewEvaluation() {
         institution_id: institutionId,
         criteria_results: criteriaResults,
         scores_override: scoresOverride,
+        nlp_analysis: results.nlp_analysis || null,
       });
 
       showToast(
