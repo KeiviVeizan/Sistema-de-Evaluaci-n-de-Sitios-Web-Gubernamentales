@@ -181,6 +181,7 @@ const MENU_STRUCTURE = {
       id: 'followups',
       icon: CheckCircle2,
       label: 'Seguimientos',
+      permission: 'followups_manage',
       children: [
         {
           path: '/admin/evaluator/followups',
@@ -225,7 +226,7 @@ const MENU_STRUCTURE = {
  *  - onMobileClose()    — callback para cerrar desde dentro del sidebar
  */
 function ModernSidebar({ onCollapse, mobileOpen = false, onMobileClose }) {
-  const { user, logout } = useAuth();
+  const { user, logout, hasPermission } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -319,8 +320,10 @@ function ModernSidebar({ onCollapse, mobileOpen = false, onMobileClose }) {
     setHoveredItem(null);
   };
 
-  // Obtener items del menú según el rol del usuario
-  const currentMenuItems = MENU_STRUCTURE[user?.role] || [];
+  // Obtener items del menú según el rol del usuario, filtrando por permisos
+  const currentMenuItems = (MENU_STRUCTURE[user?.role] || []).filter(
+    item => !item.permission || hasPermission(item.permission)
+  );
 
   const showLabels = !collapsed || isMobile;
 

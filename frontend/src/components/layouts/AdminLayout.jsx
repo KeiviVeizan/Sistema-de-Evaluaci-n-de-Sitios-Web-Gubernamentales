@@ -189,7 +189,6 @@ export default function AdminLayout() {
           </button>
 
           <div className={styles.headerTitle}>
-            Bienvenido de vuelta
           </div>
 
           <div className={styles.headerActions}>

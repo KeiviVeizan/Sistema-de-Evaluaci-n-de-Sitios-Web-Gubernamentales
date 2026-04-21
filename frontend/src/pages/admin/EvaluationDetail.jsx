@@ -108,8 +108,9 @@ function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
 export default function EvaluationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const isAdminOrSecretary = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'secretary' || user?.role === 'evaluator';
+  const { user, hasPermission } = useAuth();
+  const canManageFollowups = hasPermission('followups_manage');
+  const isAdminOrSecretary = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'secretary';
   const [evaluation, setEvaluation] = useState(null);
   const [loading, setLoading]       = useState(true);
   const [downloading, setDownloading] = useState(false);
@@ -213,7 +214,7 @@ export default function EvaluationDetail() {
       <section style={sectionStyle}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
           <h2 style={{ ...sectionTitle, marginBottom: 0 }}>Seguimientos Programados</h2>
-          {isAdminOrSecretary && nonCompliant.length > 0 && (
+          {canManageFollowups && nonCompliant.length > 0 && (
             <button onClick={() => setShowModal(true)} style={{ ...btnPrimary, padding: '8px 14px', fontSize: '0.85rem' }}>
               <Calendar size={14} /> + Programar Seguimiento
             </button>
@@ -253,7 +254,7 @@ export default function EvaluationDetail() {
                     {isAdminOrSecretary && f.status === 'pending' && (
                       <button onClick={() => handleCancelFollowup(f.id)} style={btnSmallGray}>Cancelar</button>
                     )}
-                    {isAdminOrSecretary && f.status === 'corrected' && (
+                    {canManageFollowups && f.status === 'corrected' && (
                       <>
                         <button onClick={() => handleValidateFollowup(f.id, true)} style={btnSmallGreen}>Validar</button>
                         <button onClick={() => handleValidateFollowup(f.id, false)} style={btnSmallRed}>Rechazar</button>

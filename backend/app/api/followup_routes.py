@@ -25,7 +25,7 @@ from app.models.database_models import CriteriaResult, Evaluation, Followup, Ins
 from app.auth.dependencies import (
     get_current_active_user,
     allow_admin_secretary,
-    allow_staff_followups,  # Permite admin, secretary Y evaluator
+    require_followups_manage,  # Verifica permiso granular FOLLOWUPS_MANAGE
 )
 from app.services.email_service import email_service
 from app.services.notification_service import create_notification
@@ -125,10 +125,10 @@ def _load_followup(followup_id: int, db: Session) -> Followup:
 @router.post("", summary="Crear seguimiento")
 async def create_followup(
     data: FollowupCreate,
-    current_user=Depends(allow_staff_followups),
+    current_user=Depends(require_followups_manage),
     db: Session = Depends(get_db),
 ):
-    """Crea un seguimiento para un criterio no cumplido. Admin o evaluador."""
+    """Crea un seguimiento para un criterio no cumplido. Requiere permiso FOLLOWUPS_MANAGE."""
     # Validar que existe la evaluación
     evaluation = db.query(Evaluation).filter(Evaluation.id == data.evaluation_id).first()
     if not evaluation:
@@ -194,10 +194,10 @@ async def create_followup(
 @router.post("/bulk", summary="Crear seguimientos para múltiples criterios")
 async def create_followup_bulk(
     data: FollowupCreateBulk,
-    current_user=Depends(allow_staff_followups),
+    current_user=Depends(require_followups_manage),
     db: Session = Depends(get_db),
 ):
-    """Crea seguimientos para múltiples criterios no cumplidos. Envía un solo email consolidado."""
+    """Crea seguimientos para múltiples criterios no cumplidos. Requiere permiso FOLLOWUPS_MANAGE."""
     if not data.criteria_result_ids:
         raise HTTPException(status_code=400, detail="Debe seleccionar al menos un criterio")
 
@@ -409,11 +409,12 @@ async def mark_corrected(
 async def validate_correction(
     followup_id: int,
     data: ValidateCorrectionRequest,
-    current_user=Depends(allow_staff_followups),
+    current_user=Depends(require_followups_manage),
     db: Session = Depends(get_db),
 ):
     """
     Permite al admin/secretaría/evaluador validar o rechazar una corrección reportada.
+    Requiere permiso FOLLOWUPS_MANAGE.
     El seguimiento debe estar en estado 'corrected'.
     Los evaluadores solo pueden validar correcciones de sus propias evaluaciones.
     """

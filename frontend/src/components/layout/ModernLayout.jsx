@@ -58,7 +58,6 @@ function ModernLayout() {
             </div>
 
             <span className={styles.pageTitle}>
-              Bienvenido de vuelta
             </span>
           </div>
 

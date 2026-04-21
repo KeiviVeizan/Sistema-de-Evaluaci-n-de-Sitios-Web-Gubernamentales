@@ -7,16 +7,19 @@ criterios no cumplidos y recomendaciones generales.
 """
 
 import io
+import os
 import re
 from collections import defaultdict
 from xml.sax.saxutils import escape as xml_escape
 from datetime import datetime
 from sqlalchemy.orm import Session
+from PIL import Image as PILImage
 
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
+from reportlab.lib.utils import ImageReader
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
     HRFlowable, PageBreak, KeepTogether
@@ -54,6 +57,36 @@ COLOR_PRIORITY_MED    = colors.HexColor('#f59e0b')
 COLOR_PRIORITY_LOW    = colors.HexColor('#10b981')
 
 PAGE_W, PAGE_H = A4
+
+# ── Marca de agua (logo AGETIC) ──────────────────────────────────────────────
+_ASSETS_DIR = os.path.join(os.path.dirname(__file__), '..', 'assets')
+_LOGO_PATH = os.path.join(_ASSETS_DIR, 'LOGO-AGETIC.png')
+
+_watermark_reader = None  # Cache para la imagen de marca de agua
+
+
+def _get_watermark_image():
+    """Crea y cachea una versión semi-transparente del logo para marca de agua."""
+    global _watermark_reader
+    if _watermark_reader is not None:
+        return _watermark_reader
+    if not os.path.exists(_LOGO_PATH):
+        logger.warning("Logo AGETIC no encontrado en %s", _LOGO_PATH)
+        return None
+    try:
+        img = PILImage.open(_LOGO_PATH).convert('RGBA')
+        # Reducir opacidad al 8% para que sea una marca de agua sutil
+        alpha = img.split()[3]
+        alpha = alpha.point(lambda p: int(p * 0.08))
+        img.putalpha(alpha)
+        buf = io.BytesIO()
+        img.save(buf, format='PNG')
+        buf.seek(0)
+        _watermark_reader = ImageReader(buf)
+        return _watermark_reader
+    except Exception as e:
+        logger.warning("No se pudo cargar logo para marca de agua: %s", e)
+        return None
 
 # Etiquetas de dimensiones
 DIMENSION_LABELS = {
@@ -1281,9 +1314,23 @@ def generate_evaluation_report(evaluation_id: int, db: Session) -> bytes:
     # ── 3. Construir PDF ──────────────────────────────────────────────────────
     buffer = io.BytesIO()
 
-    # Función para pie de página con número de página
+    # Función para pie de página y marca de agua
     def _add_footer(canvas, doc):
         canvas.saveState()
+
+        # ── Marca de agua (logo AGETIC de fondo) ──
+        wm = _get_watermark_image()
+        if wm:
+            wm_w = 350  # Ancho de la marca de agua en puntos
+            wm_h = 350  # Alto de la marca de agua en puntos
+            x = (PAGE_W - wm_w) / 2
+            y = (PAGE_H - wm_h) / 2
+            canvas.drawImage(
+                wm, x, y, width=wm_w, height=wm_h,
+                preserveAspectRatio=True, mask='auto'
+            )
+
+        # ── Pie de página ──
         canvas.setFont('Helvetica', 7.5)
         canvas.setFillColor(colors.HexColor('#7f8c8d'))
         footer_text = (

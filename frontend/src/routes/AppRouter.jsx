@@ -327,12 +327,13 @@ export default function AppRouter() {
             }
           />
 
-          {/* Seguimientos del evaluador */}
+          {/* Seguimientos del evaluador - requiere permiso followups_manage */}
           <Route
             path="evaluator/followups"
             element={
               <RoleBasedRoute
                 allowedRoles={[ROLES.EVALUATOR]}
+                requiredPermission="followups_manage"
                 showAccessDenied
               >
                 <EvaluatorFollowups />

@@ -942,13 +942,16 @@ async def get_evaluation_by_id(
     nlp_criteria = len([c for c in criteria_results if c.criteria_id in nlp_criteria_ids])
     heuristic_criteria = len(criteria_results) - nlp_criteria
 
-    # Construir scores
+    # Recalcular scores por dimensión desde los criteria_results de BD
+    # para evitar usar score_semantic_web (que combina semántica técnica + NLP)
+    recalculated = _calculate_scores(db_criteria)
+
     scores = {
-        'accesibilidad': {'percentage': evaluation.score_accessibility or 0},
-        'usabilidad': {'percentage': evaluation.score_usability or 0},
-        'semantica_tecnica': {'percentage': evaluation.score_semantic_web or 0},
+        'accesibilidad': recalculated.get('accesibilidad', {'percentage': evaluation.score_accessibility or 0}),
+        'usabilidad': recalculated.get('usabilidad', {'percentage': evaluation.score_usability or 0}),
+        'semantica_tecnica': recalculated.get('semantica_tecnica', {'percentage': 0}),
         'semantica_nlp': {'percentage': nlp_record.nlp_global_score if nlp_record else 0},
-        'soberania': {'percentage': evaluation.score_digital_sovereignty or 0},
+        'soberania': recalculated.get('soberania', {'percentage': evaluation.score_digital_sovereignty or 0}),
         'total': evaluation.score_total or 0
     }
 

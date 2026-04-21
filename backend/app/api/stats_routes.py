@@ -21,28 +21,19 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/stats", tags=["statistics"])
 
-# Bolivia es UTC-4 (sin horario de verano)
-BOLIVIA_UTC_OFFSET = timedelta(hours=-4)
-
-
-def bolivia_day_to_utc_range(date_str: str):
+def bolivia_day_range(date_str: str):
     """
-    Convierte una fecha en zona horaria Bolivia (UTC-4) a un rango UTC
-    para filtrar registros almacenados en UTC.
+    Retorna el rango [inicio, fin) de un día en hora Bolivia.
 
-    Ejemplo: '2026-02-13' Bolivia → [2026-02-13T04:00Z, 2026-02-14T04:00Z)
+    Los timestamps en la BD ya están en hora Bolivia (naive),
+    así que NO se necesita conversión UTC.
+
+    Ejemplo: '2026-02-13' → [2026-02-13T00:00, 2026-02-14T00:00)
     """
     target_date = datetime.strptime(date_str, "%Y-%m-%d").date()
-    # Inicio del día en Bolivia = medianoche Bolivia = 04:00 UTC
-    start_utc = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0) - BOLIVIA_UTC_OFFSET
-    end_utc = start_utc + timedelta(days=1)
-    return start_utc, end_utc
-
-
-def utc_to_bolivia_hour(dt_utc: datetime) -> int:
-    """Convierte un datetime UTC al hour en zona horaria Bolivia (UTC-4)."""
-    bolivia_dt = dt_utc + BOLIVIA_UTC_OFFSET
-    return bolivia_dt.hour
+    start = datetime(target_date.year, target_date.month, target_date.day, 0, 0, 0)
+    end = start + timedelta(days=1)
+    return start, end
 
 
 @router.get("/daily-evaluations")
@@ -52,13 +43,13 @@ async def get_daily_evaluations(
     db: Session = Depends(get_db)
 ):
     """Obtener evaluaciones realizadas en un día específico, agrupadas por evaluador."""
-    # Convertir fecha Bolivia a rango UTC para consultar correctamente
-    start_utc, end_utc = bolivia_day_to_utc_range(date)
-    logger.info(f"daily-evaluations: fecha={date}, rango UTC=[{start_utc}, {end_utc})")
+    # Los timestamps en BD ya están en hora Bolivia (naive), filtrar directamente
+    start, end = bolivia_day_range(date)
+    logger.info(f"daily-evaluations: fecha={date}, rango Bolivia=[{start}, {end})")
 
     evaluations = db.query(Evaluation).filter(
-        Evaluation.started_at >= start_utc,
-        Evaluation.started_at < end_utc
+        Evaluation.started_at >= start,
+        Evaluation.started_at < end
     ).all()
 
     logger.info(f"Encontradas {len(evaluations)} evaluaciones")
@@ -92,8 +83,8 @@ async def get_daily_evaluations(
                     }
 
         website = db.query(Website).filter(Website.id == ev.website_id).first()
-        # Hora en zona horaria Bolivia para mostrar al usuario
-        bolivia_hour = utc_to_bolivia_hour(ev.started_at) if ev.started_at else 0
+        # El timestamp ya está en hora Bolivia, usar la hora directamente
+        bolivia_hour = ev.started_at.hour if ev.started_at else 0
 
         # Obtener el nombre actual de la institución desde la tabla institutions
         # usando el dominio del website (evita nombres desactualizados en websites)
@@ -131,25 +122,25 @@ async def get_hourly_activity(
     db: Session = Depends(get_db)
 ):
     """Obtener actividad por hora en un día específico (horas en zona horaria Bolivia)."""
-    # Convertir fecha Bolivia a rango UTC
-    start_utc, end_utc = bolivia_day_to_utc_range(date)
-    logger.info(f"hourly-activity: fecha={date}, rango UTC=[{start_utc}, {end_utc})")
+    # Los timestamps en BD ya están en hora Bolivia (naive)
+    start, end = bolivia_day_range(date)
+    logger.info(f"hourly-activity: fecha={date}, rango Bolivia=[{start}, {end})")
 
     evaluations = db.query(Evaluation).filter(
-        Evaluation.started_at >= start_utc,
-        Evaluation.started_at < end_utc
+        Evaluation.started_at >= start,
+        Evaluation.started_at < end
     ).all()
 
     logger.info(f"Encontradas {len(evaluations)} evaluaciones para gráfico")
 
-    # Agrupar por hora Bolivia (no UTC)
+    # Los timestamps ya están en hora Bolivia, usar la hora directamente
     hourly_data = {hour: 0 for hour in range(24)}
 
     for ev in evaluations:
         if ev.started_at:
-            hour = utc_to_bolivia_hour(ev.started_at)
+            hour = ev.started_at.hour
             hourly_data[hour] += 1
-            logger.info(f"Eval {ev.id}: UTC={ev.started_at.hour}h → Bolivia={hour}h")
+            logger.info(f"Eval {ev.id}: hora Bolivia={hour}h")
 
     return {
         "date": date,
@@ -170,25 +161,24 @@ async def get_monthly_calendar(
     """Obtener conteo de evaluaciones por cada día del mes (en zona horaria Bolivia)."""
     import calendar as cal_module
 
-    # Rango UTC que cubre todo el mes en Bolivia
+    # Los timestamps en BD ya están en hora Bolivia (naive)
     first_day_str = f"{year}-{month:02d}-01"
     days_in_month = cal_module.monthrange(year, month)[1]
     last_day_str = f"{year}-{month:02d}-{days_in_month:02d}"
 
-    start_utc, _ = bolivia_day_to_utc_range(first_day_str)
-    _, end_utc = bolivia_day_to_utc_range(last_day_str)
+    start, _ = bolivia_day_range(first_day_str)
+    _, end = bolivia_day_range(last_day_str)
 
     evaluations = db.query(Evaluation).filter(
-        Evaluation.started_at >= start_utc,
-        Evaluation.started_at < end_utc
+        Evaluation.started_at >= start,
+        Evaluation.started_at < end
     ).all()
 
-    # Agrupar por fecha Bolivia
+    # Los timestamps ya están en hora Bolivia, agrupar directamente por fecha
     calendar_data = {}
     for ev in evaluations:
         if ev.started_at:
-            bolivia_dt = ev.started_at + BOLIVIA_UTC_OFFSET
-            day_str = bolivia_dt.date().isoformat()
+            day_str = ev.started_at.date().isoformat()
             calendar_data[day_str] = calendar_data.get(day_str, 0) + 1
 
     return {

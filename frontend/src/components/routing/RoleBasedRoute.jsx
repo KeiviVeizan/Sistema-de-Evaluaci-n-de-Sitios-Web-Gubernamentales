@@ -4,8 +4,9 @@ import { ShieldX } from 'lucide-react';
 import styles from './ProtectedRoute.module.css';
 
 /**
- * Componente que protege rutas basadas en roles
+ * Componente que protege rutas basadas en roles y/o permisos granulares
  * @param {Array|string} allowedRoles - Roles permitidos para acceder
+ * @param {string} requiredPermission - Permiso granular requerido (opcional)
  * @param {React.ReactNode} children - Contenido a renderizar si tiene permiso
  * @param {React.ReactNode} fallback - Contenido alternativo si no tiene permiso (en lugar de redirigir)
  * @param {string} redirectTo - Ruta de redirección si no tiene permiso (default: /admin)
@@ -13,12 +14,13 @@ import styles from './ProtectedRoute.module.css';
  */
 export default function RoleBasedRoute({
   allowedRoles,
+  requiredPermission,
   children,
   fallback = null,
   redirectTo = '/admin',
   showAccessDenied = false,
 }) {
-  const { user, hasRole, loading } = useAuth();
+  const { user, hasRole, hasPermission, loading } = useAuth();
 
   // Loading se maneja en ProtectedRoute padre
   if (loading) {
@@ -26,7 +28,8 @@ export default function RoleBasedRoute({
   }
 
   // Verificar si el usuario tiene uno de los roles permitidos
-  const hasAccess = hasRole(allowedRoles);
+  // y si se requiere un permiso granular, verificarlo también
+  const hasAccess = hasRole(allowedRoles) && (!requiredPermission || hasPermission(requiredPermission));
 
   if (!hasAccess) {
     // Si hay un fallback, renderizarlo en lugar de redirigir

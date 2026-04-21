@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { Monitor, FileCheck, Code, Shield, BookOpen, Laptop } from 'lucide-react';
 import styles from './AgeticHome.module.css';
 
@@ -143,9 +142,14 @@ export default function AgeticHome() {
                     Ir a la Herramienta
                   </a>
                 ) : (
-                  <Link to={servicio.link} className={styles.serviceButton}>
+                  <a
+                    href={servicio.link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={styles.serviceButton}
+                  >
                     Ir a la Herramienta
-                  </Link>
+                  </a>
                 )}
               </div>
             </div>
