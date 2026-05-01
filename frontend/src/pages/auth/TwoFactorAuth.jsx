@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { ShieldCheck, AlertCircle, Loader, ArrowLeft } from 'lucide-react';
+import { AlertCircle, Loader, ArrowLeft } from 'lucide-react';
 import styles from './TwoFactorAuth.module.css';
 
 export default function TwoFactorAuth() {
@@ -103,7 +103,7 @@ export default function TwoFactorAuth() {
       <div className={styles.card}>
         <div className={styles.header}>
           <div className={styles.iconWrapper}>
-            <ShieldCheck size={40} />
+            <img src="/Logo-GobScan.png" alt="GobScan" className={styles.logoImg} />
           </div>
           <h1 className={styles.title}>Verificación en dos pasos</h1>
           <p className={styles.subtitle}>

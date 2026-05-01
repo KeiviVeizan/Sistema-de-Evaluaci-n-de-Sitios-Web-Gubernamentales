@@ -63,6 +63,12 @@
   letter-spacing: -0.025em;
 }
 
+.gobScanLogo {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
 .closeSidebar {
   display: none;
   margin-left: auto;

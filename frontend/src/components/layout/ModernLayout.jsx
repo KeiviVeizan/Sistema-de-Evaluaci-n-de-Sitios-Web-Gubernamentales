@@ -62,6 +62,8 @@ function ModernLayout() {
           </div>
 
           <div className={styles.topbarRight}>
+            <img src="/Logo-GobScan.png" alt="GobScan" className={styles.gobScanLogo} />
+
             {/* Notificaciones solo para evaluadores */}
             {user?.role === ROLES.EVALUATOR && <NotificationBell />}
 

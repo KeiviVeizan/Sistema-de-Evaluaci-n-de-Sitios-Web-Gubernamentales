@@ -36,18 +36,20 @@ export default function Login() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.card}>
-        <div className={styles.header}>
-          <img
-            src="/LOGO-AGETIC.png"
-            alt="AGETIC"
-            className={styles.logo}
-          />
-          <h1 className={styles.title}>Sistema de Evaluación GOB.BO</h1>
-          <p className={styles.subtitle}>
-            Evaluación de Sitios Web Gubernamentales
-          </p>
+      {/* Panel izquierdo — formulario */}
+      <div className={styles.leftPanel}>
+        <div className={styles.brandHeader}>
+          <img src="/Logo-GobScan.png" alt="GobScan" className={styles.brandLogo} />
+          <span className={styles.brandName}>GobScan</span>
         </div>
+
+        <p className={styles.welcome}>Bienvenido</p>
+        <h1 className={styles.title}>
+          Sistema de Evaluación de Sitios Web &ldquo;GobScan&rdquo;
+        </h1>
+        <p className={styles.subtitle}>
+          Ingrese sus credenciales para acceder al sistema
+        </p>
 
         <form onSubmit={handleSubmit} className={styles.form}>
           {error && (
@@ -126,7 +128,33 @@ export default function Login() {
         </form>
 
         <div className={styles.footer}>
-          <p>© {new Date().getFullYear()} AGETIC - Estado Plurinacional de Bolivia</p>
+          <p>© {new Date().getFullYear()} AGETIC — Estado Plurinacional de Bolivia</p>
+        </div>
+      </div>
+
+      {/* Panel derecho — visual */}
+      <div className={styles.rightPanel}>
+        <div className={styles.visualContent}>
+          <div className={styles.logosRow}>
+            <img src="/LOGO-AGETIC.png" alt="AGETIC" className={styles.visualLogoInvert} />
+            <div className={styles.logoSeparator} />
+            <img src="/Logo-GobScan.png" alt="GobScan" className={styles.visualLogo} />
+          </div>
+
+          <div className={styles.visualText}>
+            <p className={styles.visualTitle}>
+              Evaluación y Monitoreo de Sitios Web Gubernamentales
+            </p>
+            <p className={styles.visualSubtitle}>
+              Agencia de Gobierno Electrónico y Tecnologías de Información y Comunicación
+            </p>
+          </div>
+
+          <div className={styles.decorDots}>
+            {Array.from({ length: 15 }).map((_, i) => (
+              <span key={i} className={styles.decorDot} />
+            ))}
+          </div>
         </div>
       </div>
     </div>

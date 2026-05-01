@@ -35,7 +35,7 @@ const servicios = [
     externo: true,
   },
   {
-    icon: <Laptop size={40} strokeWidth={1.5} />,
+    icon: <img src="/Logo-GobScan.png" alt="GobScan" style={{ width: 60, height: 60, objectFit: 'contain' }} />,
     titulo: 'GobScan — Evaluación de Sitios Web Gubernamentales',
     descripcion:
       'Sistema de evaluación y monitoreo de sitios web de entidades gubernamentales del Estado Plurinacional de Bolivia. Permite verificar el cumplimiento de estándares de accesibilidad, seguridad, rendimiento y lineamientos de Gobierno Electrónico.',

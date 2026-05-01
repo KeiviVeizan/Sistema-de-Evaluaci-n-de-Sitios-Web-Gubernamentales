@@ -26,6 +26,12 @@
   object-fit: contain;
 }
 
+.gobScanLogo {
+  height: 30px;
+  width: auto;
+  object-fit: contain;
+}
+
 /* Área principal desplazada por el sidebar flotante (240px + 1rem margen + 1rem separación) */
 .main {
   flex: 1;
@@ -92,6 +98,8 @@
 /* ===== LOGO en topbar (solo móvil) ===== */
 .topbarLogo {
   display: none;
+  align-items: center;
+  gap: 8px;
 }
 
 .topbarLogo img {
@@ -316,7 +324,7 @@
 
   /* Mostrar logo en topbar (oculto en desktop donde está el floating logo) */
   .topbarLogo {
-    display: block;
+    display: flex;
   }
 
   /* Título más pequeño en móvil */

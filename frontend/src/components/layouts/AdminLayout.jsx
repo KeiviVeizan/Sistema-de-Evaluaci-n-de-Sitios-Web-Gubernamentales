@@ -192,6 +192,7 @@ export default function AdminLayout() {
           </div>
 
           <div className={styles.headerActions}>
+            <img src="/Logo-GobScan.png" alt="GobScan" className={styles.gobScanLogo} />
             {/* Campana de notificaciones: solo para evaluadores */}
             {user?.role === ROLES.EVALUATOR && <NotificationBell />}
             <div className={styles.userMenu}>
