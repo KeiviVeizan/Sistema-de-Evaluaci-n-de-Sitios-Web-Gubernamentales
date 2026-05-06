@@ -199,3 +199,69 @@
     right: -50px;
   }
 }
+
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
+:global([data-theme="dark"]) .bellButton:hover {
+  background: rgba(255,255,255,0.07);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .panel {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+:global([data-theme="dark"]) .panelHeader {
+  background: #0f1017;
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .panelTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .markAllBtn:hover {
+  background: rgba(196,64,64,0.12);
+}
+
+:global([data-theme="dark"]) .notifItem {
+  border-bottom-color: rgba(255,255,255,0.04);
+}
+
+:global([data-theme="dark"]) .notifItem:hover {
+  background: rgba(255,255,255,0.04);
+}
+
+:global([data-theme="dark"]) .unread {
+  background: rgba(196,64,64,0.08);
+  border-left-color: #c44040;
+}
+
+:global([data-theme="dark"]) .notifTitle {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .notifMessage {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .notifDate {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .readBtn {
+  background: transparent;
+  border-color: rgba(255,255,255,0.1);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .readBtn:hover {
+  border-color: #c44040;
+  color: #c44040;
+  background: rgba(196,64,64,0.1);
+}
+
+:global([data-theme="dark"]) .empty {
+  color: #3d4455;
+}

@@ -900,7 +900,7 @@ class EvaluationEngine:
     # MODO SIN BASE DE DATOS (para testing directo)
     # ========================================================================
 
-    def evaluate_url(self, url: str) -> Dict[str, Any]:
+    def evaluate_url(self, url: str, progress_callback=None) -> Dict[str, Any]:
         """
         Evalua una URL directamente sin usar base de datos (SYNC).
 
@@ -926,11 +926,26 @@ class EvaluationEngine:
         if not self.crawler:
             raise RuntimeError("Crawler no disponible. Instalar dependencias.")
 
+        def _cb(step: str) -> None:
+            if progress_callback:
+                try:
+                    progress_callback(step)
+                except Exception:
+                    pass
+
+        _STEP_MAP = {
+            'accesibilidad': 'accessibility',
+            'usabilidad':    'usability',
+            'semantica':     'semantics',
+            'soberania':     'sovereignty',
+        }
+
         logger.info(f"Iniciando evaluacion de: {url}")
         logger.info("=" * 60)
 
         # 1. Crawlear el sitio (SYNC)
         logger.info("[1/3] Extrayendo contenido...")
+        _cb('extracting')
         extracted_content = self.crawler.crawl(url)
 
         if 'error' in extracted_content:
@@ -944,6 +959,7 @@ class EvaluationEngine:
         scores_por_dimension = {}
 
         for dimension_name, evaluador in self.evaluadores.items():
+            _cb(_STEP_MAP.get(dimension_name, dimension_name))
             logger.info(f"      Evaluando {dimension_name}...")
             try:
                 results = evaluador.evaluate(extracted_content)
@@ -964,6 +980,7 @@ class EvaluationEngine:
 
         # 3. Ejecutar análisis NLP
         logger.info("[3/3] Ejecutando análisis NLP...")
+        _cb('nlp')
         nlp_result = None
         if self.nlp_analyzer:
             try:
@@ -1106,23 +1123,19 @@ class EvaluationEngine:
 # FUNCION DE CONVENIENCIA PARA USO DIRECTO
 # ============================================================================
 
-def evaluar_url(url: str) -> Dict[str, Any]:
+def evaluar_url(url: str, progress_callback=None) -> Dict[str, Any]:
     """
     Funcion de conveniencia para evaluar una URL directamente (SYNC).
 
     Esta funcion es SYNC y sera ejecutada en un ThreadPoolExecutor
     desde el endpoint async de FastAPI.
 
-    Ejemplo de uso:
-        from app.evaluator.evaluation_engine import evaluar_url
-        resultado = evaluar_url('https://www.aduana.gob.bo')
-        print(f"Score total: {resultado['scores']['total']}%")
-
     Args:
         url: URL del sitio a evaluar
+        progress_callback: callable(step: str) opcional para reportar progreso
 
     Returns:
         Dict con resultados completos
     """
     engine = EvaluationEngine()
-    return engine.evaluate_url(url)
+    return engine.evaluate_url(url, progress_callback=progress_callback)

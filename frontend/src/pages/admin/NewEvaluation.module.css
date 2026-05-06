@@ -1,4 +1,5 @@
-/* Ocupa todo el viewport — el sidebar y topbar flotan encima */
+/* ── Contenedores principales ───────────────────────────────────────────── */
+
 .wrapper {
   position: relative;
   width: 100%;
@@ -9,7 +10,6 @@
   background: var(--color-bg, #ffffff);
 }
 
-/* Cuando hay resultados, permitir scroll */
 .wrapperResults {
   position: relative;
   width: 100%;
@@ -18,11 +18,171 @@
   display: flex;
   flex-direction: column;
   background: var(--color-bg, #ffffff);
+  padding-top: 64px;
 }
 
-/* Confinar el fondo animado al área del wrapper */
 .wrapper :global(.animated-bg) {
   position: absolute;
   inset: 0;
   z-index: 0;
+}
+
+/* ── SaveBar ─────────────────────────────────────────────────────────────── */
+
+.saveBar {
+  position: sticky;
+  top: 64px;
+  z-index: 100;
+  background: rgba(255, 255, 255, 0.97);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid #e5e7eb;
+  padding: 12px 28px 12px calc(80px + 2.5rem);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.saveBarText {
+  color: #4b5563;
+  font-size: 0.875rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.saveBarAccent {
+  color: #1a6b3a;
+  font-weight: 600;
+}
+
+.saveBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #1a6b3a 0%, #15572f 100%);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 9px 22px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  min-width: 170px;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(26, 107, 58, 0.3);
+  letter-spacing: 0.01em;
+}
+
+.saveBtn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(26, 107, 58, 0.4);
+}
+
+.saveBtn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(26, 107, 58, 0.2);
+}
+
+.saveBtn:disabled {
+  background: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.saveBtnSpinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Institution picker ──────────────────────────────────────────────────── */
+
+.institutionPicker {
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 12px 20px;
+  margin: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.institutionPickerText {
+  color: #92400e;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.institutionPickerSelect {
+  padding: 7px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  min-width: 260px;
+  background: white;
+  color: #1f2937;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.institutionPickerSelect:focus {
+  border-color: #800000;
+  box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+}
+
+/* ── Dark mode ───────────────────────────────────────────────────────────── */
+
+:global([data-theme="dark"]) .saveBar {
+  background: rgba(10, 11, 17, 0.97);
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+}
+
+:global([data-theme="dark"]) .saveBarText {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .saveBarAccent {
+  color: #4ade80;
+}
+
+:global([data-theme="dark"]) .saveBtn:disabled {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.3);
+}
+
+:global([data-theme="dark"]) .institutionPicker {
+  background: rgba(245, 158, 11, 0.08);
+  border-color: rgba(245, 158, 11, 0.25);
+}
+
+:global([data-theme="dark"]) .institutionPickerText {
+  color: #fbbf24;
+}
+
+:global([data-theme="dark"]) .institutionPickerSelect {
+  background: #13141f;
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .institutionPickerSelect:focus {
+  border-color: #c44040;
+  box-shadow: 0 0 0 3px rgba(196, 64, 64, 0.15);
 }

@@ -162,7 +162,7 @@ export default function AppRouter() {
             path="evaluations"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR, ROLES.SECRETARY]}
                 showAccessDenied
               >
                 <NewEvaluation />
@@ -173,7 +173,7 @@ export default function AppRouter() {
             path="evaluations/new"
             element={
               <RoleBasedRoute
-                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR]}
+                allowedRoles={[ROLES.SUPERADMIN, ROLES.EVALUATOR, ROLES.SECRETARY]}
                 showAccessDenied
               >
                 <NewEvaluation />

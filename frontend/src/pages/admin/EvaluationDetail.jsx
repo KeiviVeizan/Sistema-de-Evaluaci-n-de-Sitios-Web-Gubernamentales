@@ -4,7 +4,21 @@ import { Download, ArrowLeft, Calendar } from 'lucide-react';
 import evaluationService from '../../services/evaluationService';
 import followupService from '../../services/followupService';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import ResultsDashboard from '../../components/home/ResultsDashboard';
+import styles from './EvaluationDetail.module.css';
+
+// ── Followup status config ─────────────────────────────────────────────────────
+
+const FOLLOWUP_STATUS = (dark) => ({
+  pending:   { label: 'Pendiente',             color: dark ? '#fcd34d' : '#e67e22' },
+  corrected: { label: 'Corregido (pendiente)', color: dark ? '#93c5fd' : '#2980b9' },
+  validated: { label: 'Validado',              color: dark ? '#34d399' : '#27ae60' },
+  rejected:  { label: 'Rechazado',             color: dark ? '#f87171' : '#c0392b' },
+  cancelled: { label: 'Cancelado',             color: dark ? '#7b8496' : '#95a5a6' },
+});
+
+// ── Toast ──────────────────────────────────────────────────────────────────────
 
 function Toast({ message, type, onClose }) {
   if (!message) return null;
@@ -17,15 +31,10 @@ function Toast({ message, type, onClose }) {
   );
 }
 
-const FOLLOWUP_STATUS_LABELS = {
-  pending:   { label: 'Pendiente',             color: '#e67e22' },
-  corrected: { label: 'Corregido (pendiente)', color: '#2980b9' },
-  validated: { label: 'Validado',              color: '#27ae60' },
-  rejected:  { label: 'Rechazado',             color: '#c0392b' },
-  cancelled: { label: 'Cancelado',             color: '#95a5a6' },
-};
+// ── FollowupModal ──────────────────────────────────────────────────────────────
 
 function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
+  const { dark } = useTheme();
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [dueDate, setDueDate] = useState('');
   const [notes, setNotes] = useState('');
@@ -48,7 +57,7 @@ function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
 
   const handleSave = async () => {
     if (selectedIds.size === 0) { setError('Seleccione al menos un criterio'); return; }
-    if (!dueDate)               { setError('Seleccione una fecha de vencimiento'); return; }
+    if (!dueDate) { setError('Seleccione una fecha de vencimiento'); return; }
     const payload = {
       evaluation_id: evaluationId,
       criteria_result_ids: Array.from(selectedIds).map(Number),
@@ -70,53 +79,86 @@ function FollowupModal({ nonCompliant, evaluationId, onSave, onClose }) {
   const allSelected = selectedIds.size === nonCompliant.length;
 
   return (
-    <div style={modalOverlay}>
-      <div style={{ ...modalBox, maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-        <h3 style={{ margin: '0 0 16px', color: '#1a3a5c', fontSize: '1rem', fontWeight: 700 }}>Programar Seguimiento</h3>
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalBox}>
+        <h3 className={styles.modalTitle}>Programar Seguimiento</h3>
 
-        <label style={labelStyle}>Criterios a corregir * <span style={{ fontWeight: 400, color: '#888', fontSize: '0.8rem' }}>({selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''})</span></label>
-        <div style={{ border: '1px solid #d0dce8', borderRadius: '6px', maxHeight: '200px', overflowY: 'auto', marginBottom: '12px' }}>
-          {/* Seleccionar todos */}
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '2px solid #d0dce8', cursor: 'pointer', background: '#f0f4f8', fontSize: '0.85rem', fontWeight: 600, color: '#1a3a5c' }}>
+        <label className={styles.modalLabel}>
+          Criterios a corregir *{' '}
+          <span style={{ fontWeight: 400, color: dark ? '#3d4455' : '#888', fontSize: '0.8rem' }}>
+            ({selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''})
+          </span>
+        </label>
+
+        <div className={styles.criteriaList}>
+          <label className={styles.criteriaSelectAll}>
             <input type="checkbox" checked={allSelected} onChange={toggleAll} style={{ accentColor: '#800000' }} />
             Seleccionar todos
           </label>
           {nonCompliant.map(c => (
-            <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 12px', borderBottom: '1px solid #f0f0f0', cursor: 'pointer', background: selectedIds.has(c.id) ? '#fdf2f2' : 'transparent', fontSize: '0.85rem', color: '#333' }}>
+            <label
+              key={c.id}
+              className={styles.criteriaItem}
+              style={{ background: selectedIds.has(c.id) ? (dark ? 'rgba(196,64,64,0.1)' : '#fdf2f2') : 'transparent' }}
+            >
               <input type="checkbox" checked={selectedIds.has(c.id)} onChange={() => toggleCriteria(c.id)} style={{ accentColor: '#800000' }} />
-              <code style={{ fontSize: '0.78rem', color: '#800000', fontWeight: 600 }}>{c.criteria_id}</code>
-              <span style={{ flex: 1 }}>{c.criteria_name}</span>
-              <span style={{ fontSize: '0.72rem', padding: '1px 6px', borderRadius: '3px', background: c.status === 'fail' ? '#fde8e8' : '#fef3c7', color: c.status === 'fail' ? '#c0392b' : '#92400e', fontWeight: 600 }}>{c.status === 'fail' ? 'Fallido' : 'Parcial'}</span>
+              <code className={styles.criteriaCode}>{c.criteria_id}</code>
+              <span className={styles.criteriaName}>{c.criteria_name}</span>
+              <span className={c.status === 'fail' ? styles.criteriaStatusFail : styles.criteriaStatusPartial}>
+                {c.status === 'fail' ? 'Fallido' : 'Parcial'}
+              </span>
             </label>
           ))}
         </div>
 
-        <label style={labelStyle}>Fecha de vencimiento *</label>
-        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} style={inputStyle} min={new Date().toISOString().split('T')[0]} />
-        <label style={labelStyle}>Notas</label>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Observaciones o acciones requeridas..." rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
-        {error && <p style={{ color: '#c0392b', fontSize: '0.83rem', margin: '4px 0 0' }}>{error}</p>}
-        <div style={{ display: 'flex', gap: '8px', marginTop: '16px', justifyContent: 'flex-end' }}>
-          <button onClick={onClose} style={btnSecondary} disabled={saving}>Cancelar</button>
-          <button onClick={handleSave} style={{ ...btnPrimary, opacity: saving ? 0.7 : 1 }} disabled={saving}>{saving ? 'Guardando...' : `Guardar${selectedIds.size > 1 ? ` (${selectedIds.size})` : ''}`}</button>
+        <label className={styles.modalLabel}>Fecha de vencimiento *</label>
+        <input
+          type="date"
+          value={dueDate}
+          onChange={e => setDueDate(e.target.value)}
+          className={styles.modalInput}
+          min={new Date().toISOString().split('T')[0]}
+        />
+
+        <label className={styles.modalLabel}>Notas</label>
+        <textarea
+          value={notes}
+          onChange={e => setNotes(e.target.value)}
+          placeholder="Observaciones o acciones requeridas..."
+          rows={3}
+          className={styles.modalInput}
+          style={{ resize: 'vertical', fontFamily: 'inherit' }}
+        />
+
+        {error && <p className={styles.modalError}>{error}</p>}
+
+        <div className={styles.modalActions}>
+          <button className={styles.btnModalCancel} onClick={onClose} disabled={saving}>Cancelar</button>
+          <button className={styles.btnModalSave} onClick={handleSave} disabled={saving}>
+            {saving ? 'Guardando...' : `Guardar${selectedIds.size > 1 ? ` (${selectedIds.size})` : ''}`}
+          </button>
         </div>
       </div>
     </div>
   );
 }
 
+// ── EvaluationDetail ───────────────────────────────────────────────────────────
+
 export default function EvaluationDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { dark } = useTheme();
   const { user, hasPermission } = useAuth();
   const canManageFollowups = hasPermission('followups_manage');
   const isAdminOrSecretary = user?.role === 'admin' || user?.role === 'superadmin' || user?.role === 'secretary';
+
   const [evaluation, setEvaluation] = useState(null);
-  const [loading, setLoading]       = useState(true);
+  const [loading, setLoading] = useState(true);
   const [downloading, setDownloading] = useState(false);
-  const [toast, setToast]           = useState({ message: '', type: 'success' });
-  const [followups, setFollowups]   = useState([]);
-  const [showModal, setShowModal]   = useState(false);
+  const [toast, setToast] = useState({ message: '', type: 'success' });
+  const [followups, setFollowups] = useState([]);
+  const [showModal, setShowModal] = useState(false);
 
   const showToast = (message, type = 'success') => {
     setToast({ message, type });
@@ -144,18 +186,21 @@ export default function EvaluationDetail() {
 
   const handleDownloadReport = async () => {
     setDownloading(true);
-    try { await evaluationService.downloadReport(id); showToast('Informe PDF descargado correctamente'); }
-    catch { showToast('Error al generar el informe PDF', 'error'); }
-    finally { setDownloading(false); }
+    try {
+      await evaluationService.downloadReport(id);
+      showToast('Informe PDF descargado correctamente');
+    } catch {
+      showToast('Error al generar el informe PDF', 'error');
+    } finally {
+      setDownloading(false);
+    }
   };
 
   const handleCreateFollowup = async (data) => {
-    try {
-      const createdList = await followupService.createBulk(data);
-      setFollowups(prev => [...prev, ...createdList]);
-      const count = createdList.length;
-      showToast(`${count} seguimiento${count !== 1 ? 's' : ''} programado${count !== 1 ? 's' : ''} correctamente`);
-    } catch (err) { throw err; }
+    const createdList = await followupService.createBulk(data);
+    setFollowups(prev => [...prev, ...createdList]);
+    const count = createdList.length;
+    showToast(`${count} seguimiento${count !== 1 ? 's' : ''} programado${count !== 1 ? 's' : ''} correctamente`);
   };
 
   const handleValidateFollowup = async (followupId, approved) => {
@@ -163,7 +208,9 @@ export default function EvaluationDetail() {
       const updated = await followupService.validate(followupId, { approved, notes: '' });
       setFollowups(prev => prev.map(f => f.id === followupId ? updated : f));
       showToast(approved ? 'Correccion validada correctamente' : 'Correccion rechazada');
-    } catch { showToast('Error al validar el seguimiento', 'error'); }
+    } catch {
+      showToast('Error al validar el seguimiento', 'error');
+    }
   };
 
   const handleCancelFollowup = async (followupId) => {
@@ -171,97 +218,128 @@ export default function EvaluationDetail() {
       const updated = await followupService.cancel(followupId);
       setFollowups(prev => prev.map(f => f.id === followupId ? updated : f));
       showToast('Seguimiento cancelado');
-    } catch { showToast('Error al cancelar el seguimiento', 'error'); }
+    } catch {
+      showToast('Error al cancelar el seguimiento', 'error');
+    }
   };
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-      <div style={{ width: '40px', height: '40px', border: '4px solid #e0e0e0', borderTopColor: '#800000', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className={styles.loadingWrapper}>
+        <div className={styles.spinner} />
+      </div>
+    );
+  }
 
-  if (!evaluation) return (
-    <div style={{ textAlign: 'center', padding: '48px' }}>
-      <p style={{ color: '#666' }}>No se encontro la evaluacion.</p>
-      <button onClick={() => navigate(-1)} style={btnSecondary}><ArrowLeft size={16} /> Volver</button>
-    </div>
-  );
+  if (!evaluation) {
+    return (
+      <div className={styles.notFound}>
+        <p className={styles.notFoundText}>No se encontro la evaluacion.</p>
+        <button className={styles.btnBack} onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} /> Volver
+        </button>
+      </div>
+    );
+  }
 
   const criteriaResults = evaluation.criteria_results || [];
-  const failedCriteria  = criteriaResults.filter(c => c.status === 'fail');
-  const partialCriteria = criteriaResults.filter(c => c.status === 'partial');
-  const nonCompliant    = [...failedCriteria, ...partialCriteria];
-  const evalDate = evaluation.timestamp ? new Date(evaluation.timestamp).toLocaleString('es-BO') : '-';
+  const nonCompliant = [
+    ...criteriaResults.filter(c => c.status === 'fail'),
+    ...criteriaResults.filter(c => c.status === 'partial'),
+  ];
+  const evalDate = evaluation.timestamp
+    ? new Date(evaluation.timestamp).toLocaleString('es-BO')
+    : '-';
+
+  const statusMap = FOLLOWUP_STATUS(dark);
 
   return (
-    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '24px 16px' }}>
-
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
-        <button onClick={() => navigate(-1)} style={btnSecondary}><ArrowLeft size={16} /> Volver</button>
-        <button onClick={handleDownloadReport} disabled={downloading} style={{ ...btnPrimary, opacity: downloading ? 0.7 : 1, cursor: downloading ? 'not-allowed' : 'pointer' }}>
-          {downloading ? (<><span style={spinnerStyle} />Generando PDF...</>) : (<><Download size={16} />Descargar Informe PDF</>)}
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <button className={styles.btnBack} onClick={() => navigate(-1)}>
+          <ArrowLeft size={16} /> Volver
+        </button>
+        <button className={styles.btnDownload} onClick={handleDownloadReport} disabled={downloading}>
+          {downloading
+            ? <><span className={styles.btnSpinner} /> Generando PDF...</>
+            : <><Download size={16} /> Descargar Informe PDF</>
+          }
         </button>
       </div>
 
-      <h1 style={{ fontSize: '1.4rem', fontWeight: 700, color: '#1a3a5c', marginBottom: '4px' }}>Detalle de Evaluacion #{id}</h1>
-      <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '24px' }}>URL evaluada: <strong>{evaluation.url || '-'}</strong> &nbsp;&middot;&nbsp; Fecha: {evalDate}</p>
+      <h1 className={styles.pageTitle}>Detalle de Evaluacion #{id}</h1>
+      <p className={styles.pageMeta}>
+        URL evaluada: <strong>{evaluation.url || '-'}</strong> &nbsp;&middot;&nbsp; Fecha: {evalDate}
+      </p>
 
-      {/* ResultsDashboard con vista completa de dimensiones y criterios expandibles */}
       <ResultsDashboard data={evaluation} hideHeader />
 
-      {/* Seguimientos Programados */}
-      <section style={sectionStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
-          <h2 style={{ ...sectionTitle, marginBottom: 0 }}>Seguimientos Programados</h2>
+      <section className={styles.section}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>Seguimientos Programados</h2>
           {canManageFollowups && nonCompliant.length > 0 && (
-            <button onClick={() => setShowModal(true)} style={{ ...btnPrimary, padding: '8px 14px', fontSize: '0.85rem' }}>
+            <button className={styles.btnSchedule} onClick={() => setShowModal(true)}>
               <Calendar size={14} /> + Programar Seguimiento
             </button>
           )}
         </div>
+
         {followups.length === 0 ? (
-          <p style={{ color: '#999', fontSize: '0.88rem' }}>No hay seguimientos programados para esta evaluacion.</p>
+          <p className={styles.followupEmpty}>No hay seguimientos programados para esta evaluacion.</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div className={styles.followupList}>
             {followups.map(f => {
-              const statusCfg = FOLLOWUP_STATUS_LABELS[f.status] || FOLLOWUP_STATUS_LABELS.pending;
+              const statusCfg = statusMap[f.status] || statusMap.pending;
               const overdue = f.status === 'pending' && new Date(f.due_date) < new Date();
               return (
-                <div key={f.id} style={{ background: '#f8fafc', border: `1px solid ${overdue ? '#c0392b' : '#d0dce8'}`, borderRadius: '8px', padding: '12px 16px', display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
-                  <div style={{ flex: 1, minWidth: '200px' }}>
-                    <div style={{ fontWeight: 600, fontSize: '0.88rem', color: '#1a3a5c' }}>
-                      <code style={{ fontSize: '0.8rem', marginRight: '6px' }}>{f.criteria_id}</code>{f.criteria_name}
+                <div
+                  key={f.id}
+                  className={styles.followupItem}
+                  style={{ border: `1px solid ${overdue ? (dark ? '#f87171' : '#c0392b') : (dark ? 'rgba(255,255,255,0.07)' : '#d0dce8')}` }}
+                >
+                  <div className={styles.followupLeft}>
+                    <div className={styles.followupName}>
+                      <code className={styles.followupCode}>{f.criteria_id}</code>
+                      {f.criteria_name}
                     </div>
-                    <div style={{ fontSize: '0.8rem', color: overdue ? '#c0392b' : '#666', marginTop: '4px' }}>
+                    <div className={overdue ? styles.followupDateOverdue : styles.followupDate}>
                       Vence: {new Date(f.due_date).toLocaleDateString('es-BO')}
                       {overdue && <span style={{ marginLeft: '6px', fontWeight: 600 }}> - VENCIDO</span>}
                     </div>
-                    {f.notes && <div style={{ fontSize: '0.8rem', color: '#555', marginTop: '4px', fontStyle: 'italic' }}>{f.notes}</div>}
+                    {f.notes && <div className={styles.followupNotes}>{f.notes}</div>}
                     {f.status === 'corrected' && f.corrected_at && (
-                      <div style={{ fontSize: '0.78rem', color: '#2980b9', marginTop: '4px' }}>
+                      <div className={styles.followupCorrected}>
                         Institucion reporto correccion el {new Date(f.corrected_at).toLocaleDateString('es-BO')}
                       </div>
                     )}
                     {f.validation_notes && (
-                      <div style={{ fontSize: '0.78rem', color: '#666', marginTop: '4px', fontStyle: 'italic' }}>
-                        Nota validacion: {f.validation_notes}
-                      </div>
+                      <div className={styles.followupValidationNotes}>Nota validacion: {f.validation_notes}</div>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, color: statusCfg.color, background: `${statusCfg.color}18`, border: `1px solid ${statusCfg.color}`, borderRadius: '4px', padding: '2px 8px' }}>{statusCfg.label}</span>
+
+                  <div className={styles.followupRight}>
+                    <span style={{
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      color: statusCfg.color,
+                      background: `${statusCfg.color}18`,
+                      border: `1px solid ${statusCfg.color}`,
+                      borderRadius: '4px',
+                      padding: '2px 8px',
+                    }}>
+                      {statusCfg.label}
+                    </span>
                     {isAdminOrSecretary && f.status === 'pending' && (
-                      <button onClick={() => handleCancelFollowup(f.id)} style={btnSmallGray}>Cancelar</button>
+                      <button className={styles.btnSmallGray} onClick={() => handleCancelFollowup(f.id)}>Cancelar</button>
                     )}
                     {canManageFollowups && f.status === 'corrected' && (
                       <>
-                        <button onClick={() => handleValidateFollowup(f.id, true)} style={btnSmallGreen}>Validar</button>
-                        <button onClick={() => handleValidateFollowup(f.id, false)} style={btnSmallRed}>Rechazar</button>
+                        <button className={styles.btnSmallGreen} onClick={() => handleValidateFollowup(f.id, true)}>Validar</button>
+                        <button className={styles.btnSmallRed} onClick={() => handleValidateFollowup(f.id, false)}>Rechazar</button>
                       </>
                     )}
                     {isAdminOrSecretary && f.status === 'rejected' && (
-                      <button onClick={() => handleCancelFollowup(f.id)} style={btnSmallGray}>Cancelar</button>
+                      <button className={styles.btnSmallGray} onClick={() => handleCancelFollowup(f.id)}>Cancelar</button>
                     )}
                   </div>
                 </div>
@@ -272,22 +350,14 @@ export default function EvaluationDetail() {
       </section>
 
       {showModal && (
-        <FollowupModal nonCompliant={nonCompliant} evaluationId={Number(id)} onSave={handleCreateFollowup} onClose={() => setShowModal(false)} />
+        <FollowupModal
+          nonCompliant={nonCompliant}
+          evaluationId={Number(id)}
+          onSave={handleCreateFollowup}
+          onClose={() => setShowModal(false)}
+        />
       )}
       <Toast message={toast.message} type={toast.type} onClose={() => setToast({ message: '' })} />
     </div>
   );
 }
-
-const btnPrimary = { display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#800000', color: '#fff', border: 'none', borderRadius: '8px', padding: '10px 18px', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' };
-const btnSecondary = { display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'transparent', color: '#2c5f8a', border: '1px solid #2c5f8a', borderRadius: '8px', padding: '8px 14px', fontWeight: 600, fontSize: '0.88rem', cursor: 'pointer' };
-const btnSmallGreen = { background: 'transparent', color: '#27ae60', border: '1px solid #27ae60', borderRadius: '5px', padding: '3px 10px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' };
-const btnSmallRed   = { background: 'transparent', color: '#c0392b', border: '1px solid #c0392b', borderRadius: '5px', padding: '3px 10px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' };
-const btnSmallGray  = { background: 'transparent', color: '#95a5a6', border: '1px solid #95a5a6', borderRadius: '5px', padding: '3px 10px', fontSize: '0.78rem', fontWeight: 600, cursor: 'pointer' };
-const spinnerStyle = { display: 'inline-block', width: '14px', height: '14px', border: '2px solid rgba(255,255,255,0.4)', borderTopColor: '#fff', borderRadius: '50%', animation: 'spin 0.7s linear infinite' };
-const sectionStyle = { background: '#fff', border: '1px solid #d0dce8', borderRadius: '10px', padding: '20px', marginBottom: '20px' };
-const sectionTitle = { fontSize: '1rem', fontWeight: 700, color: '#1a3a5c', marginBottom: '14px', marginTop: 0 };
-const modalOverlay = { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '16px' };
-const modalBox = { background: '#fff', borderRadius: '10px', padding: '24px', width: '100%', maxWidth: '460px', boxShadow: '0 8px 32px rgba(0,0,0,0.18)', display: 'flex', flexDirection: 'column' };
-const labelStyle = { fontSize: '0.82rem', fontWeight: 600, color: '#1a3a5c', marginTop: '12px', marginBottom: '4px', display: 'block' };
-const inputStyle = { width: '100%', padding: '8px 10px', border: '1px solid #c0ccd8', borderRadius: '6px', fontSize: '0.88rem', boxSizing: 'border-box', color: '#1a3a5c' };

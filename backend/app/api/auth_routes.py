@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.database_models import User
-from app.auth.security import verify_password, create_access_token, hash_password
+from app.auth.security import verify_password, create_access_token, create_refresh_token, decode_token, hash_password
 from app.auth.dependencies import get_current_active_user
 from app.schemas.auth_schemas import TokenResponse, UserResponse
 from app.services.email_service import email_service
@@ -185,15 +185,16 @@ async def verify_2fa(
     del _2fa_codes[verification.username]
     logger.info(f"✓ Código 2FA verificado correctamente para '{verification.username}'")
 
-    # Generar JWT
-    access_token = create_access_token(
-        data={"sub": user.username, "role": user.role.value}
-    )
+    # Generar tokens
+    token_data = {"sub": user.username, "role": user.role.value}
+    access_token = create_access_token(data=token_data)
+    refresh_token = create_refresh_token(data=token_data)
 
     logger.info(f"✓ 2FA exitoso: {user.username} ({user.role.value})")
 
     return TokenResponse(
         access_token=access_token,
+        refresh_token=refresh_token,
         user=UserResponse.from_user(user),
     )
 
@@ -209,6 +210,34 @@ async def get_me(
 ):
     """Retorna el perfil del usuario autenticado."""
     return UserResponse.from_user(current_user)
+
+
+@router.post("/refresh", summary="Renovar access token usando refresh token")
+async def refresh_access_token(data: dict, db: Session = Depends(get_db)):
+    """Emite un nuevo access token a partir de un refresh token válido."""
+    token = data.get("refresh_token", "")
+    if not token:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token requerido")
+
+    try:
+        payload = decode_token(token)
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token inválido o expirado")
+
+    if payload.get("type") != "refresh":
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
+
+    username = payload.get("sub")
+    if not username:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token inválido")
+
+    user = db.query(User).filter(User.username == username).first()
+    if not user or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Usuario no válido")
+
+    new_access_token = create_access_token(data={"sub": user.username, "role": user.role.value})
+    logger.info(f"Token renovado para: {user.username}")
+    return {"access_token": new_access_token, "token_type": "bearer"}
 
 
 # ============================================================================

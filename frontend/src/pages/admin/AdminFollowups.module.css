@@ -1,0 +1,336 @@
+/* ===================================
+   Admin Followups
+   =================================== */
+
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  color: #111827;
+}
+
+.pageSubtitle {
+  color: #6b7280;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+/* ---- Toggle buttons ---- */
+.toggleGroup {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 12px;
+}
+
+.toggleBtn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background: #ffffff;
+  color: #6b7280;
+  font-weight: 400;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggleBtnActive {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 2px solid #2563eb;
+  background: #eff6ff;
+  color: #2563eb;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* ---- States ---- */
+.loadingState {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+}
+
+.errorState {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.retryBtn {
+  margin-left: 12px;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+}
+
+.emptyState p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.emptyState p + p {
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
+/* ---- Evaluator group card ---- */
+.groupCard {
+  margin-bottom: 32px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.groupHeader {
+  background: #f9fafb;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.groupName {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.groupEmail {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.groupCount {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: #9ca3af;
+}
+
+/* ---- Evaluation row ---- */
+.evalRow {
+  border-bottom: 1px solid #f3f4f6;
+  padding: 16px 20px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: background 0.15s;
+}
+
+.evalRow:last-child {
+  border-bottom: none;
+}
+
+.evalRow:hover {
+  background: #f9fafb;
+}
+
+/* ---- Flat card (ungrouped view) ---- */
+.evalCard {
+  border: 1px solid #e5e7eb;
+  padding: 16px 20px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: box-shadow 0.15s;
+}
+
+.evalCard:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* ---- Eval content layout ---- */
+.evalContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.evalLeft {
+  flex: 1;
+}
+
+.evalTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.evalTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.evalInst {
+  margin: 0 0 2px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.evalEvaluator {
+  margin: 0 0 2px;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.evalDate {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.evalRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.pendingBadge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.statusList {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.moreCount {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  align-self: center;
+}
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .pageTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .pageSubtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .toggleBtn {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.08);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .toggleBtnActive {
+  background: rgba(37,99,235,0.12);
+  border-color: #3b82f6;
+  color: #93c5fd;
+}
+
+:global([data-theme="dark"]) .errorState {
+  background: rgba(153,27,27,0.15);
+  border: 1px solid rgba(153,27,27,0.3);
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .retryBtn {
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .emptyState {
+  background: rgba(255,255,255,0.02);
+  border-color: rgba(255,255,255,0.08);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .groupCard {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .groupHeader {
+  background: #0f1017;
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .groupName {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .groupEmail {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .groupCount {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .evalRow {
+  background: #13141f;
+  border-bottom-color: rgba(255,255,255,0.04);
+}
+
+:global([data-theme="dark"]) .evalRow:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+:global([data-theme="dark"]) .evalCard {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .evalCard:hover {
+  box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  border-color: rgba(255,255,255,0.1);
+}
+
+:global([data-theme="dark"]) .evalTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .evalInst {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .evalEvaluator {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .pendingBadge {
+  background: rgba(146,64,14,0.2);
+  color: #fcd34d;
+}
+
+:global([data-theme="dark"]) .moreCount {
+  color: #3d4455;
+}

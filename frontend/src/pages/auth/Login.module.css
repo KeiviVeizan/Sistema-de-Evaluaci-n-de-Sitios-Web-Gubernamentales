@@ -408,3 +408,31 @@
     margin-bottom: 32px;
   }
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .leftPanel {
+  background: #13141f;
+}
+
+:global([data-theme="dark"]) .input {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+}
+
+:global([data-theme="dark"]) .input:focus {
+  background: #13141f;
+  border-color: #c44040;
+  box-shadow: 0 0 0 3px rgba(196,64,64,0.12);
+}
+
+:global([data-theme="dark"]) .error {
+  background: rgba(153,27,27,0.2);
+  border-color: rgba(153,27,27,0.4);
+  color: #f87171;
+}
+
+@media (max-width: 900px) {
+  :global([data-theme="dark"]) .container {
+    background: #13141f;
+  }
+}

@@ -1,0 +1,272 @@
+/* ===================================
+   Reports - Informes y Reportes
+   =================================== */
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.pageTitle {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+/* ---- States ---- */
+.loadingWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #800000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorState {
+  background: #fdf5f5;
+  border: 1px solid #e8c0c0;
+  border-left: 4px solid #c0392b;
+  border-radius: 8px;
+  padding: 14px 18px;
+  color: #c0392b;
+  font-size: 0.9rem;
+  margin-bottom: 20px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 48px;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* ---- List ---- */
+.evalList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+/* ---- Evaluation card ---- */
+.evalCard {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.evalCardLeft {
+  flex: 1;
+  min-width: 200px;
+}
+
+.evalCardTitle {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #1a3a5c;
+  margin-bottom: 4px;
+}
+
+.evalCardMeta {
+  font-size: 0.82rem;
+  color: #666;
+  margin-bottom: 2px;
+}
+
+.evalCardUrl {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 2px;
+  word-break: break-all;
+}
+
+.evalCardRight {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.scoreLabel {
+  font-size: 0.72rem;
+  color: #888;
+  margin-bottom: 2px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.scoreCenter {
+  text-align: center;
+}
+
+.btnGroup {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btnPrimary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #800000;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.btnPrimary:hover {
+  background: #6b0000;
+}
+
+.btnDownload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.btnDownload:hover:not(:disabled) {
+  background: #15803d;
+}
+
+.btnDownload:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- Pagination ---- */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btnPagination {
+  background: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnPagination:hover:not(:disabled) {
+  background: #e0e0e0;
+}
+
+.btnPagination:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pageInfo {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .pageTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .pageSubtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .spinner {
+  border-color: rgba(255,255,255,0.08);
+  border-top-color: #c44040;
+}
+
+:global([data-theme="dark"]) .errorState {
+  background: rgba(192,57,43,0.12);
+  border-color: rgba(192,57,43,0.3);
+  border-left-color: #c44040;
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .emptyState {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .evalCard {
+  background: #13141f;
+}
+
+:global([data-theme="dark"]) .evalCardTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .evalCardMeta {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .evalCardUrl {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .scoreLabel {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .btnPagination {
+  background: rgba(255,255,255,0.05);
+  color: #b0b8cc;
+  border-color: rgba(255,255,255,0.08);
+}
+
+:global([data-theme="dark"]) .btnPagination:hover:not(:disabled) {
+  background: rgba(255,255,255,0.09);
+}
+
+:global([data-theme="dark"]) .pageInfo {
+  color: #7b8496;
+}

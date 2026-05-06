@@ -1,4 +1,5 @@
 import re
+import socket
 import logging
 from typing import Dict, List, Optional, Any
 from datetime import datetime
@@ -53,129 +54,159 @@ class GobBoCrawler:
         'más info', 'continuar', 'siguiente', 'anterior'
     ]
 
-    def __init__(self, timeout: int = 30, user_agent: Optional[str] = None):
-        """
-        Inicializa el crawler.
+    # User agent de navegador real para evitar bloqueos a nivel TCP/TLS
+    BROWSER_UA = (
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+        'AppleWebKit/537.36 (KHTML, like Gecko) '
+        'Chrome/124.0.0.0 Safari/537.36'
+    )
 
-        Args:
-            timeout: Timeout en segundos para las peticiones HTTP
-            user_agent: User-Agent personalizado para las peticiones
-        """
-        from app import __version__
+    def __init__(self, timeout: int = 30, user_agent: Optional[str] = None):
         self.timeout = timeout
-        self.user_agent = user_agent or f"GOB.BO-Evaluator/{__version__} (ADSIB)"
+        self.user_agent = user_agent or self.BROWSER_UA
         self.session = requests.Session()
-        self.session.headers.update({'User-Agent': self.user_agent})
+        self.session.headers.update({
+            'User-Agent': self.user_agent,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'es-BO,es;q=0.9,en;q=0.8',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        })
+
+    def _make_playwright_context(self, browser):
+        """Crea un contexto Playwright con configuración anti-detección."""
+        context = browser.new_context(
+            user_agent=self.BROWSER_UA,
+            viewport={'width': 1920, 'height': 1080},
+            locale='es-BO',
+            timezone_id='America/La_Paz',
+            ignore_https_errors=True,
+            java_script_enabled=True,
+            extra_http_headers={
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'es-BO,es;q=0.9,en;q=0.8',
+                'Accept-Encoding': 'gzip, deflate, br',
+                'DNT': '1',
+                'Upgrade-Insecure-Requests': '1',
+            }
+        )
+        # Ocultar propiedades que delatan que es un navegador automatizado
+        context.add_init_script("""
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] });
+            Object.defineProperty(navigator, 'languages', { get: () => ['es-BO', 'es', 'en'] });
+            window.chrome = { runtime: {} };
+        """)
+        return context
 
     def _fetch_page_with_playwright(self, url: str) -> Optional[str]:
         """
-        Obtiene el HTML de una URL usando Playwright SYNC (ejecuta JavaScript).
-
-        Esto permite extraer contenido de sitios web que cargan contenido dinamicamente
-        con JavaScript (SPAs como React, Vue, Angular).
-
-        Args:
-            url: URL del sitio web a cargar
-
-        Returns:
-            str: HTML completamente renderizado, o None si hay error
+        Obtiene el HTML de una URL usando Playwright SYNC.
+        Intenta HTTPS y, si falla por conexión, reintenta con HTTP.
         """
+        urls_to_try = [url]
+        # Si la URL es HTTPS, agregar HTTP como alternativa
+        if url.startswith('https://'):
+            urls_to_try.append('http://' + url[8:])
+
+        for attempt_url in urls_to_try:
+            result = self._playwright_attempt(attempt_url)
+            if result:
+                return result
+            if attempt_url != url:
+                logger.info(f"Fallback HTTP también falló para {attempt_url}")
+
+        logger.info("Playwright falló en todos los intentos. Probando requests...")
+        return self._fetch_page_with_requests(url)
+
+    def _playwright_attempt(self, url: str) -> Optional[str]:
+        """Intento único de carga con Playwright."""
         try:
             logger.info(f"Usando Playwright SYNC para cargar {url}")
 
             with sync_playwright() as p:
-                # Lanzar navegador Chromium en modo headless
                 browser = p.chromium.launch(
                     headless=True,
                     args=[
                         '--disable-dev-shm-usage',
                         '--no-sandbox',
-                        '--disable-web-security'
+                        '--disable-blink-features=AutomationControlled',
+                        '--disable-infobars',
+                        '--window-size=1920,1080',
+                        '--start-maximized',
                     ]
                 )
 
-                # Crear contexto de navegacion con configuracion
-                context = browser.new_context(
-                    user_agent=self.user_agent,
-                    viewport={'width': 1920, 'height': 1080},
-                    ignore_https_errors=True
-                )
-
-                # Crear nueva pagina
+                context = self._make_playwright_context(browser)
                 page = context.new_page()
                 page.set_default_timeout(self.timeout * 1000)
 
-                # Navegar a la URL y esperar a que la red este inactiva
-                logger.info(f"Navegando a {url} y esperando carga de JavaScript...")
-                page.goto(url, wait_until='networkidle')
+                logger.info(f"Navegando a {url}...")
+                try:
+                    # 'load' es más tolerante que 'networkidle': espera DOMContentLoaded + recursos básicos
+                    page.goto(url, wait_until='load', timeout=self.timeout * 1000)
+                except PlaywrightTimeout:
+                    # Si 'load' también falla, intentar con 'domcontentloaded' (más permisivo)
+                    logger.warning(f"Timeout con wait_until='load' en {url}, reintentando con 'domcontentloaded'...")
+                    try:
+                        page.goto(url, wait_until='domcontentloaded', timeout=self.timeout * 1000)
+                    except PlaywrightTimeout:
+                        browser.close()
+                        return None
 
-                # Esperar a que el DOM este completamente cargado
-                page.wait_for_load_state('domcontentloaded')
-
-                # Scroll para activar lazy loading de imagenes y contenido
-                logger.info("Simulando scroll para activar lazy loading...")
-                page.evaluate('''
+                # Scroll para activar lazy loading
+                page.evaluate("""
                     window.scrollTo(0, document.body.scrollHeight / 2);
                     setTimeout(() => window.scrollTo(0, document.body.scrollHeight), 300);
                     setTimeout(() => window.scrollTo(0, 0), 600);
-                ''')
-
-                # Una sola espera corta para lazy loading
+                """)
                 page.wait_for_timeout(1000)
 
-                # Obtener HTML completamente renderizado
                 html = page.content()
-
-                # Cerrar navegador
                 browser.close()
 
                 logger.info(f"HTML obtenido exitosamente ({len(html)} caracteres)")
 
-                # Si Playwright obtuvo muy poco HTML, intentar fallback con requests
                 if len(html) < 500:
-                    logger.warning(
-                        f"Playwright obtuvo solo {len(html)} caracteres para {url}. "
-                        f"Intentando fallback con requests..."
-                    )
-                    browser.close()
-                    return self._fetch_page_with_requests(url) or html
+                    logger.warning(f"Playwright obtuvo solo {len(html)} chars para {url}")
+                    return None
 
                 return html
 
         except PlaywrightTimeout as e:
             logger.error(f"Timeout de Playwright al cargar {url}: {e}")
-            logger.info("Intentando fallback con requests...")
-            return self._fetch_page_with_requests(url)
+            return None
         except Exception as e:
             logger.error(f"Error con Playwright al cargar {url}: {e}")
-            logger.info("Intentando fallback con requests...")
-            return self._fetch_page_with_requests(url)
+            return None
 
     def _fetch_page_with_requests(self, url: str) -> Optional[str]:
         """
-        Fallback: obtiene HTML usando requests cuando Playwright falla o retorna poco contenido.
-
-        Args:
-            url: URL del sitio web a cargar
-
-        Returns:
-            str: HTML obtenido, o None si hay error
+        Fallback: obtiene HTML usando requests. Intenta HTTPS y luego HTTP si falla.
         """
-        try:
-            logger.info(f"Usando requests como fallback para {url}")
-            response = self.session.get(
-                url,
-                timeout=self.timeout,
-                verify=False,
-                allow_redirects=True
-            )
-            response.raise_for_status()
-            html = response.text
-            logger.info(f"Fallback requests obtuvo {len(html)} caracteres para {url}")
-            return html if len(html) > 100 else None
-        except Exception as e:
-            logger.error(f"Fallback requests también falló para {url}: {e}")
-            return None
+        urls_to_try = [url]
+        if url.startswith('https://'):
+            urls_to_try.append('http://' + url[8:])
+
+        for attempt_url in urls_to_try:
+            try:
+                logger.info(f"Usando requests como fallback para {attempt_url}")
+                response = self.session.get(
+                    attempt_url,
+                    timeout=self.timeout,
+                    verify=False,
+                    allow_redirects=True
+                )
+                response.raise_for_status()
+                html = response.text
+                logger.info(f"Fallback requests obtuvo {len(html)} caracteres para {attempt_url}")
+                if len(html) > 100:
+                    return html
+            except Exception as e:
+                logger.error(f"Fallback requests falló para {attempt_url}: {e}")
+
+        return None
 
     def _validate_content_loaded(self, soup: BeautifulSoup) -> bool:
         """
@@ -197,6 +228,23 @@ class GobBoCrawler:
 
         # Al menos debe tener texto o algunos elementos
         return has_text or has_links or has_images
+
+    def _is_tcp_reachable(self, url: str, tcp_timeout: int = 8) -> bool:
+        """
+        Verifica conectividad TCP antes de lanzar Playwright o requests.
+        Prueba puerto 443 y 80. Si ambos fallan, el sitio es inalcanzable.
+        """
+        parsed = urlparse(url)
+        host = parsed.netloc
+        for port in (443, 80):
+            try:
+                s = socket.create_connection((host, port), timeout=tcp_timeout)
+                s.close()
+                logger.info(f"TCP OK: {host}:{port}")
+                return True
+            except (socket.timeout, OSError):
+                continue
+        return False
 
     def crawl(self, url: str) -> Dict[str, Any]:
         """
@@ -231,6 +279,20 @@ class GobBoCrawler:
             raise ValueError(f"La URL {url} no es un dominio .gob.bo valido")
 
         logger.info(f"Iniciando crawling de {url}")
+
+        # Pre-check TCP: falla rápido si el servidor no acepta conexiones
+        if not self._is_tcp_reachable(url):
+            logger.error(f"El servidor de {url} no acepta conexiones TCP (puerto 80/443)")
+            return {
+                'error': (
+                    'El sitio web no es accesible desde el evaluador. '
+                    'El servidor no responde a las conexiones de red. '
+                    'Posibles causas: el sitio está caído, usa HTTP/3 exclusivamente, '
+                    'o tiene restricciones de acceso desde esta red.'
+                ),
+                'url': url,
+                'crawled_at': datetime.utcnow().isoformat()
+            }
 
         try:
             # Usar Playwright SYNC para obtener HTML con JavaScript ejecutado

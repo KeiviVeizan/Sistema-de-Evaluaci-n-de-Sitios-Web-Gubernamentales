@@ -140,9 +140,17 @@ const MENU_STRUCTURE = {
       ],
     },
     {
+      id: 'evaluations',
+      path: '/admin/evaluations',
+      icon: FileEdit,
+      label: 'Realizar Evaluación',
+      permission: 'evaluations_manage',
+    },
+    {
       id: 'followups',
       icon: CheckCircle2,
       label: 'Seguimientos',
+      permission: 'followups_manage',
       children: [
         {
           path: '/admin/secretary/followups',

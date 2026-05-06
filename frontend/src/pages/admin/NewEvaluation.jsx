@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import Hero from '../../components/home/Hero';
 import ResultsDashboard from '../../components/home/ResultsDashboard';
 import AnimatedBackground from '../../components/ui/AnimatedBackground';
-import LoadingOverlay from '../../components/ui/LoadingOverlay';
 import evaluationService from '../../services/evaluationService';
 import institutionService from '../../services/institutionService';
 import styles from './NewEvaluation.module.css';
@@ -56,65 +55,27 @@ function Toast({ message, type, onClose }) {
 // ── Barra superior de guardado ───────────────────────────────────────────────
 function SaveBar({ onSave, saving }) {
   return (
-    <div
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        background: 'rgba(255,255,255,0.95)',
-        backdropFilter: 'blur(6px)',
-        borderBottom: '1px solid #e5e7eb',
-        padding: '10px 24px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'flex-end',
-        gap: '12px',
-      }}
-    >
-      <span style={{ color: '#555', fontSize: '0.875rem' }}>
-        Evaluación completada — guarda los resultados para registrarlos en el sistema.
+    <div className={styles.saveBar}>
+      <span className={styles.saveBarText}>
+        Evaluación completada —{' '}
+        <span className={styles.saveBarAccent}>guarda los resultados</span>{' '}
+        para registrarlos en el sistema.
       </span>
       <button
         onClick={onSave}
         disabled={saving}
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          background: saving ? '#999' : '#1a6b3a',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          padding: '8px 20px',
-          fontSize: '0.9rem',
-          fontWeight: 600,
-          cursor: saving ? 'not-allowed' : 'pointer',
-          transition: 'background 0.2s',
-          minWidth: '160px',
-          justifyContent: 'center',
-        }}
+        className={styles.saveBtn}
         aria-label="Guardar evaluación"
       >
         {saving ? (
           <>
-            <span
-              style={{
-                width: '14px',
-                height: '14px',
-                border: '2px solid rgba(255,255,255,0.4)',
-                borderTopColor: '#fff',
-                borderRadius: '50%',
-                display: 'inline-block',
-                animation: 'spin 0.7s linear infinite',
-              }}
-            />
+            <span className={styles.saveBtnSpinner} />
             Guardando…
           </>
         ) : (
           'Guardar evaluación'
         )}
       </button>
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -196,7 +157,6 @@ function validateCriteria(criteria) {
 export default function NewEvaluation() {
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(false);     // Evaluación en curso
   const [saving, setSaving] = useState(false);        // Guardado en curso
   const [results, setResults] = useState(null);       // Datos del resultado
   const [institutionId, setInstitutionId] = useState(null);
@@ -215,7 +175,6 @@ export default function NewEvaluation() {
   const [showInstitutionPicker, setShowInstitutionPicker] = useState(false);
 
   const handleEvaluationComplete = useCallback(async (data) => {
-    setLoading(false);
     setResults(data);
 
     try {
@@ -353,19 +312,18 @@ export default function NewEvaluation() {
   return (
     <div className={results ? styles.wrapperResults : styles.wrapper}>
       <AnimatedBackground visible={!results} />
-      <LoadingOverlay visible={loading} />
 
       {results ? (
         <>
           <SaveBar onSave={handleSaveEvaluation} saving={saving} />
           {showInstitutionPicker && !institutionId && (
-            <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px', padding: '12px 20px', margin: '0 24px 12px', display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-              <span style={{ color: '#92400e', fontSize: '0.85rem', fontWeight: 600 }}>
+            <div className={styles.institutionPicker}>
+              <span className={styles.institutionPickerText}>
                 No se encontró institución para este dominio. Selecciona manualmente:
               </span>
               <select
                 onChange={e => { const val = e.target.value; setInstitutionId(val ? Number(val) : null); }}
-                style={{ padding: '6px 10px', border: '1px solid #c0ccd8', borderRadius: '6px', fontSize: '0.85rem', minWidth: '250px' }}
+                className={styles.institutionPickerSelect}
               >
                 <option value="">Seleccionar institución...</option>
                 {allInstitutions.map(inst => (
@@ -384,14 +342,9 @@ export default function NewEvaluation() {
         </>
       ) : (
         <Hero
-          loading={loading}
-          onEvaluationStart={() => {
-            setLoading(true);
-            setResults(null);
-            setInstitutionId(null);
-          }}
+          onEvaluationStart={() => { setResults(null); setInstitutionId(null); }}
           onEvaluationComplete={handleEvaluationComplete}
-          onEvaluationError={() => setLoading(false)}
+          onEvaluationError={() => {}}
           compact
         />
       )}

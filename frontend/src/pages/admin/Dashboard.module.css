@@ -203,3 +203,23 @@
   color: white;
   border-color: var(--color-primary);
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .statCard {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .section {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .sectionTitle {
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .quickAction {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.07);
+}

@@ -1,39 +1,32 @@
-/**
- * Página de Informes y Reportes para SUPERADMIN.
- *
- * Muestra todas las evaluaciones del sistema con opciones de:
- * - Ver detalle de cada evaluación
- * - Descargar informe PDF
- * - Filtrar por institución, evaluador, fecha
- */
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import evaluationService from '../../services/evaluationService';
+import { useTheme } from '../../contexts/ThemeContext';
+import styles from './Reports.module.css';
 
-// ── Helpers de estilo ─────────────────────────────────────────────────────────
-
-const SCORE_COLOR = (score) => {
+const SCORE_COLOR = (score, dark) => {
+  if (dark) {
+    if (score >= 70) return '#34d399';
+    if (score >= 50) return '#fcd34d';
+    return '#f87171';
+  }
   if (score >= 70) return '#27ae60';
   if (score >= 50) return '#e67e22';
   return '#c0392b';
 };
 
 function ScoreBadge({ score }) {
-  if (score == null) return <span style={{ color: '#999', fontSize: '0.85rem' }}>—</span>;
-  const color = SCORE_COLOR(score);
+  const { dark } = useTheme();
+  if (score == null) return <span style={{ color: dark ? '#3d4455' : '#999', fontSize: '0.85rem' }}>—</span>;
   return (
-    <span style={{
-      fontWeight: 700,
-      fontSize: '1rem',
-      color,
-    }}>
+    <span style={{ fontWeight: 700, fontSize: '1rem', color: SCORE_COLOR(score, dark) }}>
       {Number(score).toFixed(1)}%
     </span>
   );
 }
 
-function EvaluationCard({ evaluation, onViewDetail, onDownloadReport }) {
+function EvaluationCard({ evaluation, onViewDetail }) {
+  const { dark } = useTheme();
   const [downloading, setDownloading] = useState(false);
 
   const date = evaluation.started_at
@@ -43,7 +36,7 @@ function EvaluationCard({ evaluation, onViewDetail, onDownloadReport }) {
     : '—';
 
   const score = evaluation.score_total;
-  const borderColor = score != null ? SCORE_COLOR(score) : '#c0ccd8';
+  const borderColor = score != null ? SCORE_COLOR(score, dark) : (dark ? 'rgba(255,255,255,0.08)' : '#c0ccd8');
 
   const handleDownload = async () => {
     try {
@@ -58,58 +51,36 @@ function EvaluationCard({ evaluation, onViewDetail, onDownloadReport }) {
   };
 
   return (
-    <div style={{
-      background: '#fff',
-      border: `1px solid ${borderColor}`,
-      borderLeft: `4px solid ${borderColor}`,
-      borderRadius: '8px',
-      padding: '16px 20px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      gap: '16px',
-      flexWrap: 'wrap',
-    }}>
-      <div style={{ flex: 1, minWidth: '200px' }}>
-        <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#1a3a5c', marginBottom: '4px' }}>
-          Evaluación #{evaluation.id}
-        </div>
-        <div style={{ fontSize: '0.82rem', color: '#666', marginBottom: '2px' }}>
+    <div
+      className={styles.evalCard}
+      style={{ border: `1px solid ${borderColor}`, borderLeft: `4px solid ${borderColor}` }}
+    >
+      <div className={styles.evalCardLeft}>
+        <div className={styles.evalCardTitle}>Evaluación #{evaluation.id}</div>
+        <div className={styles.evalCardMeta}>
           <strong>Institución:</strong> {evaluation.institution_name || evaluation.website_url || 'N/A'}
         </div>
-        <div style={{ fontSize: '0.82rem', color: '#666' }}>
+        <div className={styles.evalCardMeta}>
           <strong>Fecha:</strong> {date}
         </div>
         {evaluation.website_url && (
-          <div style={{ fontSize: '0.8rem', color: '#888', marginTop: '2px', wordBreak: 'break-all' }}>
-            {evaluation.website_url}
-          </div>
+          <div className={styles.evalCardUrl}>{evaluation.website_url}</div>
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '0.72rem', color: '#888', marginBottom: '2px', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            Puntaje Total
-          </div>
+      <div className={styles.evalCardRight}>
+        <div className={styles.scoreCenter}>
+          <div className={styles.scoreLabel}>Puntaje Total</div>
           <ScoreBadge score={score} />
         </div>
-
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button
-            onClick={() => onViewDetail(evaluation.id)}
-            style={btnPrimary}
-          >
+        <div className={styles.btnGroup}>
+          <button className={styles.btnPrimary} onClick={() => onViewDetail(evaluation.id)}>
             👁️ Ver Detalle
           </button>
           <button
+            className={styles.btnDownload}
             onClick={handleDownload}
             disabled={downloading}
-            style={{
-              ...btnDownload,
-              opacity: downloading ? 0.6 : 1,
-              cursor: downloading ? 'not-allowed' : 'pointer',
-            }}
           >
             {downloading ? '⏳ Descargando...' : '⬇️ Descargar Informe'}
           </button>
@@ -118,8 +89,6 @@ function EvaluationCard({ evaluation, onViewDetail, onDownloadReport }) {
     </div>
   );
 }
-
-// ── Componente principal ───────────────────────────────────────────────────────
 
 export default function Reports() {
   const navigate = useNavigate();
@@ -138,10 +107,7 @@ export default function Reports() {
     try {
       setLoading(true);
       setError('');
-      const data = await evaluationService.list({
-        page: currentPage,
-        page_size: pageSize,
-      });
+      const data = await evaluationService.list({ page: currentPage, page_size: pageSize });
       setEvaluations(data.evaluations || []);
       setTotalEvaluations(data.total || 0);
     } catch (err) {
@@ -152,94 +118,57 @@ export default function Reports() {
     }
   };
 
-  const handleViewDetail = (evaluationId) => {
-    navigate(`/admin/evaluations/${evaluationId}`);
-  };
-
   const totalPages = Math.ceil(totalEvaluations / pageSize);
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-        <div style={{ width: '40px', height: '40px', border: '4px solid #e0e0e0', borderTopColor: '#800000', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-        <style>{'@keyframes spin { to { transform: rotate(360deg); } }'}</style>
+      <div className={styles.loadingWrapper}>
+        <div className={styles.spinner} />
       </div>
     );
   }
 
   return (
-    <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '24px 16px' }}>
-      <h1 style={{ fontSize: '1.6rem', fontWeight: 700, color: '#1a3a5c', marginBottom: '4px' }}>
-        Informes y Reportes
-      </h1>
-      <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '24px' }}>
+    <div className={styles.container}>
+      <h1 className={styles.pageTitle}>Informes y Reportes</h1>
+      <p className={styles.pageSubtitle}>
         Todas las evaluaciones realizadas en el sistema. Puede ver el detalle o descargar el informe PDF.
       </p>
 
-      {error && (
-        <div style={{
-          background: '#fdf5f5',
-          border: '1px solid #e8c0c0',
-          borderLeft: '4px solid #c0392b',
-          borderRadius: '8px',
-          padding: '14px 18px',
-          color: '#c0392b',
-          fontSize: '0.9rem',
-          marginBottom: '20px',
-        }}>
-          {error}
-        </div>
-      )}
+      {error && <div className={styles.errorState}>{error}</div>}
 
       {!error && evaluations.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '48px', color: '#999', fontSize: '0.9rem' }}>
-          No hay evaluaciones registradas en el sistema.
-        </div>
+        <div className={styles.emptyState}>No hay evaluaciones registradas en el sistema.</div>
       )}
 
       {evaluations.length > 0 && (
         <>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+          <div className={styles.evalList}>
             {evaluations.map(ev => (
               <EvaluationCard
                 key={ev.id}
                 evaluation={ev}
-                onViewDetail={handleViewDetail}
+                onViewDetail={(id) => navigate(`/admin/evaluations/${id}`)}
               />
             ))}
           </div>
 
-          {/* Paginación */}
           {totalPages > 1 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              gap: '12px',
-              marginTop: '24px',
-            }}>
+            <div className={styles.pagination}>
               <button
+                className={styles.btnPagination}
                 onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                style={{
-                  ...btnPagination,
-                  opacity: currentPage === 1 ? 0.4 : 1,
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                }}
               >
                 ← Anterior
               </button>
-              <span style={{ color: '#666', fontSize: '0.9rem' }}>
+              <span className={styles.pageInfo}>
                 Página {currentPage} de {totalPages}
               </span>
               <button
+                className={styles.btnPagination}
                 onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
-                style={{
-                  ...btnPagination,
-                  opacity: currentPage === totalPages ? 0.4 : 1,
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                }}
               >
                 Siguiente →
               </button>
@@ -250,46 +179,3 @@ export default function Reports() {
     </div>
   );
 }
-
-// ── Estilos ────────────────────────────────────────────────────────────────────
-
-const btnPrimary = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '6px',
-  background: '#800000',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '6px',
-  padding: '8px 16px',
-  fontWeight: 600,
-  fontSize: '0.85rem',
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-};
-
-const btnDownload = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: '6px',
-  background: '#16a34a',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '6px',
-  padding: '8px 16px',
-  fontWeight: 600,
-  fontSize: '0.85rem',
-  cursor: 'pointer',
-  whiteSpace: 'nowrap',
-};
-
-const btnPagination = {
-  background: '#f0f0f0',
-  color: '#333',
-  border: '1px solid #ddd',
-  borderRadius: '6px',
-  padding: '8px 16px',
-  fontWeight: 600,
-  fontSize: '0.85rem',
-  cursor: 'pointer',
-};

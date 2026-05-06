@@ -37,7 +37,7 @@ const PROGRESS_COLORS = [
 
 function MetricCard({ icon: Icon, label, value, color }) {
   return (
-    <div className={styles.metricCard}>
+    <div className={styles.metricCard} style={{ '--card-accent': color }}>
       <div className={styles.metricIcon} style={{ background: color }}>
         <Icon size={24} />
       </div>
@@ -132,9 +132,12 @@ export default function SecretaryDashboard() {
       {/* Encabezado */}
       <div className={styles.header}>
         <div className={styles.headerLeft}>
-          <h1 className={styles.title}>
-            Bienvenido, {user?.full_name || user?.name || 'Secretario'}
-          </h1>
+          <div className={styles.headerAccent}>
+            <div className={styles.headerAccentBar} />
+            <h1 className={styles.title}>
+              Bienvenido, {user?.full_name || user?.name || 'Secretario'}
+            </h1>
+          </div>
           <p className={styles.subtitle}>
             Panel de gestión de usuarios e instituciones
           </p>
@@ -183,7 +186,10 @@ export default function SecretaryDashboard() {
         {/* Distribución de usuarios */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Distribución de Usuarios</h3>
+            <div className={styles.cardTitleGroup}>
+              <div className={styles.cardTitleAccent} />
+              <h3 className={styles.cardTitle}>Distribución de Usuarios</h3>
+            </div>
           </div>
           {stats && stats.total_managed_users > 0 ? (
             <div className={styles.donutSection}>
@@ -234,7 +240,10 @@ export default function SecretaryDashboard() {
         {/* Últimos usuarios registrados */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Usuarios Recientes</h3>
+            <div className={styles.cardTitleGroup}>
+              <div className={styles.cardTitleAccent} />
+              <h3 className={styles.cardTitle}>Usuarios Recientes</h3>
+            </div>
             {recentUsers.length > 0 && (
               <span className={styles.cardBadge}>Últimos {recentUsers.length}</span>
             )}
@@ -285,7 +294,10 @@ export default function SecretaryDashboard() {
         {/* Gráfico de registros mensuales */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Registros Mensuales</h3>
+            <div className={styles.cardTitleGroup}>
+              <div className={styles.cardTitleAccent} />
+              <h3 className={styles.cardTitle}>Registros Mensuales</h3>
+            </div>
             <span className={styles.cardBadge}>Últimos 6 meses</span>
           </div>
           {monthlyData.some(m => m.total > 0) ? (
@@ -344,7 +356,10 @@ export default function SecretaryDashboard() {
         {/* Instituciones más evaluadas */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
-            <h3 className={styles.cardTitle}>Instituciones Más Evaluadas</h3>
+            <div className={styles.cardTitleGroup}>
+              <div className={styles.cardTitleAccent} />
+              <h3 className={styles.cardTitle}>Instituciones Más Evaluadas</h3>
+            </div>
           </div>
           {topInstitutions.length > 0 && topInstitutions.some(i => i.evaluation_count > 0) ? (
             <div className={styles.institutionList}>

@@ -13,6 +13,7 @@ ARQUITECTURA:
 - Evaluacion sync ejecutada en ThreadPoolExecutor
 - Patron recomendado por FastAPI para operaciones I/O-bound
 """
+import json
 from datetime import datetime, timezone, timedelta
 from typing import Optional, List
 
@@ -203,6 +204,67 @@ async def evaluate_url(
     except Exception as e:
         logger.error(f"Error durante evaluación de {request.url}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error interno: {str(e)}")
+
+
+# ============================================================================
+# ENDPOINT SSE: Evaluar URL con progreso en tiempo real
+# ============================================================================
+
+@router.get(
+    "/evaluate-stream",
+    summary="Evaluar URL con progreso SSE",
+    description="Evalúa una URL y transmite el progreso paso a paso via Server-Sent Events.",
+)
+async def evaluate_url_stream(url: str = Query(..., description="URL del sitio a evaluar")):
+    """Stream de progreso de evaluación vía SSE."""
+
+    async def event_generator():
+        loop = asyncio.get_event_loop()
+        queue: asyncio.Queue = asyncio.Queue()
+
+        def progress_callback(step: str) -> None:
+            loop.call_soon_threadsafe(
+                queue.put_nowait,
+                {"type": "progress", "step": step},
+            )
+
+        def run_evaluation() -> None:
+            try:
+                result = ejecutar_evaluacion(str(url), progress_callback=progress_callback)
+                loop.call_soon_threadsafe(
+                    queue.put_nowait,
+                    {"type": "complete", "result": result},
+                )
+            except Exception as exc:
+                loop.call_soon_threadsafe(
+                    queue.put_nowait,
+                    {"type": "error", "message": str(exc)},
+                )
+
+        # Enviar evento inicial antes de arrancar el hilo
+        yield f"data: {json.dumps({'type': 'progress', 'step': 'connecting'})}\n\n"
+
+        loop.run_in_executor(_executor, run_evaluation)
+
+        while True:
+            try:
+                event = await asyncio.wait_for(queue.get(), timeout=180.0)
+                yield f"data: {json.dumps(event, default=str)}\n\n"
+                if event["type"] in ("complete", "error"):
+                    break
+            except asyncio.TimeoutError:
+                yield f"data: {json.dumps({'type': 'error', 'message': 'Tiempo de espera agotado'})}\n\n"
+                break
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
 
 
 # ============================================================================

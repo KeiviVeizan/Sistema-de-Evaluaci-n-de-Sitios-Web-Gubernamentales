@@ -17,6 +17,7 @@ from app.models.database_models import UserRole, Permission
 class TokenResponse(BaseModel):
     """Respuesta de login exitoso."""
     access_token: str
+    refresh_token: str
     token_type: str = "bearer"
     user: "UserResponse"
 

@@ -163,6 +163,7 @@ async def get_pending_followups(
 
         result.append({
             "id": f.id,
+            "evaluation_id": f.evaluation_id,
             "criterion": criteria_result.criteria_name if criteria_result else "N/A",
             "criterion_code": criteria_result.criteria_id if criteria_result else "N/A",
             "description": f.notes or "Observación pendiente",

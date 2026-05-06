@@ -710,3 +710,154 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .title {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .subtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .metricCard {
+  background: #13141f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:global([data-theme="dark"]) .metricLabel {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .metricValue {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .calendarSection {
+  background: #13141f;
+  box-shadow: none;
+}
+
+:global([data-theme="dark"]) .sectionTitle {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .monthLabel {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .navBtn {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .daysScroll {
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+
+:global([data-theme="dark"]) .daysScroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+}
+
+:global([data-theme="dark"]) .dayButton {
+  background: rgba(255,255,255,0.03);
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .dayButton:hover:not(.futureBtn) {
+  background: rgba(196,64,64,0.12);
+  border-color: rgba(196,64,64,0.4);
+}
+
+:global([data-theme="dark"]) .dayButton.todayBtn:not(.active) {
+  background: rgba(245,158,11,0.08);
+  border-color: rgba(245,158,11,0.4);
+}
+
+:global([data-theme="dark"]) .chartCard {
+  background: #13141f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:global([data-theme="dark"]) .chartTitle {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .evaluationsSection {
+  background: #13141f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:global([data-theme="dark"]) .evaluatorRow {
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .evaluatorName {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .evaluatorEmail {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .evalCountBadge {
+  background: rgba(196,64,64,0.12);
+  color: #c44040;
+}
+
+:global([data-theme="dark"]) .evalCardsScroll {
+  scrollbar-color: rgba(255,255,255,0.08) transparent;
+}
+
+:global([data-theme="dark"]) .evalCardsScroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.08);
+}
+
+:global([data-theme="dark"]) .evalCard {
+  background: linear-gradient(160deg, #1a1b2a 0%, var(--score-grad, rgba(196,64,64,0.06)) 100%);
+  border-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .evalCardInstName {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .evalCardFooter {
+  border-top-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .statusBadge[data-status="completed"] {
+  background: rgba(6,95,70,0.2);
+  color: #34d399;
+}
+
+:global([data-theme="dark"]) .statusBadge[data-status="in_progress"] {
+  background: rgba(146,64,14,0.2);
+  color: #fcd34d;
+}
+
+:global([data-theme="dark"]) .statusBadge[data-status="pending"] {
+  background: rgba(55,48,163,0.2);
+  color: #818cf8;
+}
+
+:global([data-theme="dark"]) .statusBadge[data-status="failed"] {
+  background: rgba(153,27,27,0.2);
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .emptyState p {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .spinner {
+  border-color: rgba(255,255,255,0.06);
+  border-top-color: #c44040;
+}
+
+:global([data-theme="dark"]) .errorState {
+  background: rgba(153,27,27,0.15);
+  border-color: rgba(153,27,27,0.3);
+  color: #f87171;
+}

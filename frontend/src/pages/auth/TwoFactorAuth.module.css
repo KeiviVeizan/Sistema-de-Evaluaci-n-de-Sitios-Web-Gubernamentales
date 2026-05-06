@@ -183,3 +183,29 @@
 .footer a:hover {
   text-decoration: underline;
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .container {
+  background: linear-gradient(135deg, #0a0b11 0%, #13141f 100%);
+}
+
+:global([data-theme="dark"]) .card {
+  background: #13141f;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+}
+
+:global([data-theme="dark"]) .codeInput {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.1);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .codeInput:focus {
+  border-color: #c44040;
+  box-shadow: 0 0 0 3px rgba(196,64,64,0.12);
+}
+
+:global([data-theme="dark"]) .footer {
+  background: #0f1017;
+  border-top-color: rgba(255,255,255,0.05);
+}

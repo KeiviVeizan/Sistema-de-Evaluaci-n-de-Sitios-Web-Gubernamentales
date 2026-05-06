@@ -43,7 +43,7 @@ export default function Header() {
       <div className="header__brand">
         <div className="header__logo" style={{ opacity: 0, transform: 'scale(0)' }}>
           <Shield size={20} />
-          <img src="./public/LOGO-AGETIC.png" alt="Logo de la Agetic" />
+          <img src="/LOGO-AGETIC.png" alt="Logo de la Agetic" />
         </div>
         <span className="header__title">
           {titleText.split('').map((char, i) => (

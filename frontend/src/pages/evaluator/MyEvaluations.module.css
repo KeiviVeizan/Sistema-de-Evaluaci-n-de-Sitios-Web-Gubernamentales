@@ -1,0 +1,200 @@
+/* ===================================
+   MyEvaluations
+   =================================== */
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.pageTitle {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.pageSubtitle {
+  color: #6b7280;
+  margin-top: 4px;
+  margin-bottom: 0;
+}
+
+.loadingState {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+}
+
+.errorState {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.9rem;
+}
+
+.retryBtn {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: inherit;
+  padding: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 48px;
+  color: #6b7280;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px dashed #d1d5db;
+}
+
+.emptySubtitle {
+  margin: 8px 0 0;
+  font-size: 0.875rem;
+}
+
+.evalList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.evalCard {
+  border: 1px solid #e5e7eb;
+  padding: 16px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #ffffff;
+  transition: box-shadow 0.15s;
+}
+
+.evalCard:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.evalCardInner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.evalLeft {
+  flex: 1;
+}
+
+.evalTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.evalTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.evalInst {
+  margin: 0 0 2px;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+.evalDate {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+.evalRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.pendingBadge {
+  background: #fef3c7;
+  color: #92400e;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.followupCount {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .pageTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .pageSubtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .loadingState {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .errorState {
+  background: rgba(220,38,38,0.15);
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .retryBtn {
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .emptyState {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.1);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .evalCard {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .evalCard:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+}
+
+:global([data-theme="dark"]) .evalTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .evalInst {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .evalDate {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .pendingBadge {
+  background: rgba(217,119,6,0.18);
+  color: #fcd34d;
+}
+
+:global([data-theme="dark"]) .followupCount {
+  color: #3d4455;
+}

@@ -1092,3 +1092,155 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .content {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .tableContainer {
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .table thead {
+  background: #0f1017;
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .table tbody tr {
+  border-bottom-color: rgba(255,255,255,0.04);
+}
+
+:global([data-theme="dark"]) .table tbody tr:hover {
+  background: rgba(255,255,255,0.03);
+}
+
+:global([data-theme="dark"]) .filterSelect {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .searchInput {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .searchInput::placeholder {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .btnSecondary {
+  background: transparent;
+  border-color: rgba(255,255,255,0.08);
+}
+
+:global([data-theme="dark"]) .btnSecondary:hover:not(:disabled) {
+  background: rgba(255,255,255,0.04);
+  border-color: rgba(255,255,255,0.12);
+}
+
+:global([data-theme="dark"]) .modal {
+  background: #13141f;
+}
+
+:global([data-theme="dark"]) .modalHeader {
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .modalHeader h2 {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .closeBtn:hover {
+  background: rgba(255,255,255,0.06);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .modalFooter {
+  background: #0f1017;
+  border-top-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .confirmModal {
+  background: #13141f;
+}
+
+:global([data-theme="dark"]) .confirmModalTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .confirmModalMessage {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .confirmModalMessage strong {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .confirmModalWarning {
+  background: rgba(153,27,27,0.15);
+  border-color: rgba(153,27,27,0.3);
+}
+
+:global([data-theme="dark"]) .formSectionTitle {
+  color: #e0e4f0;
+  border-bottom-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .formGroup label {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .input {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .input:disabled {
+  background: rgba(255,255,255,0.03);
+}
+
+:global([data-theme="dark"]) .passwordInputWrapper {
+  border-color: rgba(255,255,255,0.08);
+  background: #1a1b2a;
+}
+
+:global([data-theme="dark"]) .passwordField {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .passwordField::placeholder {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .checkboxLabel {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .loadingInline {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .permissionCheckbox {
+  background: rgba(255,255,255,0.03);
+  border-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .permissionCheckbox:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.1);
+}
+
+:global([data-theme="dark"]) .actionBtn {
+  border-color: rgba(255,255,255,0.08);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .spinner {
+  animation: spin 1s linear infinite;
+}

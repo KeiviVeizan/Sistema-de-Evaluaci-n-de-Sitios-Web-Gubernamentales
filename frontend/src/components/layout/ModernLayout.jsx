@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useLocation } from 'react-router-dom';
 import { useAuth, ROLES, ROLE_LABELS } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import {
   User,
   ChevronDown,
   Shield,
   LogOut,
   Menu,
+  Moon,
+  Sun,
 } from 'lucide-react';
 import ModernSidebar from './ModernSidebar';
 import NotificationBell from '../ui/NotificationBell';
@@ -15,6 +18,7 @@ import styles from './ModernLayout.module.css';
 
 function ModernLayout() {
   const { user, logout } = useAuth();
+  const { dark, toggle } = useTheme();
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -62,7 +66,14 @@ function ModernLayout() {
           </div>
 
           <div className={styles.topbarRight}>
-            <img src="/Logo-GobScan.png" alt="GobScan" className={styles.gobScanLogo} />
+            <img src="/logo%20GobScan_transparente.png" alt="GobScan" className={styles.gobScanLogo} />
+            <button
+              className={styles.themeToggle}
+              onClick={toggle}
+              aria-label={dark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+            >
+              {dark ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
 
             {/* Notificaciones solo para evaluadores */}
             {user?.role === ROLES.EVALUATOR && <NotificationBell />}

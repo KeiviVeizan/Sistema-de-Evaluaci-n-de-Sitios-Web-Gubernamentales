@@ -329,3 +329,77 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .pageTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .pageSubtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .card {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.06);
+}
+
+:global([data-theme="dark"]) .cardHeader {
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .cardTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .infoLabel {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .infoValue {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .label {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .input {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .input:focus {
+  border-color: #c44040;
+  box-shadow: 0 0 0 3px rgba(196,64,64,0.12);
+}
+
+:global([data-theme="dark"]) .requirements {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .requirementsTitle {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .btnGhost {
+  background: transparent;
+  border-color: rgba(255,255,255,0.08);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .btnGhost:hover {
+  background: rgba(255,255,255,0.04);
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .securityNote {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .spinner {
+  border-color: rgba(255,255,255,0.06);
+  border-top-color: #c44040;
+}

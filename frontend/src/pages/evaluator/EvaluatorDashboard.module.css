@@ -388,3 +388,112 @@
     font-size: 1.5rem;
   }
 }
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .header {
+  background: #13141f;
+  border-bottom-color: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .header h1 {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .header p {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .metricCard {
+  background: #13141f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:global([data-theme="dark"]) .metricContent h3 {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .metricContent p {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .trendUp {
+  background: rgba(5,150,105,0.15);
+  color: #34d399;
+}
+
+:global([data-theme="dark"]) .trendDown {
+  background: rgba(220,38,38,0.15);
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .chartCard,
+:global([data-theme="dark"]) .rankingsCard {
+  background: #13141f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:global([data-theme="dark"]) .chartCard h3,
+:global([data-theme="dark"]) .rankingsCard h3 {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .rankingItem {
+  background: rgba(255,255,255,0.025);
+}
+
+:global([data-theme="dark"]) .rankingItem:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .rankingName {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .recentCard {
+  background: #13141f;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.4);
+}
+
+:global([data-theme="dark"]) .recentCard h3 {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .evaluationItem {
+  background: rgba(255,255,255,0.025);
+}
+
+:global([data-theme="dark"]) .evaluationItem:hover {
+  background: rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .evaluationInfo h4 {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .evaluationInfo p {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .scoreGood {
+  background: rgba(5,150,105,0.15);
+  color: #34d399;
+}
+
+:global([data-theme="dark"]) .scoreWarning {
+  background: rgba(217,119,6,0.15);
+  color: #fcd34d;
+}
+
+:global([data-theme="dark"]) .scoreBad {
+  background: rgba(220,38,38,0.15);
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .emptyState {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .loadingSpinner {
+  border-color: rgba(255,255,255,0.06);
+  border-top-color: #c44040;
+}

@@ -1,0 +1,492 @@
+/* ===================================
+   EvaluatorFollowups
+   =================================== */
+
+.container {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 24px 16px;
+}
+
+.pageTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 4px;
+}
+
+.pageSubtitle {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 24px;
+}
+
+/* ---- Spinner ---- */
+.spinnerWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 60vh;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e0e0e0;
+  border-top-color: #800000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ---- Filter row ---- */
+.filterRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.filterBtn {
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+/* ---- Empty ---- */
+.emptyMsg {
+  text-align: center;
+  padding: 48px;
+  color: #999;
+  font-size: 0.9rem;
+}
+
+/* ---- Group list ---- */
+.groupList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.groupCard {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.groupTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a3a5c;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.groupCount {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #666;
+  background: #f0f0f0;
+  padding: 2px 8px;
+  border-radius: 12px;
+}
+
+/* ---- Followup list ---- */
+.followupList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.followupItem {
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.followupHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.followupInfo {
+  flex: 1;
+}
+
+.followupName {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #1a3a5c;
+}
+
+.critCode {
+  font-size: 0.82rem;
+  margin-right: 6px;
+  background: #e8edf2;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.followupDate {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 6px;
+}
+
+.followupDateOverdue {
+  font-size: 0.8rem;
+  color: #c0392b;
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #e0e0e0;
+  margin: 10px 0 8px;
+}
+
+.notesText {
+  font-size: 0.82rem;
+  color: #444;
+  font-style: italic;
+}
+
+.correctedBox {
+  font-size: 0.8rem;
+  color: #2980b9;
+  margin-top: 8px;
+  background: #f0f7ff;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.validatedBox {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #f0faf4;
+  border: 1px solid #a8dfc0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #27ae60;
+}
+
+.rejectedBox {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: #fdf5f5;
+  border: 1px solid #e8c0c0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #c0392b;
+}
+
+.actionRow {
+  margin-top: 12px;
+}
+
+.btnValidate {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #2980b9;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btnValidate:hover {
+  background: #2471a3;
+}
+
+.statusMsg {
+  margin: 0;
+  font-size: 0.85rem;
+  font-style: italic;
+}
+
+.statusMsgPending { color: #e67e22; }
+.statusMsgValidated { color: #27ae60; font-weight: 600; font-style: normal; }
+.statusMsgRejected { color: #c0392b; }
+
+/* ---- Modal ---- */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modalBox {
+  background: #fff;
+  border-radius: 10px;
+  padding: 24px;
+  width: 100%;
+  max-width: 500px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+}
+
+.modalTitle {
+  margin: 0 0 8px;
+  color: #1a3a5c;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.modalSubtitle {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: #555;
+}
+
+.modalLabel {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a3a5c;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.modalLabelNote {
+  color: #c0392b;
+  font-weight: 400;
+}
+
+.actionGroup {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.actionBtn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 2px solid;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modalTextarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid #c0ccd8;
+  border-radius: 6px;
+  font-size: 0.88rem;
+  box-sizing: border-box;
+  resize: vertical;
+  font-family: inherit;
+  color: #1a3a5c;
+  background: #fff;
+  transition: border-color 0.15s;
+}
+
+.modalTextarea:focus {
+  outline: none;
+  border-color: #800000;
+}
+
+.modalError {
+  color: #c0392b;
+  font-size: 0.83rem;
+  margin: 4px 0 0;
+}
+
+.modalActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+.btnModalCancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  color: #2c5f8a;
+  border: 1px solid #2c5f8a;
+  border-radius: 6px;
+  padding: 7px 14px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.btnModalCancel:hover:not(:disabled) {
+  background: rgba(44,95,138,0.08);
+}
+
+.btnModalSave {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: filter 0.15s;
+}
+
+.btnModalSave:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.btnModalSave:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .pageTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .pageSubtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .spinner {
+  border-color: rgba(255,255,255,0.08);
+  border-top-color: #c44040;
+}
+
+:global([data-theme="dark"]) .emptyMsg {
+  color: #3d4455;
+}
+
+:global([data-theme="dark"]) .groupCard {
+  background: #13141f;
+  border-color: rgba(255,255,255,0.07);
+  box-shadow: none;
+}
+
+:global([data-theme="dark"]) .groupTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .groupCount {
+  background: rgba(255,255,255,0.07);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .followupName {
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .critCode {
+  background: rgba(255,255,255,0.08);
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .followupDate {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .divider {
+  border-top-color: rgba(255,255,255,0.07);
+}
+
+:global([data-theme="dark"]) .notesText {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .correctedBox {
+  background: rgba(41,128,185,0.12);
+  color: #93c5fd;
+}
+
+:global([data-theme="dark"]) .validatedBox {
+  background: rgba(39,174,96,0.1);
+  border-color: rgba(39,174,96,0.25);
+  color: #4ade80;
+}
+
+:global([data-theme="dark"]) .rejectedBox {
+  background: rgba(192,57,43,0.12);
+  border-color: rgba(192,57,43,0.25);
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .statusMsgPending {
+  color: #fcd34d;
+}
+
+:global([data-theme="dark"]) .statusMsgValidated {
+  color: #4ade80;
+}
+
+:global([data-theme="dark"]) .statusMsgRejected {
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .modalOverlay {
+  background: rgba(0,0,0,0.7);
+}
+
+:global([data-theme="dark"]) .modalBox {
+  background: #13141f;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+:global([data-theme="dark"]) .modalTitle {
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .modalSubtitle {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .modalLabel {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .modalTextarea {
+  background: #1a1b2a;
+  border-color: rgba(255,255,255,0.08);
+  color: #e0e4f0;
+}
+
+:global([data-theme="dark"]) .modalTextarea:focus {
+  border-color: #c44040;
+}
+
+:global([data-theme="dark"]) .modalError {
+  color: #f87171;
+}
+
+:global([data-theme="dark"]) .btnModalCancel {
+  color: #93c5fd;
+  border-color: rgba(147,197,253,0.35);
+}
+
+:global([data-theme="dark"]) .btnModalCancel:hover:not(:disabled) {
+  background: rgba(147,197,253,0.08);
+}

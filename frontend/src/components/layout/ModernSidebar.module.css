@@ -526,6 +526,102 @@
   font-weight: 500;
 }
 
+/* ===== DARK MODE ===== */
+:global([data-theme="dark"]) .sidebar::before {
+  background: linear-gradient(180deg, #0d0e16 0%, #0d0e16 45%, #4a0000 80%, #700000 100%);
+  box-shadow: 4px 0 32px rgba(0, 0, 0, 0.6), 0 4px 24px rgba(0, 0, 0, 0.5);
+}
+
+:global([data-theme="dark"]) .header {
+  border-bottom-color: rgba(255, 255, 255, 0.04);
+}
+
+:global([data-theme="dark"]) .toggleBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .toggleBtn:hover {
+  background: rgba(245, 158, 11, 0.12);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+:global([data-theme="dark"]) .divider {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 30%,
+    rgba(255, 255, 255, 0.05) 70%,
+    transparent 100%);
+}
+
+:global([data-theme="dark"]) .navItem {
+  color: #7b8496;
+}
+
+:global([data-theme="dark"]) .navItem:hover {
+  background: rgba(245, 158, 11, 0.08);
+  color: #e0e4f0;
+  border-left-color: rgba(245, 158, 11, 0.3);
+}
+
+:global([data-theme="dark"]) .navItem.active {
+  background: rgba(245, 158, 11, 0.12);
+  color: #fef3c7;
+  border-left-color: #f59e0b;
+}
+
+:global([data-theme="dark"]) .submenu {
+  background: rgba(0, 0, 0, 0.2);
+  border-left-color: rgba(245, 158, 11, 0.2);
+}
+
+:global([data-theme="dark"]) .submenuItem {
+  color: #555e72;
+}
+
+:global([data-theme="dark"]) .submenuItem:hover {
+  background: rgba(245, 158, 11, 0.07);
+  color: #d0d4e0;
+}
+
+:global([data-theme="dark"]) .submenuItem.active {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fef3c7;
+}
+
+:global([data-theme="dark"]) .sidebar.collapsed .tooltipMenu {
+  background: #13141f;
+  border-color: rgba(255, 255, 255, 0.07);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+:global([data-theme="dark"]) .sidebar.collapsed .tooltipMenu::before {
+  border-right-color: #13141f;
+}
+
+:global([data-theme="dark"]) .tooltipMenuItem {
+  color: #b0b8cc;
+}
+
+:global([data-theme="dark"]) .tooltipMenuItem:hover {
+  background: rgba(245, 158, 11, 0.08);
+  color: #f0f1f8;
+}
+
+:global([data-theme="dark"]) .footer {
+  border-top-color: rgba(255, 255, 255, 0.04);
+}
+
+:global([data-theme="dark"]) .userName {
+  color: #d0d4e0;
+}
+
+:global([data-theme="dark"]) .userRole {
+  color: #c44040;
+}
+
 /* ===== RESPONSIVE MÓVIL ===== */
 @media (max-width: 767px) {
 

@@ -26,25 +26,22 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 def create_access_token(
     data: dict, expires_delta: Optional[timedelta] = None
 ) -> str:
-    """
-    Crea un token JWT firmado.
-
-    Args:
-        data: Payload del token (debe incluir "sub" con el username)
-        expires_delta: Duración personalizada del token
-
-    Returns:
-        Token JWT codificado como string
-    """
     to_encode = data.copy()
     expire = datetime.utcnow() + (
         expires_delta
         if expires_delta
         else timedelta(minutes=settings.access_token_expire_minutes)
     )
-    to_encode.update({"exp": expire})
-    return jwt.encode(
-        to_encode,
-        settings.secret_key,
-        algorithm=settings.jwt_algorithm,
-    )
+    to_encode.update({"exp": expire, "type": "access"})
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
+
+
+def create_refresh_token(data: dict) -> str:
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(days=7)
+    to_encode.update({"exp": expire, "type": "refresh"})
+    return jwt.encode(to_encode, settings.secret_key, algorithm=settings.jwt_algorithm)
+
+
+def decode_token(token: str) -> dict:
+    return jwt.decode(token, settings.secret_key, algorithms=[settings.jwt_algorithm])
