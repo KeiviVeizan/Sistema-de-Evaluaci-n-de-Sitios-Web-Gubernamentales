@@ -298,15 +298,8 @@ flake8 app/
 ## Desarrollo Futuro
 
 - [ ] Implementar procesamiento asíncrono con Celery
-- [ ] Completar análisis NLP con modelo BETO cargado
 - [ ] Agregar validación de HTML con W3C Validator
 - [ ] Implementar análisis de contraste de colores
-- [ ] Desarrollar sistema de reportes en PDF
-- [ ] Crear dashboard de visualización de resultados
-- [ ] Implementar frontend con Next.js 14
-- [ ] Agregar autenticación y autorización
-- [ ] Implementar sistema de notificaciones
-- [ ] Crear API webhooks para integración
 
 ## Contribución
 
