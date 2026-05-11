@@ -61,6 +61,17 @@ export function AuthProvider({ children }) {
     checkAuth();
   }, []);
 
+  // Escuchar expiración de sesión disparada por el interceptor de axios
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+      setRequires2FA(false);
+      setPendingUsername(null);
+    };
+    window.addEventListener('auth:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('auth:session-expired', handleSessionExpired);
+  }, []);
+
   const checkAuth = async () => {
     try {
       if (authService.isAuthenticated()) {

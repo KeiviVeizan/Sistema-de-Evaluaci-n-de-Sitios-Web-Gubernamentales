@@ -958,11 +958,91 @@ class EmailService:
             logger.info(f"Email de corrección {action} enviado exitosamente a {to_email}")
             return True
         except Exception as e:
+            error_detail = f"{type(e).__name__}: {str(e)}"
             logger.error(
-                f"Error al enviar email de corrección {action} a {to_email}: "
-                f"{type(e).__name__}: {str(e)}"
+                f"Error al enviar email de corrección {action} a {to_email}: {error_detail}"
+            )
+            await self._send_admin_error_alert(
+                context=f"Validación de seguimiento ({action})",
+                recipient=to_email,
+                detail=error_detail,
+                extra_info=(
+                    f"Institución: {institution_name}\n"
+                    f"Criterio: {criterion_code} — {criterion_name}"
+                ),
             )
             return False
+
+    async def _send_admin_error_alert(
+        self,
+        context: str,
+        recipient: str,
+        detail: str,
+        extra_info: str = "",
+    ) -> None:
+        """Notifica al administrador cuando un correo no pudo enviarse."""
+        from app.config import settings
+
+        admin_email = settings.admin_email
+        if not admin_email or not self._fastmail:
+            return
+
+        try:
+            from datetime import datetime
+            timestamp = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            extra_block = (
+                f"<p style='color:#555;font-size:14px;margin:10px 0 0;white-space:pre-line;'>"
+                f"{extra_info}</p>"
+                if extra_info else ""
+            )
+            html = f"""<!DOCTYPE html>
+<html lang="es">
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;font-family:'Segoe UI',Arial,sans-serif;background:#f4f4f4;">
+  <table width="100%" cellspacing="0" cellpadding="0" style="max-width:600px;margin:0 auto;padding:20px;">
+    <tr>
+      <td style="background:#b91c1c;padding:25px 30px;border-radius:12px 12px 0 0;">
+        <h1 style="color:white;margin:0;font-size:20px;">&#9888; Error de envío de correo</h1>
+        <p style="color:rgba(255,255,255,0.85);margin:6px 0 0;font-size:13px;">Sistema Evaluador GOB.BO — {timestamp}</p>
+      </td>
+    </tr>
+    <tr>
+      <td style="background:white;padding:30px;border-radius:0 0 12px 12px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">
+        <p style="color:#333;font-size:15px;margin:0 0 16px;">
+          No se pudo enviar el correo de notificación. Es posible que Gmail haya bloqueado
+          el envío por exceso de peticiones o un problema de autenticación.
+        </p>
+        <div style="background:#fef2f2;border-left:4px solid #b91c1c;padding:16px 20px;border-radius:0 8px 8px 0;margin:0 0 16px;">
+          <p style="color:#7f1d1d;font-size:13px;font-weight:600;margin:0 0 6px;">Contexto</p>
+          <p style="color:#991b1b;font-size:14px;margin:0;">{context}</p>
+        </div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;padding:16px 20px;border-radius:8px;margin:0 0 16px;">
+          <p style="color:#374151;font-size:13px;font-weight:600;margin:0 0 4px;">Destinatario que no recibió el correo</p>
+          <p style="color:#555;font-size:14px;margin:0;">{recipient}</p>
+          {extra_block}
+        </div>
+        <div style="background:#f9fafb;border:1px solid #e5e7eb;padding:16px 20px;border-radius:8px;">
+          <p style="color:#374151;font-size:13px;font-weight:600;margin:0 0 4px;">Detalle del error</p>
+          <p style="color:#6b7280;font-size:13px;margin:0;font-family:monospace;">{detail}</p>
+        </div>
+      </td>
+    </tr>
+    <tr>
+      <td style="padding:16px;text-align:center;">
+        <p style="color:#999;font-size:11px;margin:0;">
+          Mensaje automático del Sistema de Evaluación GOB.BO — no responder.
+        </p>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>"""
+            alert_subject = f"[ALERTA] No se pudo enviar correo: {context}"
+            message = self._build_message(alert_subject, [admin_email], html)
+            await self._fastmail.send_message(message)
+            logger.info(f"Alerta de error enviada al administrador ({admin_email})")
+        except Exception as alert_exc:
+            logger.error(f"Tampoco se pudo enviar la alerta al administrador: {alert_exc}")
 
 
     @staticmethod

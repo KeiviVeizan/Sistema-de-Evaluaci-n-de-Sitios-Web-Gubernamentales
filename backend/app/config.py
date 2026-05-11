@@ -152,6 +152,10 @@ class Settings(BaseSettings):
         default=False,
         description="Usar SSL"
     )
+    admin_email: str = Field(
+        default="",
+        description="Email del administrador para alertas de error de envío"
+    )
 
     # Frontend URL (para enlaces en emails)
     frontend_url: str = Field(

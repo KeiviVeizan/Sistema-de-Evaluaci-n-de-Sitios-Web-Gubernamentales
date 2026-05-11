@@ -34,10 +34,10 @@ api.interceptors.response.use(
 
       const refreshToken = localStorage.getItem('refreshToken');
 
-      // Sin refresh token: sesión expirada, redirigir a login
+      // Sin refresh token: sesión expirada
       if (!refreshToken) {
         localStorage.removeItem('accessToken');
-        window.location.href = '/login';
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
         return Promise.reject(error);
       }
 
@@ -53,7 +53,7 @@ api.interceptors.response.use(
       } catch {
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        window.dispatchEvent(new CustomEvent('auth:session-expired'));
         return Promise.reject(error);
       }
     }

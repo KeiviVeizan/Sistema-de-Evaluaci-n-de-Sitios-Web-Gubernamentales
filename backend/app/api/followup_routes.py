@@ -16,7 +16,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session, joinedload
 
@@ -409,6 +409,7 @@ async def mark_corrected(
 async def validate_correction(
     followup_id: int,
     data: ValidateCorrectionRequest,
+    background_tasks: BackgroundTasks,
     current_user=Depends(require_followups_manage),
     db: Session = Depends(get_db),
 ):
@@ -464,7 +465,8 @@ async def validate_correction(
                         Institution.domain == website.domain
                     ).first()
                     institution_name = institution.name if institution else website.domain
-                    await email_service.send_followup_validated_email(
+                    background_tasks.add_task(
+                        email_service.send_followup_validated_email,
                         to_email=responsible.email,
                         institution_name=institution_name,
                         criterion_code=criteria_result.criteria_id,
