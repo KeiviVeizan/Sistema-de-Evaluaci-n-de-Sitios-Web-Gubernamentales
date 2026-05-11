@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# CSS temporales de desarrollo
+src/pages/admin/checkbox_styles_temp.css
+src/pages/admin/delete_btn_styles_temp.css
+src/pages/admin/delete_button_styles.css
+src/pages/admin/modal_large_temp.css
+
+# Componentes obsoletos/respaldo
+src/pages/admin/Institutions_restored.jsx

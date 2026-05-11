@@ -322,9 +322,10 @@ Este proyecto está bajo licencia MIT.
 
 ## Contacto
 
-ADSIB - Agencia de Desarrollo de la Sociedad de la Información en Bolivia
+AGETIC - Agencia de Gobierno Electrónico y Tecnologías de Información y Comunicación
+ías 
 
 ---
 
 **Versión**: 1.0.0
-**Última actualización**: 2024
+**Última actualización**: 2026

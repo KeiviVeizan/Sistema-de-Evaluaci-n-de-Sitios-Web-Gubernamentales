@@ -25,6 +25,10 @@ models_cache/
 # Testing
 .pytest_cache/
 .coverage
+tests/
+app/evaluator/test_integration.py
+app/nlp/test_nlp_integration.py
+app/tests/
 
 # Database
 *.db
@@ -32,3 +36,39 @@ models_cache/
 
 # Temporary
 *.tmp
+nul
+delete_endpoint.txt
+crawler_output.json
+
+# Scripts de migración de desarrollo (one-off, no forman parte del sistema)
+add_position_column.py
+add_robots_txt_column.py
+change_user_role.py
+check_extracted_data.py
+debug_user.py
+delete_all_institutions.py
+migrate_criteria_result.py
+migrate_followups.py
+migrate_users_table.py
+recreate_criteria_table.py
+run_migration.py
+view_text_corpus.py
+
+# Scripts de prueba de desarrollo
+test_api.py
+test_coherencia_calibrada.py
+test_crawler.py
+test_evaluation.py
+test_permissions_api.py
+test_sem03_improvement.py
+
+# Documentación de desarrollo personal
+MEJORAS.md
+EVALUACION_README.md
+README_NLP_MIGRATION.md
+TEST_PERMISSIONS.md
+GUIA_PRUEBAS_SEM03.md
+
+# Datos y resultados de calibración NLP
+app/nlp/CALIBRACION_UMBRAL.md
+app/nlp/umbral_optimo.json

@@ -73,3 +73,20 @@ reports/
 *.swp
 nul
 backend/nul
+
+# Scripts de prueba en la raíz del proyecto
+test_sem03.ps1
+test_sem03.sh
+
+# Datos de calibración y análisis (archivos de desarrollo personal)
+*.csv
+mis_ejemplos_calibracion*.csv
+resultados_calibracion.csv
+dataset_con_predicciones.csv
+
+# Imágenes de análisis/calibración (no assets del producto)
+distribucion_similitudes.png
+curvas_metricas.png
+matriz_confusion.png
+grafico_*.png
+Modelo_Entidad_Relacion*.png
